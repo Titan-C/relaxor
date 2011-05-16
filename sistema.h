@@ -24,7 +24,7 @@ public:
     Sistema(unsigned int lado,
 	    unsigned int Niter,
 	    gsl_rng * rng,
-	    double r_max = 0.5,
+	    double r_max = 0.3,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
