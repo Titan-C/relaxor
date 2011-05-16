@@ -58,19 +58,19 @@ void Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
   for(unsigned int i=0; i<mu.size(); i++){
    
     // Crear variables descriptivas de PNR
-   /* mu_mag = r_max*gsl_rng_uniform(rng);
+    mu_mag = r_max*gsl_rng_uniform(rng);
     mu_mag = 4*PI/3 * mu_mag*mu_mag*mu_mag * P;
-    theta  = (polarizar)? PI/2 : PI;
-    theta *= gsl_rng_uniform(rng);*/
-    mstheta = 1 * sin(0);
-    phi    = 0;//2*PI*gsl_rng_uniform(rng);
+    theta  = PI/2;
+    theta *= gsl_rng_uniform(rng);
+    mstheta = mu_mag * sin(theta);
+    phi    = 2*PI*gsl_rng_uniform(rng);
     
     //Transformar en momentos dipolares
     mu[i].resize(dimension);
     
     mu[i][0] = mstheta * cos(phi);
     mu[i][1] = mstheta * sin(phi);
-    mu[i][2] = cos(0);
+    mu[i][2] = cos(theta);
     
     // Almacenar Datos del sistema
     sigma[i] = (mu[i][2] > 0) ? 1 : -1 ;
@@ -114,7 +114,7 @@ void Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
       condborde(delta_R,L);
       r=2*r_max*sqrt(dot(delta_R,delta_R));
       // Calcula la Energía de intercambio entre 2 PNR
-      Jex = 3*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
+      Jex = 3*2*r_max*2*r_max*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
       Jinter[i][j] = Jex/2;      
     }    
   }

@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
   
   unsigned int L=8, Niter=400, numexps = 1;
-  double T=2;/*
+  double T=7;/*
   cin>>L;
   cin>> Niter;
   cin>>T;*/
@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
     numexps += relaxor.experimento(T, 0, Niter, grabar , rng);
     if (grabar)
       T-=0.1;
-    
   }while(T>0);
   
   // Analisis de datos
