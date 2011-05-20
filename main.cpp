@@ -59,48 +59,18 @@ int main(int argc, char **argv) {
   // Analisis de datos
 
   //procesar datos polarizacion congelada
-  vector< vector<double> > sigmas_time, sigmas_conf;
-  vector< vector<double> > S_frozen, Susceptibilidad, Polarizacion;
+  int CongMed=0;
+  vector< vector<double> > Polarizacion;
   vector<double> temp;
-  unsigned int lentos=4, mediciones = numexps/4, L3=L*L*L;
+  unsigned int mediciones = numexps/4;
   
     //Arreglo de temperaturas
   temp.resize(mediciones);
   for(unsigned int i = 0; i<temp.size(); i++)
     temp[i] = T + (mediciones-i)*dT;
   
-  S_frozen.resize(mediciones);
-  for(unsigned int i=0; i< S_frozen.size(); i++){
-    S_frozen[i].resize(lentos+1);
-    S_frozen[i][lentos] = temp[i];
-    for(unsigned int j=0; j< lentos; j++)
-      S_frozen[i][j] = 0;
-  }
+  CongMed = relaxor.eval_congelamiento_susceptibilidad("Congelamiento.dat",temp,Niter,mediciones);
 
-  import_data(sigmas_time, "sum_sigma_time.dat", mediciones, L3);
-  
-  for(unsigned int i=0 ; i<sigmas_time.size(); i++){
-    for(unsigned int j=0; j<sigmas_time[i].size(); j++){
-      sigmas_time[i][j] = abs(sigmas_time[i][j]/Niter);
-      for(unsigned int k=0;k<lentos;k++){
-	if (sigmas_time[i][j] >= (1-0.1*k) )
-	  S_frozen[i][k]+=(double) 1/L3;
-      }
-    }    
-  }
-  array_print(S_frozen, "Congelamiento.dat");
-  
-
-  
-  //Encontrar la susceptibilidad del material
-  Susceptibilidad.resize(mediciones);
-  for(unsigned int i=0; i<Susceptibilidad.size(); i++){
-    Susceptibilidad[i].resize(lentos+1);
-    Susceptibilidad[i][lentos] = temp[i];
-    for(unsigned int j=0; j<lentos; j++)
-      Susceptibilidad[i][j] = (1 - S_frozen[i][j])/temp[i];
-  }
-  array_print(Susceptibilidad, "Susceptibilidad.dat");
   
   time(&end);
   cout<<difftime(end,start);

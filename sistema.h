@@ -26,7 +26,7 @@ public:
     Sistema(unsigned int lado,
 	    unsigned int Niter,
 	    gsl_rng * rng,
-	    double r_max = 1,
+	    double r_max = 0.3,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
@@ -43,10 +43,7 @@ public:
     
     //Operaciones de análisis
     double sta_dev();
-    void eval_congelamiento( std::string ARCHIVO, int Niter, int mediciones );
-    void eval_susceptibilidad( std::string ARCHIVO );
-	
-
+    int eval_congelamiento_susceptibilidad( std::string ARCHIVO, const std::vector<double> temp, int Niter, int mediciones );
 };
 // Operaciones necesarias para tratar al sistema
 void condborde ( std::vector <double>& R, int L);

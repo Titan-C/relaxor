@@ -95,7 +95,6 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
   }
   array_print(mu, "mu_PNR.dat");
-  mu.clear();
   array_print(R, "posiciones.dat");
   array_print(G, "grafo_vecinos.dat");
   // Calcular las enrgías de intercambio de las PNR
@@ -117,7 +116,7 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
       r=2*r_max*sqrt(dot(delta_R,delta_R));
       // Calcula la Energía de intercambio entre 2 PNR
       Jex = 3*2*r_max*2*r_max*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
-      Jinter[i][j] = Jex/2;      
+      Jinter[i][j] = Jex/2;
     }    
   }
   for(unsigned int i = 0; i<Jinter.size(); i++){
@@ -132,10 +131,11 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
   }
   array_print(J, "J_vecinos.dat");
 
-  return sta_dev();
-  R.clear();
+  R.clear();  
+  mu.clear();
   delta_R.clear();
   Jinter.clear();
+  return sta_dev();
 }
 //Calcular la desviación standar del las energías de intercambio.
 double Sistema::sta_dev()
@@ -178,6 +178,7 @@ void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng)
 {
   double dH = delta_E(idflip, E);
   T *= DeltaJ;
+  //std::cout<<T<<std::endl;
   if ( dH < 0) sigma[idflip] *= -1;
   else if ( exp(-dH/T) >= gsl_rng_uniform(rng) ) sigma[idflip] *= -1;
 }
@@ -212,14 +213,15 @@ void Sistema::reset_sum_sigma()
     sum_sigma_conf[i] = 0;    
 }
 
-void Sistema::eval_congelamiento(std::string ARCHIVO, int Niter, int mediciones)
+int Sistema::eval_congelamiento_susceptibilidad(std::string ARCHIVO, const std::vector<double> temp, int Niter, int mediciones)
 {
   std::vector< std::vector<double> > sigmas_time,S_frozen;
   unsigned int lentos=4, L3=L*L*L;
   
   S_frozen.resize(mediciones);
   for(unsigned int i=0; i< S_frozen.size(); i++){
-    S_frozen[i].resize(lentos);
+    S_frozen[i].resize(lentos+1);
+    S_frozen[i][lentos] = temp[i];
     for(unsigned int j=0; j< lentos; j++)
       S_frozen[i][j] = 0;
   }
@@ -228,19 +230,29 @@ void Sistema::eval_congelamiento(std::string ARCHIVO, int Niter, int mediciones)
   
   for(unsigned int i=0 ; i<sigmas_time.size(); i++){
     for(unsigned int j=0; j<sigmas_time[i].size(); j++){
-      sigmas_time[i][j] = abs(sigmas_time[i][j]/Niter);
+      sigmas_time[i][j] = std::abs(sigmas_time[i][j]/Niter);
       for(unsigned int k=0;k<lentos;k++){
-	if (sigmas_time[i][j] >= (1-0.1*k) )
+	if (sigmas_time[i][j] >= (1-0.1*k) ){
 	  S_frozen[i][k]+=(double) 1/L3;
+	}
       }
-    }    
+    }
   }
-  ar_print(S_frozen, "Congelamiento.dat", true);
-
-}
-void Sistema::eval_susceptibilidad(std::string ARCHIVO)
-{
-
+  array_print(S_frozen, ARCHIVO.c_str());
+  
+  std::vector< std::vector<double> > Susceptibilidad;
+  Susceptibilidad.resize(mediciones);
+  for(unsigned int i=0; i<Susceptibilidad.size(); i++){
+    Susceptibilidad[i].resize(lentos+1);
+    Susceptibilidad[i][lentos] = temp[i];
+    for(unsigned int j=0; j<lentos; j++)
+      Susceptibilidad[i][j] = (1 - S_frozen[i][j])/temp[i];
+  }
+  array_print(Susceptibilidad, "Susceptibilidad.dat");
+  sigmas_time.clear();
+  S_frozen.clear();
+  Susceptibilidad.clear();
+  return 1;
 }
 
 
