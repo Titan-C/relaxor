@@ -9,18 +9,26 @@ void out(double value, std::string ARCHIVO)
   file.close();
 }
 // Imprime datos de los arreglos vectoriales
-void array_print(const std::vector< int >& V, std::string ARCHIVO) {
+void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app) {
   std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str(), std::fstream::out);
+    
   for(unsigned int i = 0; i<V.size(); i++)
     file<<V[i]<<"\t";
   file<<std::endl;
   file.close();
 }
 // Imprime datos de los arreglos matricales
-void array_print(const std::vector< std::vector< int > >& M, std::string ARCHIVO, bool p) {
+void array_print(const std::vector< std::vector< int > >& M, std::string ARCHIVO, bool app, bool p) {
   std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out);
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str(), std::fstream::out);
+  
   for (unsigned int i=0;i<M.size();i++) {
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
@@ -30,9 +38,13 @@ void array_print(const std::vector< std::vector< int > >& M, std::string ARCHIVO
   file.close();
 }
 // Imprime datos de los arreglos matricales
-void array_print(const std::vector< std::vector< double > >& M, std::string ARCHIVO, bool p) {
+void array_print(const std::vector< std::vector< double > >& M, std::string ARCHIVO, bool app, bool p) {
   std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out);
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str(), std::fstream::out);
+  
   for (unsigned int i=0;i<M.size();i++) {
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";

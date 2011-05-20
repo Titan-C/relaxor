@@ -2,6 +2,7 @@
 #define SISTEMA_H
 
 #include <vector>
+#include <iostream>
 #include <gsl/gsl_rng.h>
 
 class Sistema
@@ -31,7 +32,6 @@ public:
     ~Sistema();
 
     double init(gsl_rng* rng, double r_max, bool polarizar);
-    double std();
     // Operaciones de ejecución
     double total_E (double E);
     double delta_E (unsigned int idflip, double E);
@@ -40,6 +40,12 @@ public:
     int experimento(double T, double E, unsigned int Niter,
 		    bool grabar, gsl_rng* rng);
     void reset_sum_sigma();
+    
+    //Operaciones de análisis
+    double sta_dev();
+    void eval_congelamiento( std::string ARCHIVO, int Niter, int mediciones );
+    void eval_susceptibilidad( std::string ARCHIVO );
+	
 
 };
 // Operaciones necesarias para tratar al sistema

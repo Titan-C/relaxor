@@ -42,12 +42,12 @@ int main(int argc, char **argv) {
   time(&start);
   //vaciar archivo de datos en cada ejecución
   file_wipe("log");
-  file_wipe("sum_sigma_time.dat");
-  file_wipe("sum_sigma_conf.dat");
   file_wipe("energy_log.dat");
   cout<<"Energía inicial = "<<relaxor.total_E(0)<<endl;
   bool grabar;
-
+  
+  file_wipe("sum_sigma_time.dat");
+  file_wipe("sum_sigma_conf.dat");
   do{
     grabar = (numexps % 4 == 0);
     //ejecutar una corrida en el tiempo correspondiente a Niter  

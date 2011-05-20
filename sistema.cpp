@@ -95,6 +95,7 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
   }
   array_print(mu, "mu_PNR.dat");
+  mu.clear();
   array_print(R, "posiciones.dat");
   array_print(G, "grafo_vecinos.dat");
   // Calcular las enrgías de intercambio de las PNR
@@ -131,10 +132,13 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
   }
   array_print(J, "J_vecinos.dat");
 
-  return std();
+  return sta_dev();
+  R.clear();
+  delta_R.clear();
+  Jinter.clear();
 }
 //Calcular la desviación standar del las energías de intercambio.
-double Sistema::std()
+double Sistema::sta_dev()
 {
   unsigned int celdas, columnas;
   columnas = J[1].size();
@@ -206,6 +210,37 @@ void Sistema::reset_sum_sigma()
     sum_sigma_time[i] = 0;
   for(unsigned int i = 0; i < sum_sigma_conf.size(); i++)
     sum_sigma_conf[i] = 0;    
+}
+
+void Sistema::eval_congelamiento(std::string ARCHIVO, int Niter, int mediciones)
+{
+  std::vector< std::vector<double> > sigmas_time,S_frozen;
+  unsigned int lentos=4, L3=L*L*L;
+  
+  S_frozen.resize(mediciones);
+  for(unsigned int i=0; i< S_frozen.size(); i++){
+    S_frozen[i].resize(lentos);
+    for(unsigned int j=0; j< lentos; j++)
+      S_frozen[i][j] = 0;
+  }
+
+  import_data(sigmas_time, "sum_sigma_time.dat", mediciones, L3);
+  
+  for(unsigned int i=0 ; i<sigmas_time.size(); i++){
+    for(unsigned int j=0; j<sigmas_time[i].size(); j++){
+      sigmas_time[i][j] = abs(sigmas_time[i][j]/Niter);
+      for(unsigned int k=0;k<lentos;k++){
+	if (sigmas_time[i][j] >= (1-0.1*k) )
+	  S_frozen[i][k]+=(double) 1/L3;
+      }
+    }    
+  }
+  ar_print(S_frozen, "Congelamiento.dat", true);
+
+}
+void Sistema::eval_susceptibilidad(std::string ARCHIVO)
+{
+
 }
 
 
