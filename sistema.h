@@ -20,16 +20,18 @@ private:
     std::vector< std::vector<double> > J;	// Energías de intercambio primeros vecinos
 
 public:
+    double DeltaJ;
     // Constructor y destructor
     Sistema(unsigned int lado,
 	    unsigned int Niter,
 	    gsl_rng * rng,
-	    double r_max = 0.3,
+	    double r_max = 1,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
 
-    void init(gsl_rng* rng, double r_max, bool polarizar);
+    double init(gsl_rng* rng, double r_max, bool polarizar);
+    double std();
     // Operaciones de ejecución
     double total_E (double E);
     double delta_E (unsigned int idflip, double E);

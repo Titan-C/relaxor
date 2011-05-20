@@ -26,13 +26,15 @@ int main(int argc, char **argv) {
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
   
   unsigned int L=8, Niter=400, numexps = 1;
-  double T=7;/*
+  double T=2.5,dT = 0.1,std;/*
   cin>>L;
   cin>> Niter;
   cin>>T;*/
   gsl_rng_set(rng, time(NULL) );
   
   Sistema relaxor(L, Niter, rng);
+  std = relaxor.DeltaJ;
+  cout<<"desviación standard = "<<std<<endl;
 
   
   //iniciar sistema
@@ -43,7 +45,7 @@ int main(int argc, char **argv) {
   file_wipe("sum_sigma_time.dat");
   file_wipe("sum_sigma_conf.dat");
   file_wipe("energy_log.dat");
-  cout<<relaxor.total_E(0)<<endl;
+  cout<<"Energía inicial = "<<relaxor.total_E(0)<<endl;
   bool grabar;
 
   do{
@@ -51,7 +53,7 @@ int main(int argc, char **argv) {
     //ejecutar una corrida en el tiempo correspondiente a Niter  
     numexps += relaxor.experimento(T, 0, Niter, grabar , rng);
     if (grabar)
-      T-=0.1;
+      T-=dT;
   }while(T>0);
   
   // Analisis de datos
@@ -65,7 +67,7 @@ int main(int argc, char **argv) {
     //Arreglo de temperaturas
   temp.resize(mediciones);
   for(unsigned int i = 0; i<temp.size(); i++)
-    temp[i] = T + (mediciones-i)*0.2;
+    temp[i] = T + (mediciones-i)*dT;
   
   S_frozen.resize(mediciones);
   for(unsigned int i=0; i< S_frozen.size(); i++){

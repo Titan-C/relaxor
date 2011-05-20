@@ -1,6 +1,7 @@
 #include "sistema.h"
 #include <cmath>
 #include "impresor.h"
+ #include <gsl/gsl_statistics.h>
 
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
@@ -30,7 +31,7 @@ Sistema::Sistema(unsigned int lado,
   
   // Inicializa al sistema, llenado de datos
   //Crear arreglos auxiliares
-  init(rng, r_max, polarizar);  
+  DeltaJ = init(rng, r_max, polarizar);
   
 }
 
@@ -46,7 +47,7 @@ Sistema::~Sistema()
   sigma.clear();
 }
 
-void Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
+double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
   //Creo variable auxiliares
   unsigned int ind_xy, L2=L*L;
   double mu_mag, theta, mstheta, phi, PI = 4*atan(1);
@@ -119,18 +120,35 @@ void Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
     }    
   }
   for(unsigned int i = 0; i<Jinter.size(); i++){
-    for(unsigned int j = i+1; j<Jinter[i].size(); j++)
+    for(unsigned int j = i+1; j<Jinter.size(); j++)
       Jinter[j][i] = Jinter[i][j];
   }
   array_print(Jinter, "Matriz_Intercambio.dat");
   // Elabora el arreglo de interacción de primeros vecinos
   for(unsigned int i=0; i<J.size(); i++){
     for(unsigned int j=0; j<J[i].size(); j++)
-      
       J[i][j] = Jinter[i][G[i][j]];
   }
   array_print(J, "J_vecinos.dat");
+
+  return std();
 }
+//Calcular la desviación standar del las energías de intercambio.
+double Sistema::std()
+{
+  unsigned int celdas, columnas;
+  columnas = J[1].size();
+  celdas = J.size() * columnas;
+  double * Jij;
+  Jij = new double [celdas];
+  for(unsigned int i = 0 ; i<J.size(); i++){
+    for(unsigned int j = 0; j<columnas; j++)
+      Jij[i*columnas + j] = J[i][j];
+  }
+  return gsl_stats_sd (Jij, 1, celdas);
+  delete[] Jij;
+}
+
 //Calcula la energía total del sistema
 double Sistema::total_E(double E)
 {
@@ -155,6 +173,7 @@ double Sistema::delta_E(unsigned int idflip, double E)
 void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng)
 {
   double dH = delta_E(idflip, E);
+  T *= DeltaJ;
   if ( dH < 0) sigma[idflip] *= -1;
   else if ( exp(-dH/T) >= gsl_rng_uniform(rng) ) sigma[idflip] *= -1;
 }
