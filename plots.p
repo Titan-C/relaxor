@@ -29,3 +29,4 @@ plot "Susceptibilidad.dat" using 5:1 w l,\
       "Susceptibilidad.dat" using 5:3 w l,\
       "Susceptibilidad.dat" using 5:4 w l;
 unset multiplot
+pause 10
