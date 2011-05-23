@@ -31,7 +31,7 @@ public:
     ~Sistema();
 
     double init(gsl_rng* rng, double r_max, bool polarizar);
-    double stan_dev();
+    double stan_dev(const std::vector< std::vector< double > >& M);
     // Operaciones de ejecución
     double total_E (double E);
     double delta_E (unsigned int idflip, double E);
@@ -40,10 +40,13 @@ public:
     int experimento(double T, double E, unsigned int Niter,
 		    bool grabar, gsl_rng* rng);
     void reset_sum_sigma();
-
 };
 // Operaciones necesarias para tratar al sistema
 void condborde ( std::vector <double>& R, int L);
 double dot(const std::vector<double>& a, const std::vector<double>& b);
+
+void temp_array(std::vector <double>& Temperatura, double T, double dT);
+void field_array(std::vector <double>& campo);
+void procesar(unsigned int Niter, unsigned int L, const std::vector< double >& Temperatura);
 
 #endif // SISTEMA_H
