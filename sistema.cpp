@@ -224,5 +224,3 @@ double dot(const std::vector< double >& a, const std::vector< double >& b){
     A+=a[i]*b[i];
   return A;
 }
-
-
