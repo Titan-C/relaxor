@@ -69,9 +69,9 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
     //Transformar en momentos dipolares
     mu[i].resize(dimension);
     
-    mu[i][0] = mstheta * cos(phi);
-    mu[i][1] = mstheta * sin(phi);
-    mu[i][2] = cos(theta);
+    mu[i][0] = mstheta * std::cos(phi);
+    mu[i][1] = mstheta * std::sin(phi);
+    mu[i][2] = std::cos(theta);
     
     // Almacenar Datos del sistema
     sigma[i] = (mu[i][2] > 0) ? 1 : -1 ;
@@ -103,7 +103,6 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
   std::vector< std::vector<double> > Jinter;
   delta_R.resize(dimension);
   Jinter.resize(sigma.size());
-  
   for(unsigned int i = 0; i<Jinter.size(); i++){
     Jinter[i].resize(sigma.size());
     for(unsigned int j = i+1; j<Jinter[i].size(); j++){
@@ -111,14 +110,16 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
        * Aplica condiciones de borde,
        * Calcula el módulo */
       for(unsigned int k=0; k<dimension; k++)
-	delta_R[k] = R[j][k]-R[i][k];
+	delta_R[k] = 2*r_max*(R[j][k]-R[i][k]);
       condborde(delta_R,L);
-      r=2*r_max*sqrt(dot(delta_R,delta_R));
+      r=std::sqrt(dot(delta_R,delta_R));
       // Calcula la Energía de intercambio entre 2 PNR
-      Jex = 3*2*r_max*2*r_max*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
+      Jex = 3*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
       Jinter[i][j] = Jex/2;      
     }    
   }
+
+  //Completa la parte inferior de la matriz de intercambio
   for(unsigned int i = 0; i<Jinter.size(); i++){
     for(unsigned int j = i+1; j<Jinter.size(); j++)
       Jinter[j][i] = Jinter[i][j];
@@ -130,18 +131,23 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
       J[i][j] = Jinter[i][G[i][j]];
   }
   array_print(J, "J_vecinos.dat");
-
-  return stan_dev();
+ 
+  return stan_dev(Jinter);
+  
+  Jinter.clear();
+  mu.clear();
+  R.clear();
+  delta_R.clear();
 }
 //Calcular la desviación standar del las energías de intercambio.
-double Sistema::stan_dev()
+double Sistema::stan_dev(const std::vector< std::vector<double> >& M)
 {
   unsigned int celdas, columnas;
-  columnas = J[1].size();
-  celdas = J.size() * columnas;
+  columnas = M[1].size();
+  celdas = M.size() * columnas;
   double * Jij;
   Jij = new double [celdas];
-  for(unsigned int i = 0 ; i<J.size(); i++){
+  for(unsigned int i = 0 ; i<M.size(); i++){
     for(unsigned int j = 0; j<columnas; j++)
       Jij[i*columnas + j] = J[i][j];
   }
@@ -223,4 +229,59 @@ double dot(const std::vector< double >& a, const std::vector< double >& b){
   for(unsigned int i=0;i<a.size();i++)
     A+=a[i]*b[i];
   return A;
+}
+void temp_array(std::vector< double >& Temperatura, double T, double dT)
+{
+  Temperatura.resize(int (T/dT));
+  for(unsigned int i = 0; i<Temperatura.size() ;i++)
+    Temperatura[i] = T - i*dT;
+}
+void field_array(std::vector< double >& campo)
+{
+  int Mediciones = 1;
+  campo.resize(Mediciones);
+  campo[0]=0;
+}
+
+
+void procesar(unsigned int Niter, unsigned int L, const std::vector<double> & Temperatura)
+{
+  //Encontrar proporción de dipolos congelados
+  std::vector< std::vector<double> > sigmas_time, S_frozen;
+  unsigned int lentos = 4, L3 = L*L*L;
+
+  import_data(sigmas_time, "sum_sigma_time.dat", Temperatura.size() , L3);
+
+  S_frozen.resize(Temperatura.size());
+  for(unsigned int i = 0; i < S_frozen.size(); i++){
+    S_frozen[i].resize(lentos+1);
+    S_frozen[i][lentos] = Temperatura[i];
+    for(unsigned int j = 0; j < lentos; j++)
+      S_frozen[i][j] = 0;
+  }
+  for(unsigned int i=0 ; i<sigmas_time.size(); i++){
+    for(unsigned int j=0; j<sigmas_time[i].size(); j++){
+      sigmas_time[i][j] = std::abs(sigmas_time[i][j]/Niter);
+      for(unsigned int k=0;k<lentos;k++){
+	if (sigmas_time[i][j] >= (1-0.1*k) )
+	  S_frozen[i][k]+=(double) 1/L3;
+      }
+    }
+  }
+  array_print(S_frozen, "Congelamiento.dat");
+
+  //Encontrar la susceptibilidad
+  std::vector< std::vector<double> > Susceptibilidad;
+  Susceptibilidad.resize(Temperatura.size());
+  for(unsigned int i=0; i<Susceptibilidad.size(); i++){
+    Susceptibilidad[i].resize(lentos+1);
+    Susceptibilidad[i][lentos] = Temperatura[i];
+    for(unsigned int j=0; j<lentos; j++)
+      Susceptibilidad[i][j] = (1 - S_frozen[i][j])/Temperatura[i];
+  }
+  array_print(Susceptibilidad, "Susceptibilidad.dat");
+
+  sigmas_time.clear();
+  S_frozen.clear();
+  Susceptibilidad.clear();
 }
