@@ -17,7 +17,6 @@ J intercambio debe contener valores del mu
 #include "impresor.h"
 
 #define _pi atan(1)*4
-#define r_max 2
 
 using namespace std;
 

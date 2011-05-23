@@ -31,7 +31,7 @@ public:
     ~Sistema();
 
     double init(gsl_rng* rng, double r_max, bool polarizar);
-    double std();
+    double stan_dev();
     // Operaciones de ejecución
     double total_E (double E);
     double delta_E (unsigned int idflip, double E);

@@ -75,7 +75,7 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
     
     // Almacenar Datos del sistema
     sigma[i] = (mu[i][2] > 0) ? 1 : -1 ;
-    mu_H[i]  = abs(mu[i][2]);
+    mu_H[i]  = std::abs(mu[i][2]);
     
     // Coeficientes vector posición i-ésima PNR para base 2*r_max
     ind_xy = i % L2;
@@ -131,10 +131,10 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
   }
   array_print(J, "J_vecinos.dat");
 
-  return std();
+  return stan_dev();
 }
 //Calcular la desviación standar del las energías de intercambio.
-double Sistema::std()
+double Sistema::stan_dev()
 {
   unsigned int celdas, columnas;
   columnas = J[1].size();
@@ -156,7 +156,7 @@ double Sistema::total_E(double E)
   for(unsigned int i = 0; i < G.size(); i++){
     for(unsigned int j = 0; j < G[i].size(); j++)
       H -= J[i][j]*sigma[i]*sigma[G[i][j]];
-    H -= E*mu_H[i]*sigma[i];      
+    H -= E*mu_H[i]*sigma[i];
   }
   return H;
 }
