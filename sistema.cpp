@@ -110,13 +110,16 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
        * Aplica condiciones de borde,
        * Calcula el módulo */
       for(unsigned int k=0; k<dimension; k++)
-	delta_R[k] = 2*r_max*(R[j][k]-R[i][k]);
+	delta_R[k] = R[j][k]-R[i][k];
       condborde(delta_R,L);
-      r=std::sqrt(dot(delta_R,delta_R));
+      std::cout<<"("<<delta_R[0]<<", "<<delta_R[1]<<", "<<delta_R[2]<<") ";
+      r=2*r_max*::sqrt(dot(delta_R,delta_R));
+      std::cout<<r<<"|";
       // Calcula la Energía de intercambio entre 2 PNR
-      Jex = 3*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
+      Jex = 3*(4*r_max*r_max)*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
       Jinter[i][j] = Jex/2;      
-    }    
+    }
+    std::cout<<std::endl;
   }
 
   //Completa la parte inferior de la matriz de intercambio
