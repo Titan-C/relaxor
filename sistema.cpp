@@ -1,14 +1,15 @@
 #include "sistema.h"
 #include <cmath>
 #include "impresor.h"
- #include <gsl/gsl_statistics.h>
+#include <gsl/gsl_statistics.h>
+#include <gsl/gsl_randist.h>
 
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
 Sistema::Sistema(unsigned int lado,
 		 unsigned int Niter,
 		 gsl_rng* rng,
-		 double r_max,
+		 double Delta_J,
 		 unsigned int dim,
 		 bool polarizar)
 {
@@ -31,7 +32,7 @@ Sistema::Sistema(unsigned int lado,
   
   // Inicializa al sistema, llenado de datos
   //Crear arreglos auxiliares
-  DeltaJ = init(rng, r_max, polarizar);
+  DeltaJ = init(rng, Delta_J, polarizar);
   
 }
 
@@ -47,37 +48,25 @@ Sistema::~Sistema()
   sigma.clear();
 }
 
-double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
+double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
   //Creo variable auxiliares
   unsigned int ind_xy, L2=L*L;
-  double mu_mag, theta, mstheta, phi, PI = 4*atan(1);
-  std::vector< std::vector<double> > mu, R;
-  mu.resize(sigma.size());
+  std::vector< std::vector<double> > R;
   R.resize(sigma.size());
   
   // Creo las configuraciones de las Nanoregiones Polares (PNR)
-  for(unsigned int i=0; i<mu.size(); i++){
+  for(unsigned int i=0; i<sigma.size(); i++){
    
-    // Crear variables descriptivas de PNR
-    mu_mag = r_max*gsl_rng_uniform(rng);
-    mu_mag = 4*PI/3 * mu_mag*mu_mag*mu_mag * P;
-    theta  = PI/2;
-    theta *= gsl_rng_uniform(rng);
-    mstheta = mu_mag * sin(theta);
-    phi    = 2*PI*gsl_rng_uniform(rng);
-    
-    //Transformar en momentos dipolares
-    mu[i].resize(dimension);
-    
-    mu[i][0] = mstheta * std::cos(phi);
-    mu[i][1] = mstheta * std::sin(phi);
-    mu[i][2] = std::cos(theta);
-    
     // Almacenar Datos del sistema
-    sigma[i] = (mu[i][2] > 0) ? 1 : -1 ;
-    mu_H[i]  = std::abs(mu[i][2]);
+    if (polarizar)
+      sigma[i] = 1;
+    else
+      sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
+
+    mu_H[i]  = gsl_rng_uniform(rng);
+    array_print(R, "posiciones.dat");
     
-    // Coeficientes vector posición i-ésima PNR para base 2*r_max
+    // Coeficientes vector posición i-ésima PNR
     ind_xy = i % L2;
     R[i].resize(dimension);
     R[i][0] = ind_xy % L;
@@ -94,32 +83,17 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
   }
-  array_print(mu, "mu_PNR.dat");
   array_print(R, "posiciones.dat");
   array_print(G, "grafo_vecinos.dat");
-  // Calcular las enrgías de intercambio de las PNR
-  double r, Jex;
-  std::vector<double> delta_R;
+  // Calcular las energías de intercambio de las PNR
   std::vector< std::vector<double> > Jinter;
-  delta_R.resize(dimension);
   Jinter.resize(sigma.size());
   for(unsigned int i = 0; i<Jinter.size(); i++){
     Jinter[i].resize(sigma.size());
     for(unsigned int j = i+1; j<Jinter[i].size(); j++){
-      /* Calcula vector diferencia entre PNR,
-       * Aplica condiciones de borde,
-       * Calcula el módulo */
-      for(unsigned int k=0; k<dimension; k++)
-	delta_R[k] = R[j][k]-R[i][k];
-      condborde(delta_R,L);
-      std::cout<<"("<<delta_R[0]<<", "<<delta_R[1]<<", "<<delta_R[2]<<") ";
-      r=2*r_max*::sqrt(dot(delta_R,delta_R));
-      std::cout<<r<<"|";
       // Calcula la Energía de intercambio entre 2 PNR
-      Jex = 3*(4*r_max*r_max)*dot(mu[i],delta_R)*dot(mu[j],delta_R)/(r*r*r*r*r)-dot(mu[i],mu[j])/(r*r*r);
-      Jinter[i][j] = Jex/2;      
+      Jinter[i][j] = gsl_ran_gaussian(rng,Delta_J);
     }
-    std::cout<<std::endl;
   }
 
   //Completa la parte inferior de la matriz de intercambio
@@ -134,16 +108,17 @@ double Sistema::init(gsl_rng* rng, double r_max, bool polarizar){
       J[i][j] = Jinter[i][G[i][j]];
   }
   array_print(J, "J_vecinos.dat");
- 
+
+
+  std::cout<<"Desstan Jveci= "<<stan_dev(J)<<std::endl;
+
   return stan_dev(Jinter);
-  
+
   Jinter.clear();
-  mu.clear();
   R.clear();
-  delta_R.clear();
 }
 //Calcular la desviación standar del las energías de intercambio.
-double Sistema::stan_dev(const std::vector< std::vector<double> >& M)
+double stan_dev(const std::vector< std::vector<double> >& M)
 {
   unsigned int celdas, columnas;
   columnas = M[1].size();
@@ -152,7 +127,7 @@ double Sistema::stan_dev(const std::vector< std::vector<double> >& M)
   Jij = new double [celdas];
   for(unsigned int i = 0 ; i<M.size(); i++){
     for(unsigned int j = 0; j<columnas; j++)
-      Jij[i*columnas + j] = J[i][j];
+      Jij[i*columnas + j] = M[i][j];
   }
   return gsl_stats_sd (Jij, 1, celdas);
   delete[] Jij;
@@ -243,7 +218,7 @@ void field_array(std::vector< double >& campo)
 {
   int Mediciones = 1;
   campo.resize(Mediciones);
-  campo[0]=0;
+  campo[0]=0.8;
 }
 
 

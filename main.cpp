@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
   
-  unsigned int L=8, Niter=600, numexps = 1;
+  unsigned int L=8, Niter=400, numexps = 1;
   double T=2.5,dT = 0.1;/*
   cin>>L;
   cin>> Niter;
