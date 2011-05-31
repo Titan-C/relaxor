@@ -157,7 +157,6 @@ double Sistema::delta_E(unsigned int idflip, double E)
 void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng)
 {
   double dH = delta_E(idflip, E);
-  T *= DeltaJ;
   if ( dH < 0) sigma[idflip] *= -1;
   else if ( exp(-dH/T) >= gsl_rng_uniform(rng) ) sigma[idflip] *= -1;
 }
@@ -165,6 +164,8 @@ void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng)
 int Sistema::experimento(double T, double E, unsigned int Niter,
 			 bool grabar, gsl_rng* rng)
 {
+  T *= DeltaJ;
+  E *= DeltaJ;
   for(unsigned int i = 0; i< Niter; i++){
     out(total_E(E), "energy_log.dat");
     for(unsigned int idflip = 0; idflip < sigma.size(); idflip++)
@@ -218,7 +219,7 @@ void field_array(std::vector< double >& campo)
 {
   int Mediciones = 1;
   campo.resize(Mediciones);
-  campo[0]=0.8;
+  campo[0]=1.2;
 }
 
 
