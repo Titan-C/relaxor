@@ -1,15 +1,19 @@
 #include "impresor.h"
 #include <fstream>
 
-void out(double value, std::string ARCHIVO)
-{
+void out(double value, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
-  file.open(ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
-  file<<value<<std::endl;
+    if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str(), std::fstream::out);
+
+  file<<value;
+  if (br); file<<std::endl;
   file.close();
 }
 // Imprime datos de los arreglos vectoriales
-void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app) {
+void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
   if (app)
     file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
@@ -18,11 +22,12 @@ void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app) {
     
   for(unsigned int i = 0; i<V.size(); i++)
     file<<V[i]<<"\t";
-  file<<std::endl;
+
+  if (br); file<<std::endl;
   file.close();
 }
 // Imprime datos de los arreglos matricales
-void array_print(const std::vector< std::vector< int > >& M, std::string ARCHIVO, bool app, bool p) {
+void array_print(const std::vector< std::vector< int > >& M, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
   if (app)
     file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
@@ -33,12 +38,12 @@ void array_print(const std::vector< std::vector< int > >& M, std::string ARCHIVO
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (p); file<<std::endl;
+    if (br); file<<std::endl;
   }
   file.close();
 }
 // Imprime datos de los arreglos matricales
-void array_print(const std::vector< std::vector< double > >& M, std::string ARCHIVO, bool app, bool p) {
+void array_print(const std::vector< std::vector< double > >& M, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
   if (app)
     file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
@@ -49,7 +54,7 @@ void array_print(const std::vector< std::vector< double > >& M, std::string ARCH
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (p); file<<std::endl;
+    if (br); file<<std::endl;
   }
   file.close();
 }
