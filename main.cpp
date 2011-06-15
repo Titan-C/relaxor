@@ -18,19 +18,16 @@ using namespace std;
 int main(int argc, char **argv) {
   //iniciar sistema
   time_t start, end;
+  clock_t cl_start = clock();
   time(&start);
-
+  
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
-  
+
   unsigned int L=8, Niter=400, numexps = 1;
-  double T=2.5,dT = 0.1;/*
-  cin>>L;
-  cin>> Niter;
-  cin>>T;*/
+  double T=2.5,dT = 0.1;
   gsl_rng_set(rng, time(NULL) );
-  
+
   Sistema relaxor(L, Niter, rng);
-  cout<<"desviación standard = "<<relaxor.DeltaJ<<endl;
 
   //vaciar archivo de datos en cada ejecución
   file_wipe("log");
@@ -57,7 +54,7 @@ int main(int argc, char **argv) {
 
   time(&end);
   cout<<difftime(end,start)<<endl;
-  cout<<(double)clock()/CLOCKS_PER_SEC;
+  cout<<(double)(clock()-cl_start)/CLOCKS_PER_SEC;
   system("gnuplot ../plots.p");
   
   return 0;

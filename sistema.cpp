@@ -1,5 +1,6 @@
 #include "sistema.h"
 #include <cmath>
+#include <ctime>
 #include "impresor.h"
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_randist.h>
@@ -21,7 +22,7 @@ Sistema::Sistema(unsigned int lado,
   sum_sigma_time.resize(sigma.size());
   sum_sigma_conf.resize(Niter);
   mu_H.resize(sigma.size());
-  
+
   G.resize(sigma.size());
   J.resize(sigma.size());
   unsigned int vecinos = 2*dimension;
@@ -29,11 +30,10 @@ Sistema::Sistema(unsigned int lado,
     G[i].resize(vecinos);
     J[i].resize(vecinos);
   }
-  
+
   // Inicializa al sistema, llenado de datos
   //Crear arreglos auxiliares
-  DeltaJ = init(rng, Delta_J, polarizar);
-  
+  DeltaJ = init(rng, Delta_J, polarizar);  
 }
 
 /*Destructor:
@@ -47,32 +47,32 @@ Sistema::~Sistema()
   sum_sigma_time.clear();
   sigma.clear();
 }
-
+// Genero los datos del sistema
 double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
   //Creo variable auxiliares
   unsigned int ind_xy, L2=L*L;
-  std::vector< std::vector<double> > R;
+  std::vector< std::vector<unsigned int> > R;
   R.resize(sigma.size());
-  
-  // Creo las configuraciones de las Nanoregiones Polares (PNR)
+
+  //Estado inicial del Sistema y su topología
   for(unsigned int i=0; i<sigma.size(); i++){
-   
-    // Almacenar Datos del sistema
+
+    // Polarización de sistema
     if (polarizar)
       sigma[i] = 1;
     else
       sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
 
+    //Momento dipolar eléctrico en eje principal
     mu_H[i]  = gsl_rng_uniform(rng);
-    array_print(R, "posiciones.dat");
-    
+
     // Coeficientes vector posición i-ésima PNR
     ind_xy = i % L2;
     R[i].resize(dimension);
     R[i][0] = ind_xy % L;
     R[i][1] = ind_xy / L;
     R[i][2] = i / L2;
-    
+
     /*Encontrar índices de los primeros vecinos.
       solo existen 6: arriba y abajo(+z, -z), derecha e izquierda(+y, -y), adelante y atraz(+x, -x).
       También debo aplicar las condiciones de borde en este caso */
@@ -84,7 +84,9 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
   }
   array_print(R, "posiciones.dat");
+  R.clear();
   array_print(G, "grafo_vecinos.dat");
+
   // Calcular las energías de intercambio de las PNR
   std::vector< std::vector<double> > Jinter;
   Jinter.resize(sigma.size());
@@ -102,6 +104,7 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
       Jinter[j][i] = Jinter[i][j];
   }
   array_print(Jinter, "Matriz_Intercambio.dat");
+
   // Elabora el arreglo de interacción de primeros vecinos
   for(unsigned int i=0; i<J.size(); i++){
     for(unsigned int j=0; j<J[i].size(); j++)
@@ -109,13 +112,11 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
   }
   array_print(J, "J_vecinos.dat");
 
-
-  std::cout<<"Desstan Jveci= "<<stan_dev(J)<<std::endl;
-
-  return stan_dev(Jinter);
-
+  std::cout<<"Des stan Jveci= "<<stan_dev(J)<<std::endl;
+  std::cout<<"Des stan Total= "<<stan_dev(Jinter)<<std::endl;
   Jinter.clear();
-  R.clear();
+
+  return stan_dev(J);  
 }
 //Calcular la desviación standar del las energías de intercambio.
 double stan_dev(const std::vector< std::vector<double> >& M)
@@ -175,7 +176,7 @@ int Sistema::experimento(double T, double E, unsigned int Niter,
 	sum_sigma_time[j]+=sigma[j];
 	sum_sigma_conf[i]+=sigma[j];
       }
-    }    
+    }
   }
   if (grabar) {
     array_print(sum_sigma_time, "sum_sigma_time.dat");
@@ -192,7 +193,6 @@ void Sistema::reset_sum_sigma()
   for(unsigned int i = 0; i < sum_sigma_conf.size(); i++)
     sum_sigma_conf[i] = 0;    
 }
-
 
 // Aplica las condiciones de borde toroidales
 void condborde ( std::vector <double>& R, int L){
@@ -219,7 +219,7 @@ void field_array(std::vector< double >& campo)
 {
   int Mediciones = 1;
   campo.resize(Mediciones);
-  campo[0]=1.2;
+  campo[0]=10;
 }
 
 
@@ -233,10 +233,8 @@ void procesar(unsigned int Niter, unsigned int L, const std::vector<double> & Te
 
   S_frozen.resize(Temperatura.size());
   for(unsigned int i = 0; i < S_frozen.size(); i++){
-    S_frozen[i].resize(lentos+1);
+    S_frozen[i].assign(lentos+1, 0);
     S_frozen[i][lentos] = Temperatura[i];
-    for(unsigned int j = 0; j < lentos; j++)
-      S_frozen[i][j] = 0;
   }
   for(unsigned int i=0 ; i<sigmas_time.size(); i++){
     for(unsigned int j=0; j<sigmas_time[i].size(); j++){

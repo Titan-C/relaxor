@@ -2,6 +2,7 @@
 #define SISTEMA_H
 
 #include <vector>
+#include <iostream>
 #include <gsl/gsl_rng.h>
 
 class Sistema
@@ -16,7 +17,7 @@ private:
     std::vector<int> sum_sigma_conf;		// Suma de spines 
     std::vector<double> mu_H;			// Arreglo de proyeciones de momento al eje del campo
 
-    std::vector< std::vector<int> > G;		// Topología de primeros vecinos
+    std::vector< std::vector<unsigned int> > G;	// Topología de primeros vecinos
     std::vector< std::vector<double> > J;	// Energías de intercambio primeros vecinos
 
 public:
@@ -25,10 +26,11 @@ public:
     Sistema(unsigned int lado,
 	    unsigned int Niter,
 	    gsl_rng * rng,
-	    double Delta_J = 1.7,
+	    double Delta_J = 0.2,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
+
 
     double init(gsl_rng* rng, double Delta_J, bool polarizar);
     // Operaciones de ejecución
