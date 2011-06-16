@@ -23,11 +23,11 @@ int main(int argc, char **argv) {
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
 
-  unsigned int L=8, Niter=400, numexps = 1;
+  unsigned int L=8, numexps = 10, Equi_iter=1000, Exp_iter= 400;
   double T=2.5,dT = 0.1;
   gsl_rng_set(rng, time(NULL) );
 
-  Sistema relaxor(L, Niter, rng);
+  Sistema relaxor(L, Exp_iter, rng);
 
   //vaciar archivo de datos en cada ejecución
   file_wipe("log");
@@ -36,21 +36,20 @@ int main(int argc, char **argv) {
   file_wipe("energy_log.dat");
   cout<<"Energía inicial = "<<relaxor.total_E(0)<<endl;
   vector<double> campos, temperaturas;
-  temp_array(temperaturas, T, dT);
-  field_array(campos);
+  temp_array(temperaturas, relaxor.DeltaJ, T, dT);
+  field_array(campos, relaxor.DeltaJ);
   
   for(unsigned int i=0;i < campos.size(); i++){
     for(unsigned int j = 0; j < numexps; j++){
       for(unsigned int k = 0; k < temperaturas.size(); k++){
-	for(unsigned int l = 0; l < 3;l++)
-	  relaxor.experimento(temperaturas[k], campos[i], Niter, false , rng);
-	relaxor.experimento(temperaturas[k], campos[i], Niter, true , rng);
+	relaxor.experimento(temperaturas[k], campos[i], Equi_iter, false , rng);
+	relaxor.experimento(temperaturas[k], campos[i], Exp_iter, true , rng);
       }
     }
   }
   
   // Analisis de datos
-  procesar(Niter, L, temperaturas);
+  procesar(numexps, Exp_iter, L, relaxor.DeltaJ, temperaturas);
 
   time(&end);
   cout<<difftime(end,start)<<endl;

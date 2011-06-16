@@ -26,7 +26,7 @@ public:
     Sistema(unsigned int lado,
 	    unsigned int Niter,
 	    gsl_rng * rng,
-	    double Delta_J = 0.2,
+	    double Delta_J = 1.2,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
@@ -47,8 +47,8 @@ void condborde ( std::vector <double>& R, int L);
 double dot(const std::vector<double>& a, const std::vector<double>& b);
 double stan_dev(const std::vector< std::vector< double > >& M);
 
-void temp_array(std::vector <double>& Temperatura, double T, double dT);
-void field_array(std::vector <double>& campo);
-void procesar(unsigned int Niter, unsigned int L, const std::vector< double >& Temperatura);
+void temp_array(std::vector< double >& Temperatura, double unidad, double T, double dT);
+void field_array(std::vector< double >& campo, double unidad);
+void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector< double >& Temperatura);
 
 #endif // SISTEMA_H

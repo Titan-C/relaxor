@@ -165,8 +165,6 @@ void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng)
 int Sistema::experimento(double T, double E, unsigned int Niter,
 			 bool grabar, gsl_rng* rng)
 {
-  T *= DeltaJ;
-  E *= DeltaJ;
   for(unsigned int i = 0; i< Niter; i++){
     out(total_E(E), "energy_log.dat");
     for(unsigned int idflip = 0; idflip < sigma.size(); idflip++)
@@ -188,10 +186,8 @@ int Sistema::experimento(double T, double E, unsigned int Niter,
 
 void Sistema::reset_sum_sigma()
 {
-  for(unsigned int i = 0; i < sum_sigma_time.size(); i++)
-    sum_sigma_time[i] = 0;
-  for(unsigned int i = 0; i < sum_sigma_conf.size(); i++)
-    sum_sigma_conf[i] = 0;    
+  sum_sigma_time.assign(sum_sigma_time.size(), 0);
+  sum_sigma_conf.assign(sum_sigma_conf.size(), 0);
 }
 
 // Aplica las condiciones de borde toroidales
@@ -209,42 +205,42 @@ double dot(const std::vector< double >& a, const std::vector< double >& b){
     A+=a[i]*b[i];
   return A;
 }
-void temp_array(std::vector< double >& Temperatura, double T, double dT)
+void temp_array(std::vector< double >& Temperatura, double unidad, double T, double dT)
 {
   Temperatura.resize(int (T/dT));
   for(unsigned int i = 0; i<Temperatura.size() ;i++)
-    Temperatura[i] = T - i*dT;
+    Temperatura[i] = (T - i*dT)*unidad;
 }
-void field_array(std::vector< double >& campo)
+void field_array(std::vector< double >& campo, double unidad)
 {
   int Mediciones = 1;
   campo.resize(Mediciones);
-  campo[0]=10;
+  campo[0]=0;
 }
 
 
-void procesar(unsigned int Niter, unsigned int L, const std::vector<double> & Temperatura)
+void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector<double> & Temperatura)
 {
   //Encontrar proporción de dipolos congelados
   std::vector< std::vector<double> > sigmas_time, S_frozen;
-  unsigned int lentos = 4, L3 = L*L*L;
+  unsigned int lentos = 4, L3 = L*L*L, temp_size = Temperatura.size();
 
-  import_data(sigmas_time, "sum_sigma_time.dat", Temperatura.size() , L3);
+  import_data(sigmas_time, "sum_sigma_time.dat", numexps*temp_size , L3);
 
-  S_frozen.resize(Temperatura.size());
+  S_frozen.resize(temp_size);
   for(unsigned int i = 0; i < S_frozen.size(); i++){
     S_frozen[i].assign(lentos+1, 0);
-    S_frozen[i][lentos] = Temperatura[i];
+    S_frozen[i][lentos] = Temperatura[i]/unidad;
   }
-  for(unsigned int i=0 ; i<sigmas_time.size(); i++){
-    for(unsigned int j=0; j<sigmas_time[i].size(); j++){
-      sigmas_time[i][j] = std::abs(sigmas_time[i][j]/Niter);
-      for(unsigned int k=0;k<lentos;k++){
-	if (sigmas_time[i][j] >= (1-0.1*k) )
-	  S_frozen[i][k]+=(double) 1/L3;
-      }
-    }
-  }
+  for(unsigned int i = 0; i < numexps; i++){
+    for(unsigned int j = 0; j < temp_size; j++){
+      for(unsigned int k = 0; k < L3; k++){
+	sigmas_time[i*temp_size+j][k] = std::abs(sigmas_time[i*temp_size+j][k]/Niter);
+	for(unsigned int l = 0; l < lentos; l++){
+	  if (sigmas_time[i*temp_size+j][k] >= (1-0.1*l) )
+	    S_frozen[j][l] += (double) 1/L3/numexps;
+  }}}}
+
   array_print(S_frozen, "Congelamiento.dat");
 
   //Encontrar la susceptibilidad
@@ -252,7 +248,7 @@ void procesar(unsigned int Niter, unsigned int L, const std::vector<double> & Te
   Susceptibilidad.resize(Temperatura.size());
   for(unsigned int i=0; i<Susceptibilidad.size(); i++){
     Susceptibilidad[i].resize(lentos+1);
-    Susceptibilidad[i][lentos] = Temperatura[i];
+    Susceptibilidad[i][lentos] = Temperatura[i]/unidad;
     for(unsigned int j=0; j<lentos; j++)
       Susceptibilidad[i][j] = (1 - S_frozen[i][j])/Temperatura[i];
   }
