@@ -49,6 +49,7 @@ double stan_dev(const std::vector< std::vector< double > >& M);
 
 void temp_array(std::vector< double >& Temperatura, double unidad, double T, double dT);
 void field_array(std::vector< double >& campo, double unidad);
-void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector< double >& Temperatura);
+void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
+	      const std::vector< double >& Temperatura, const std::vector< double >& campos);
 
 #endif // SISTEMA_H

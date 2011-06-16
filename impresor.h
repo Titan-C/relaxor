@@ -8,6 +8,7 @@
 void out(double value, std::string ARCHIVO, bool app = true, bool br = true);
 // Imprime datos de los arreglos vectoriales
 void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app = true, bool br = true);
+void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app = true, bool br = true);
 // Imprime datos de los arreglos matricales
 void array_print(const std::vector< std::vector<int> >& M,
 		 std::string ARCHIVO, bool app=false, bool br = true);

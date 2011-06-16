@@ -26,6 +26,19 @@ void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app, boo
   if (br); file<<std::endl;
   file.close();
 }
+void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, bool br) {
+  std::fstream file;
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str(), std::fstream::out);
+
+  for(unsigned int i = 0; i<V.size(); i++)
+    file<<V[i]<<"\t";
+
+  if (br); file<<std::endl;
+  file.close();
+}
 // Imprime datos de los arreglos matricales
 void array_print(const std::vector< std::vector<int> >& M, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;

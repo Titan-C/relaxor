@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   vector<double> campos, temperaturas;
   temp_array(temperaturas, relaxor.DeltaJ, T, dT);
   field_array(campos, relaxor.DeltaJ);
-  
+
   for(unsigned int i=0;i < campos.size(); i++){
     for(unsigned int j = 0; j < numexps; j++){
       for(unsigned int k = 0; k < temperaturas.size(); k++){
@@ -47,9 +47,9 @@ int main(int argc, char **argv) {
       }
     }
   }
-  
+
   // Analisis de datos
-  procesar(numexps, Exp_iter, L, relaxor.DeltaJ, temperaturas);
+  procesar(numexps, Exp_iter, L, relaxor.DeltaJ, temperaturas, campos);
 
   time(&end);
   cout<<difftime(end,start)<<endl;

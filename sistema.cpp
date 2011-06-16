@@ -83,6 +83,7 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
   }
+  array_print(mu_H, "mu_H.dat", false);
   array_print(R, "posiciones.dat");
   R.clear();
   array_print(G, "grafo_vecinos.dat");
@@ -112,11 +113,13 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
   }
   array_print(J, "J_vecinos.dat");
 
-  std::cout<<"Des stan Jveci= "<<stan_dev(J)<<std::endl;
+  double stan_dev_val = stan_dev(J);
+
+  std::cout<<"Des stan Jveci= "<<stan_dev_val<<std::endl;
   std::cout<<"Des stan Total= "<<stan_dev(Jinter)<<std::endl;
   Jinter.clear();
 
-  return stan_dev(J);  
+  return stan_dev_val;
 }
 //Calcular la desviación standar del las energías de intercambio.
 double stan_dev(const std::vector< std::vector<double> >& M)
@@ -213,46 +216,61 @@ void temp_array(std::vector< double >& Temperatura, double unidad, double T, dou
 }
 void field_array(std::vector< double >& campo, double unidad)
 {
-  int Mediciones = 1;
-  campo.resize(Mediciones);
-  campo[0]=0;
+  campo.resize(23);
+  for(unsigned int i = 0 ; i< 21; i++)
+    campo[i] = double (i/10)*unidad;
+  campo[21] = 5*unidad;
+  campo[22] = 10*unidad;
 }
 
 
-void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector<double> & Temperatura)
+void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos)
 {
-  //Encontrar proporción de dipolos congelados
-  std::vector< std::vector<double> > sigmas_time, S_frozen;
-  unsigned int lentos = 4, L3 = L*L*L, temp_size = Temperatura.size();
+  std::vector< std::vector<double> > sigmas_time, S_frozen, Susceptibilidad;
+  unsigned int lentos = 4, L3 = L*L*L, temp_size = Temperatura.size(), field_size = campos.size(), index;
 
-  import_data(sigmas_time, "sum_sigma_time.dat", numexps*temp_size , L3);
+  import_data(sigmas_time, "sum_sigma_time.dat", numexps*temp_size*field_size , L3);
+  file_wipe("Congelamiento.dat");
+  file_wipe("Susceptibilidad.dat");
 
   S_frozen.resize(temp_size);
+  Susceptibilidad.resize(temp_size);
   for(unsigned int i = 0; i < S_frozen.size(); i++){
     S_frozen[i].assign(lentos+1, 0);
     S_frozen[i][lentos] = Temperatura[i]/unidad;
+    Susceptibilidad[i].assign(S_frozen[i].begin(), S_frozen[i].end());
   }
-  for(unsigned int i = 0; i < numexps; i++){
+  for(unsigned int E = 0 ; E < field_size; E++){
+    //Promediador de los dipolos congelados en los experimentos
+    for(unsigned int i = 0; i < numexps; i++){
+      for(unsigned int j = 0; j < temp_size; j++){
+
+	for(unsigned int k = 0; k < L3; k++){
+	  index = (E*numexps+i)*temp_size+j;
+	  sigmas_time[index][k] = std::abs(sigmas_time[index][k]/Niter);
+	  //Sumar dipolos congelados en ponderación
+	  for(unsigned int l = 0; l < lentos; l++){
+	    if (sigmas_time[index][k] >= (1-0.1*l) )
+	      S_frozen[j][l] += (double) 1/L3/numexps;
+	  }
+	}
+      }
+    }
+    array_print(S_frozen, "Congelamiento.dat", true);
+
+    //Encontrar la susceptibilidad
     for(unsigned int j = 0; j < temp_size; j++){
-      for(unsigned int k = 0; k < L3; k++){
-	sigmas_time[i*temp_size+j][k] = std::abs(sigmas_time[i*temp_size+j][k]/Niter);
-	for(unsigned int l = 0; l < lentos; l++){
-	  if (sigmas_time[i*temp_size+j][k] >= (1-0.1*l) )
-	    S_frozen[j][l] += (double) 1/L3/numexps;
-  }}}}
+      for(unsigned int l = 0; l < lentos; l++)
+	Susceptibilidad[j][l] = (1 - S_frozen[j][l])/Temperatura[j];
+    }
+    array_print(Susceptibilidad, "Susceptibilidad.dat", true);
 
-  array_print(S_frozen, "Congelamiento.dat");
-
-  //Encontrar la susceptibilidad
-  std::vector< std::vector<double> > Susceptibilidad;
-  Susceptibilidad.resize(Temperatura.size());
-  for(unsigned int i=0; i<Susceptibilidad.size(); i++){
-    Susceptibilidad[i].resize(lentos+1);
-    Susceptibilidad[i][lentos] = Temperatura[i]/unidad;
-    for(unsigned int j=0; j<lentos; j++)
-      Susceptibilidad[i][j] = (1 - S_frozen[i][j])/Temperatura[i];
+    //Limpiar Matriz de dipolos Congelados
+    for(unsigned int f = 0; f < S_frozen.size(); f++){
+      S_frozen[f].assign(lentos+1, 0);
+      S_frozen[f][lentos] = Temperatura[f]/unidad;
+    }
   }
-  array_print(Susceptibilidad, "Susceptibilidad.dat");
 
   sigmas_time.clear();
   S_frozen.clear();
