@@ -8,8 +8,8 @@ void out(double value, std::string ARCHIVO, bool app, bool br) {
   else
     file.open (ARCHIVO.c_str(), std::fstream::out);
 
-  file<<value;
-  if (br); file<<std::endl;
+  file<<value<<"\t";
+  if (br) file<<std::endl;
   file.close();
 }
 // Imprime datos de los arreglos vectoriales
@@ -23,7 +23,7 @@ void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app, boo
   for(unsigned int i = 0; i<V.size(); i++)
     file<<V[i]<<"\t";
 
-  if (br); file<<std::endl;
+  if (br) file<<std::endl;
   file.close();
 }
 void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, bool br) {
@@ -36,7 +36,7 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, 
   for(unsigned int i = 0; i<V.size(); i++)
     file<<V[i]<<"\t";
 
-  if (br); file<<std::endl;
+  if (br) file<<std::endl;
   file.close();
 }
 // Imprime datos de los arreglos matricales
@@ -51,7 +51,7 @@ void array_print(const std::vector< std::vector<int> >& M, std::string ARCHIVO, 
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (br); file<<std::endl;
+    if (br) file<<std::endl;
   }
   file.close();
 }
@@ -66,7 +66,7 @@ void array_print(const std::vector< std::vector< unsigned int > >& M, std::strin
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (br); file<<std::endl;
+    if (br) file<<std::endl;
   }
   file.close();
 }
@@ -81,7 +81,7 @@ void array_print(const std::vector< std::vector< double > >& M, std::string ARCH
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (br); file<<std::endl;
+    if (br) file<<std::endl;
   }
   file.close();
 }
