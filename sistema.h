@@ -51,5 +51,5 @@ void temp_array(std::vector< double >& Temperatura, double unidad, double T, dou
 void field_array(std::vector< double >& campo, double unidad);
 void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
 	      const std::vector< double >& Temperatura, const std::vector< double >& campos);
-
+void graficos(double unidad, const std::vector< double >& Temperatura, const std::vector< double >& campos);
 #endif // SISTEMA_H
