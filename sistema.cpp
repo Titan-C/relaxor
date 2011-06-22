@@ -1,6 +1,5 @@
-#include "sistema.h"
 #include <cmath>
-#include <ctime>
+#include "sistema.h"
 #include "impresor.h"
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_randist.h>

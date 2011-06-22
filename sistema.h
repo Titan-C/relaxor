@@ -2,7 +2,6 @@
 #define SISTEMA_H
 
 #include <vector>
-#include <iostream>
 #include <gsl/gsl_rng.h>
 
 class Sistema
