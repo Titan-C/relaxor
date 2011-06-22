@@ -218,7 +218,7 @@ void field_array(std::vector< double >& campo, double unidad)
 {
   campo.resize(23);
   for(unsigned int i = 0 ; i< 21; i++)
-    campo[i] = double (i/10)*unidad;
+    campo[i] = (double) i/10*unidad;
   campo[21] = 5*unidad;
   campo[22] = 10*unidad;
 }
@@ -227,11 +227,13 @@ void field_array(std::vector< double >& campo, double unidad)
 void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos)
 {
   std::vector< std::vector<double> > sigmas_time, S_frozen, Susceptibilidad;
+  double Xmax, Tmax;
   unsigned int lentos = 4, L3 = L*L*L, temp_size = Temperatura.size(), field_size = campos.size(), index;
 
   import_data(sigmas_time, "sum_sigma_time.dat", numexps*temp_size*field_size , L3);
   file_wipe("Congelamiento.dat");
   file_wipe("Susceptibilidad.dat");
+  file_wipe("Xmax_Tmax.dat");
 
   S_frozen.resize(temp_size);
   Susceptibilidad.resize(temp_size);
@@ -261,9 +263,21 @@ void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double u
     //Encontrar la susceptibilidad
     for(unsigned int j = 0; j < temp_size; j++){
       for(unsigned int l = 0; l < lentos; l++)
-	Susceptibilidad[j][l] = (1 - S_frozen[j][l])/Temperatura[j];
+	Susceptibilidad[j][l] = unidad*(1 - S_frozen[j][l])/Temperatura[j];
     }
     array_print(Susceptibilidad, "Susceptibilidad.dat", true);
+    //encontrar sus max t tmax
+    Tmax = 0;
+    Xmax = 0;
+    for(unsigned int j = 0; j< temp_size; j++){
+      if (Susceptibilidad[j][1] >= Xmax){
+	Xmax = Susceptibilidad[j][1];
+	Tmax = Temperatura[j];
+      }
+    }
+    out(campos[E]/unidad,"Xmax_Tmax.dat", true, false);
+    out(Xmax,"Xmax_Tmax.dat", true, false);
+    out(Tmax,"Xmax_Tmax.dat");
 
     //Limpiar Matriz de dipolos Congelados
     for(unsigned int f = 0; f < S_frozen.size(); f++){
@@ -275,4 +289,88 @@ void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double u
   sigmas_time.clear();
   S_frozen.clear();
   Susceptibilidad.clear();
+
+
+  std::vector< std::vector<double> > sigmas_conf, Polarizacion;
+  import_data(sigmas_conf, "sum_sigma_conf.dat", numexps*temp_size*field_size , Niter);
+  Polarizacion.resize(temp_size);
+  for(unsigned int j = 0; j< temp_size; j++)
+    Polarizacion[j].assign(field_size,0);
+
+  for(unsigned int E = 0; E < field_size; E++){
+    //Promediar la polarización
+    for(unsigned int i = 0; i< numexps; i++){
+      for(unsigned int j = 0; j< temp_size;j++){
+	for(unsigned int k = 0; k < Niter; k++){
+	  index = (E*numexps+i)*temp_size+j;
+	  Polarizacion[j][E] += (double) sigmas_conf[index][k]/Niter/L3/numexps;
+	}}}
+  }
+  array_print(Polarizacion, "polarizacion.dat");
+  sigmas_conf.clear();
+  Polarizacion.clear();
+}
+
+void graficos(double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos)
+{
+  std::vector< std::vector<double> > Frozen, Susceptibilidad, Polarizacion;
+  unsigned int temp_size = Temperatura.size(), field_size = campos.size();
+  import_data(Frozen, "Congelamiento.dat", temp_size*field_size, 5);
+  import_data(Susceptibilidad, "Susceptibilidad.dat", temp_size*field_size, 5);
+  out(2, "log");
+  //fig 2 paper
+  std::vector< std::vector<double> > plot_array;
+  plot_array.resize(temp_size);
+  for(unsigned int i = 0; i < temp_size; i++){
+    plot_array[i].resize(3);
+    plot_array[i][0] = Temperatura[i]/unidad;
+    plot_array[i][1] = Frozen[i][0];
+    plot_array[i][2] = Frozen[i][1];
+  }
+  array_print(plot_array, "Dip_cong.dat");
+  out(3, "log");
+  //fig 3 paper
+  for(unsigned int i = 0; i < temp_size; i++){
+    plot_array[i].assign(5,0);
+    plot_array[i][0] = Temperatura[i]/unidad;
+    plot_array[i][1] = unidad/Temperatura[i];
+    plot_array[i][2] = Susceptibilidad[i][1];
+    plot_array[i][3] = Susceptibilidad[i][2];
+    plot_array[i][4] = Susceptibilidad[i][3];
+  }
+  array_print(plot_array, "Sus_E0.dat");
+  out(4, "log");
+  //fig 4 paper
+  for(unsigned int i = 0; i < temp_size; i++){
+    plot_array[i].assign(5,0);
+    plot_array[i][0] = Temperatura[i]/unidad;
+    plot_array[i][1] = Frozen[i][1];
+    plot_array[i][2] = Frozen[8*temp_size +i][1];
+    plot_array[i][3] = Frozen[20*temp_size +i][1];
+    plot_array[i][4] = Frozen[22*temp_size +i][1];
+  }
+  array_print(plot_array, "Dip_cong_E.dat");
+  out(5, "log");
+  //fig 5 paper
+  for(unsigned int i = 0; i < temp_size; i++){
+    plot_array[i].assign(4,0);
+    plot_array[i][0] = Temperatura[i]/unidad;
+    plot_array[i][1] = Susceptibilidad[i][1];
+    plot_array[i][2] = Susceptibilidad[8*temp_size +i][1];
+    plot_array[i][3] = Susceptibilidad[20*temp_size +i][1];
+  }
+  array_print(plot_array, "Sus_E.dat");
+  out(100, "log");
+  //fig 6 ya esta
+  //Polarización efriando
+  import_data(Polarizacion, "polarizacion.dat", temp_size, field_size);
+    for(unsigned int i = 0; i < temp_size; i++){
+    plot_array[i].assign(5,0);
+    plot_array[i][0] = Temperatura[i]/unidad;
+    plot_array[i][1] = Polarizacion[i][0];
+    plot_array[i][2] = Polarizacion[i][8];
+    plot_array[i][3] = Polarizacion[i][20];
+    plot_array[i][4] = Polarizacion[i][22];
+  }
+  array_print(plot_array, "Cool_pol.dat");
 }
