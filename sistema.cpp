@@ -15,7 +15,6 @@ Sistema::Sistema(unsigned int lado,
 {
   dimension = dim;
   L = lado;
-  P=1;
   // Dimensionado de arreglos caraterísticos del sistema
   sigma.resize(pow(lado,dimension));  
   sum_sigma_time.resize(sigma.size());
@@ -50,6 +49,7 @@ Sistema::~Sistema()
 double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
   //Creo variable auxiliares
   unsigned int ind_xy, L2=L*L;
+  int ini_pol=0;
   std::vector< std::vector<unsigned int> > R;
   R.resize(sigma.size());
 
@@ -61,6 +61,7 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
       sigma[i] = 1;
     else
       sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
+    ini_pol+=sigma[i];
 
     //Momento dipolar eléctrico en eje principal
     mu_H[i]  = gsl_rng_uniform(rng);
@@ -82,10 +83,11 @@ double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
   }
+  std::cout<<"Polarización inicial="<<ini_pol<<std::endl;
   array_print(mu_H, "mu_H.dat", false);
   array_print(R, "posiciones.dat");
-  R.clear();
   array_print(G, "grafo_vecinos.dat");
+  R.clear();
 
   // Calcular las energías de intercambio de las PNR
   std::vector< std::vector<double> > Jinter;
@@ -207,102 +209,119 @@ double dot(const std::vector< double >& a, const std::vector< double >& b){
     A+=a[i]*b[i];
   return A;
 }
-void temp_array(std::vector< double >& Temperatura, double unidad, double T, double dT)
+void temp_array(std::vector< double >& Temperatura, double unidad, double T_top, double dT, bool heat)
 {
-  Temperatura.resize(int (T/dT));
-  for(unsigned int i = 0; i<Temperatura.size() ;i++)
-    Temperatura[i] = (T - i*dT)*unidad;
+  Temperatura.resize((int) (T_top/dT));
+  for(unsigned int i = 0; i<Temperatura.size() ;i++){
+    if (heat)
+      Temperatura[i] = (i+1)*dT*unidad;
+    else
+      Temperatura[i] = (T_top - i*dT)*unidad;
+  }
 }
-void field_array(std::vector< double >& campo, double unidad)
+void field_array(std::vector< double >& campo, double unidad, double H_top, double dH)
 {
-  campo.resize(23);
-  for(unsigned int i = 0 ; i< 21; i++)
-    campo[i] = (double) i/10*unidad;
-  campo[21] = 5*unidad;
-  campo[22] = 10*unidad;
+  campo.resize(12);
+  for(unsigned int i = 0 ; i< 5; i++)
+    campo[i] = (double) i*dH*unidad;
+  for(unsigned int i = 0 ; i< 6; i++)
+    campo[i] = (double) (6+i*2)*dH*unidad;
+  campo[11] = 2*unidad;
 }
 
 
 void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos)
 {
-  std::vector< std::vector<double> > sigmas_time, S_frozen, Susceptibilidad;
-  double Xmax, Tmax;
-  unsigned int lentos = 4, L3 = L*L*L, temp_size = Temperatura.size(), field_size = campos.size(), index;
-
-  import_data(sigmas_time, "sum_sigma_time.dat", numexps*temp_size*field_size , L3);
+  //vaciar datos de ejecuciones anteriores
   file_wipe("Congelamiento.dat");
   file_wipe("Susceptibilidad.dat");
   file_wipe("Xmax_Tmax.dat");
 
+  //Procesar Dipolos congelado y Correspondiente Susceptibilidad
+  //declarar variables
+  std::vector< std::vector<double> > sigmas_time, S_frozen, Susceptibilidad;
+  std::vector<double> slows(4,1);
+  slows[1]=0.9;
+  slows[2]=0.8;
+  slows[3]=0.6;
+
+  double Xmax, Tmax;
+  unsigned int L3 = L*L*L, temp_size = Temperatura.size(), field_size = campos.size(), index;
+
+  //iniciar o llenar variables
+  import_data(sigmas_time, "sum_sigma_time.dat", numexps*temp_size*field_size , L3);
   S_frozen.resize(temp_size);
   Susceptibilidad.resize(temp_size);
   for(unsigned int i = 0; i < S_frozen.size(); i++){
-    S_frozen[i].assign(lentos+1, 0);
-    S_frozen[i][lentos] = Temperatura[i]/unidad;
-    Susceptibilidad[i].assign(S_frozen[i].begin(), S_frozen[i].end());
+    S_frozen[i].assign(slows.size(), 0);
+    Susceptibilidad[i].assign(slows.size(), 0);
   }
+  
+  //Procesar para cada valor del campo
   for(unsigned int E = 0 ; E < field_size; E++){
-    //Promediador de los dipolos congelados en los experimentos
-    for(unsigned int i = 0; i < numexps; i++){
-      for(unsigned int j = 0; j < temp_size; j++){
 
+    //Promediador de los dipolos congelados en los experimentos
+    for(unsigned int n = 0; n < numexps; n++){
+      for(unsigned int T = 0; T < temp_size; T++){
 	for(unsigned int k = 0; k < L3; k++){
-	  index = (E*numexps+i)*temp_size+j;
+	  index = (E*numexps+n)*temp_size+T;
 	  sigmas_time[index][k] = std::abs(sigmas_time[index][k]/Niter);
 	  //Sumar dipolos congelados en ponderación
-	  for(unsigned int l = 0; l < lentos; l++){
-	    if (sigmas_time[index][k] >= (1-0.1*l) )
-	      S_frozen[j][l] += (double) 1/L3/numexps;
-	  }
-	}
-      }
-    }
+	  for(unsigned int s = 0; s < slows.size(); s++){
+	    if (sigmas_time[index][k] >= slows[s] )
+	      S_frozen[T][s] += (double) 1/L3/numexps;
+	  }//termina proporción congelada por celda
+	}//termina todas las celdas
+      }//termina rango temperatura del experimento
+    }//termina ejecución del experimento
+
     array_print(S_frozen, "Congelamiento.dat", true);
 
-    //Encontrar la susceptibilidad
-    for(unsigned int j = 0; j < temp_size; j++){
-      for(unsigned int l = 0; l < lentos; l++)
-	Susceptibilidad[j][l] = unidad*(1 - S_frozen[j][l])/Temperatura[j];
+    //Encontrar la susceptibilidad de los experimentos promediados
+    for(unsigned int T = 0; T < temp_size; T++){
+      for(unsigned int s = 0; s < slows.size(); s++)
+	Susceptibilidad[T][s] = unidad*(1 - S_frozen[T][s])/Temperatura[T];
     }
     array_print(Susceptibilidad, "Susceptibilidad.dat", true);
-    //encontrar sus max t tmax
+
+    //encontrar Xmax y Tmax
     Tmax = 0;
     Xmax = 0;
-    for(unsigned int j = 0; j< temp_size; j++){
-      if (Susceptibilidad[j][1] >= Xmax){
-	Xmax = Susceptibilidad[j][1];
-	Tmax = Temperatura[j];
+    for(unsigned int T = 0; T< temp_size; T++){
+      if (Susceptibilidad[T][1] >= Xmax){
+	Xmax = Susceptibilidad[T][1];
+	Tmax = Temperatura[T];
       }
     }
     out(campos[E]/unidad,"Xmax_Tmax.dat", true, false);
     out(Xmax,"Xmax_Tmax.dat", true, false);
-    out(Tmax,"Xmax_Tmax.dat");
+    out(Tmax/unidad,"Xmax_Tmax.dat");
 
     //Limpiar Matriz de dipolos Congelados
     for(unsigned int f = 0; f < S_frozen.size(); f++){
-      S_frozen[f].assign(lentos+1, 0);
-      S_frozen[f][lentos] = Temperatura[f]/unidad;
+      S_frozen[f].assign(slows.size(), 0);
     }
-  }
+  }//termina con los experimentos a un campo dado
 
   sigmas_time.clear();
   S_frozen.clear();
   Susceptibilidad.clear();
 
-
+  //Procesar Polarización del sistema
+  //iniciar variables
   std::vector< std::vector<double> > sigmas_conf, Polarizacion;
   import_data(sigmas_conf, "sum_sigma_conf.dat", numexps*temp_size*field_size , Niter);
   Polarizacion.resize(temp_size);
-  for(unsigned int j = 0; j< temp_size; j++)
-    Polarizacion[j].assign(field_size,0);
+  for(unsigned int T = 0; T< temp_size; T++)
+    Polarizacion[T].assign(field_size,0);
 
   for(unsigned int E = 0; E < field_size; E++){
     //Promediar la polarización
-    for(unsigned int i = 0; i< numexps; i++){
-      for(unsigned int j = 0; j< temp_size;j++){
+    for(unsigned int n = 0; n< numexps; n++){
+      for(unsigned int T = 0; T< temp_size;T++){
 	for(unsigned int k = 0; k < Niter; k++){
-	  index = (E*numexps+i)*temp_size+j;
-	  Polarizacion[j][E] += (double) sigmas_conf[index][k]/Niter/L3/numexps;
+	  index = (E*numexps+n)*temp_size+T;
+	  Polarizacion[T][E] += (double) sigmas_conf[index][k]/Niter/L3/numexps;
 	}}}
   }
   array_print(Polarizacion, "polarizacion.dat");
@@ -314,8 +333,8 @@ void graficos(double unidad, const std::vector<double>& Temperatura, const std::
 {
   std::vector< std::vector<double> > Frozen, Susceptibilidad, Polarizacion;
   unsigned int temp_size = Temperatura.size(), field_size = campos.size();
-  import_data(Frozen, "Congelamiento.dat", temp_size*field_size, 5);
-  import_data(Susceptibilidad, "Susceptibilidad.dat", temp_size*field_size, 5);
+  import_data(Frozen, "Congelamiento.dat", temp_size*field_size, 4);
+  import_data(Susceptibilidad, "Susceptibilidad.dat", temp_size*field_size, 4);
   out(2, "log");
   //fig 2 paper
   std::vector< std::vector<double> > plot_array;
@@ -341,12 +360,11 @@ void graficos(double unidad, const std::vector<double>& Temperatura, const std::
   out(4, "log");
   //fig 4 paper
   for(unsigned int i = 0; i < temp_size; i++){
-    plot_array[i].assign(5,0);
+    plot_array[i].assign(4,0);
     plot_array[i][0] = Temperatura[i]/unidad;
     plot_array[i][1] = Frozen[i][1];
-    plot_array[i][2] = Frozen[8*temp_size +i][1];
-    plot_array[i][3] = Frozen[20*temp_size +i][1];
-    plot_array[i][4] = Frozen[22*temp_size +i][1];
+    plot_array[i][2] = Frozen[5*temp_size +i][1];
+    plot_array[i][3] = Frozen[11*temp_size +i][1];
   }
   array_print(plot_array, "Dip_cong_E.dat");
   out(5, "log");
@@ -355,8 +373,8 @@ void graficos(double unidad, const std::vector<double>& Temperatura, const std::
     plot_array[i].assign(4,0);
     plot_array[i][0] = Temperatura[i]/unidad;
     plot_array[i][1] = Susceptibilidad[i][1];
-    plot_array[i][2] = Susceptibilidad[8*temp_size +i][1];
-    plot_array[i][3] = Susceptibilidad[20*temp_size +i][1];
+    plot_array[i][2] = Susceptibilidad[5*temp_size +i][1];
+    plot_array[i][3] = Susceptibilidad[11*temp_size +i][1];
   }
   array_print(plot_array, "Sus_E.dat");
   out(100, "log");
@@ -364,12 +382,11 @@ void graficos(double unidad, const std::vector<double>& Temperatura, const std::
   //Polarización efriando
   import_data(Polarizacion, "polarizacion.dat", temp_size, field_size);
     for(unsigned int i = 0; i < temp_size; i++){
-    plot_array[i].assign(5,0);
+    plot_array[i].assign(4,0);
     plot_array[i][0] = Temperatura[i]/unidad;
     plot_array[i][1] = Polarizacion[i][0];
-    plot_array[i][2] = Polarizacion[i][8];
-    plot_array[i][3] = Polarizacion[i][20];
-    plot_array[i][4] = Polarizacion[i][22];
+    plot_array[i][2] = Polarizacion[i][5];
+    plot_array[i][3] = Polarizacion[i][11];
   }
   array_print(plot_array, "Cool_pol.dat");
 }
