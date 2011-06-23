@@ -22,29 +22,25 @@ int main(int argc, char **argv) {
   time(&start);
   
   //vaciar archivo de datos en cada ejecución
-  file_wipe("log");
-  file_wipe("sum_sigma_time.dat");
-  file_wipe("sum_sigma_conf.dat");
-  file_wipe("energy_log.dat");
+system("rm *.dat");
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
 
-  unsigned int L=8, numexps = 10, Equi_iter=1000, Exp_iter= 400;
-  double T=2.5,dT = 0.1;
+  unsigned int L=8, numexps = 1, Equi_iter=1000, Exp_iter= 400;
+  double T=2.5,dT = 0.1, H=2, dH=0.1;
   gsl_rng_set(rng, time(NULL) );
 
   Sistema relaxor(L, Exp_iter, rng);
-
+//Enfriar
   cout<<"Energía inicial = "<<relaxor.total_E(0)<<endl;
   vector<double> campos, temperaturas;
-  temp_array(temperaturas, relaxor.DeltaJ, T, dT);
-  field_array(campos, relaxor.DeltaJ);
-
-  for(unsigned int i=0;i < campos.size(); i++){
-    for(unsigned int j = 0; j < numexps; j++){
-      for(unsigned int k = 0; k < temperaturas.size(); k++){
-	relaxor.experimento(temperaturas[k], campos[i], Equi_iter, false , rng);
-	relaxor.experimento(temperaturas[k], campos[i], Exp_iter, true , rng);
+  temp_array(temperaturas, relaxor.DeltaJ, T, dT, false);
+  field_array(campos, relaxor.DeltaJ, H, dH);
+  for(unsigned int E=0;E < campos.size(); E++){
+    for(unsigned int n = 0; n < numexps; n++){
+      for(unsigned int T = 0; T < temperaturas.size(); T++){
+	relaxor.experimento(temperaturas[T], 2.5*campos[E], Equi_iter, false , rng);
+	relaxor.experimento(temperaturas[T], 2.5*campos[E], Exp_iter, true , rng);
       }
     }
   }
@@ -58,6 +54,9 @@ int main(int argc, char **argv) {
   cout<<difftime(end,start)<<endl;
   cout<<(double)(clock()-cl_start)/CLOCKS_PER_SEC;
   system("gnuplot ../plotsf.p");
+  system("rename .dat _1.dat *.dat");
+  
+  
   
   return 0;
 }
