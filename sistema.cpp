@@ -225,7 +225,7 @@ void field_array(std::vector< double >& campo, double unidad, double H_top, doub
   for(unsigned int i = 0 ; i< 5; i++)
     campo[i] = (double) i*dH*unidad;
   for(unsigned int i = 0 ; i< 6; i++)
-    campo[i] = (double) (6+i*2)*dH*unidad;
+    campo[i+5] = (double) (6+i*2)*dH*unidad;
   campo[11] = 2*unidad;
 }
 

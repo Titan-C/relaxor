@@ -26,7 +26,7 @@ system("rm *.dat");
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
 
-  unsigned int L=8, numexps = 1, Equi_iter=1000, Exp_iter= 400;
+  unsigned int L=8, numexps = 4, Equi_iter=1000, Exp_iter= 400;
   double T=2.5,dT = 0.1, H=2, dH=0.1;
   gsl_rng_set(rng, time(NULL) );
 
