@@ -34,8 +34,8 @@ system("rm *.dat");
 //Enfriar
   cout<<"Energía inicial = "<<relaxor.total_E(0)<<endl;
   vector<double> campos, temperaturas;
-  temp_array(temperaturas, relaxor.DeltaJ, T, dT, false);
-  field_array(campos, relaxor.DeltaJ, H, dH);
+  temperaturas = temp_array(relaxor.DeltaJ, T, dT, false);
+  campos = field_array(relaxor.DeltaJ, H, dH);
   for(unsigned int E=0;E < campos.size(); E++){
     for(unsigned int n = 0; n < numexps; n++){
       for(unsigned int T = 0; T < temperaturas.size(); T++){

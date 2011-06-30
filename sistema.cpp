@@ -209,24 +209,28 @@ double dot(const std::vector< double >& a, const std::vector< double >& b){
     A+=a[i]*b[i];
   return A;
 }
-void temp_array(std::vector< double >& Temperatura, double unidad, double T_top, double dT, bool heat)
+std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat)
 {
-  Temperatura.resize((int) (T_top/dT));
-  for(unsigned int i = 0; i<Temperatura.size() ;i++){
+  std::vector<double> temp ((int) (T_top/dT),0);
+  for(unsigned int i = 0; i<temp.size() ;i++){
     if (heat)
-      Temperatura[i] = (i+1)*dT*unidad;
+      temp[i] = (i+1)*dT*unidad;
     else
-      Temperatura[i] = (T_top - i*dT)*unidad;
+      temp[i] = (T_top - i*dT)*unidad;
   }
+  
+  return temp;
 }
-void field_array(std::vector< double >& campo, double unidad, double H_top, double dH)
+std::vector<double> field_array(double unidad, double H_top, double dH)
 {
-  campo.resize(12);
+  std::vector<double> field (12,0);
   for(unsigned int i = 0 ; i< 5; i++)
-    campo[i] = (double) i*dH*unidad;
+    field[i] = (double) i*dH*unidad;
   for(unsigned int i = 0 ; i< 6; i++)
-    campo[i+5] = (double) (6+i*2)*dH*unidad;
-  campo[11] = 2*unidad;
+    field[i+5] = (double) (6+i*2)*dH*unidad;
+  field[11] = 2*unidad;
+  
+  return field;
 }
 
 

@@ -44,8 +44,8 @@ void condborde ( std::vector <double>& R, int L);
 double dot(const std::vector<double>& a, const std::vector<double>& b);
 double stan_dev(const std::vector< std::vector< double > >& M);
 
-void temp_array(std::vector< double >& Temperatura, double unidad, double T_top, double dT, bool heat);
-void field_array(std::vector< double >& campo, double unidad, double H_top, double dH);
+std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat);
+std::vector<double> field_array(double unidad, double H_top, double dH);
 void procesar(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
 	      const std::vector< double >& Temperatura, const std::vector< double >& campos);
 void graficos(double unidad, const std::vector< double >& Temperatura, const std::vector< double >& campos);
