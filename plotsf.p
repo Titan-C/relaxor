@@ -58,7 +58,7 @@ set xlabel "Temperatura";
 set ylabel "polarizacion";
 set title "polarización material calentando E=0";
 set xrange [0:3]
-set yrange [0:0.35]
+set yrange [0:0.25]
 plot "polarizacion_heatpol.dat" using 1:2,\
       "polarizacion_heatunpol.dat" using 1:2;
 
@@ -95,7 +95,7 @@ set xlabel "Temperatura";
 set ylabel "polarizacion";
 set title "polarización material enfriando E=0";
 set xrange [0:1.2]
-set yrange [0:0.1]
+set yrange [0:0.2]
 plot "polarizacion_coolpol.dat",\
       "polarizacion_coolpol_t.dat",\
       "polarizacion_coolpol_t_t.dat",\

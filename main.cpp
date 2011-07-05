@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
   temperaturas = temp_array(relaxor.DeltaJ, 3, dT, true);
   campos.assign(3,0);
   campos[1]=0.2*relaxor.DeltaJ;
-  campos[1]=0.6*relaxor.DeltaJ;
+  campos[2]=0.6*relaxor.DeltaJ;
   for(unsigned int E=0;E < campos.size(); E++){
     for(unsigned int n = 0; n < numexps; n++){
       relaxor.init_pol(rng,true);
