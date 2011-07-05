@@ -221,7 +221,7 @@ double stan_dev(const std::vector< std::vector<double> >& M){
 }
 
 std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat){
-  std::vector<double> temp ((int) (T_top/dT),0);
+  std::vector<double> temp( (int) ceil(1/dT*T_top) , 0);
   for(unsigned int i = 0; i<temp.size() ;i++){
     if (heat)
       temp[i] = (i+1)*dT*unidad;

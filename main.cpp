@@ -48,11 +48,12 @@ int main(int argc, char **argv) {
   Sus_proc(numexps, Exp_iter, L, relaxor.DeltaJ, temperaturas, campos,"cool");
   Pol_proc(numexps, Exp_iter, L, relaxor.DeltaJ, temperaturas, campos,"cool");
   plot_data_sus(relaxor.DeltaJ, temperaturas, campos, "cool");
-  
+
 //Calentar desde pol
   Equi_iter = 50;
   temperaturas = temp_array(relaxor.DeltaJ, 3, dT, true);
-  campos.assign(2,0.2*relaxor.DeltaJ);
+  campos.assign(3,0);
+  campos[1]=0.2*relaxor.DeltaJ;
   campos[1]=0.6*relaxor.DeltaJ;
   for(unsigned int E=0;E < campos.size(); E++){
     for(unsigned int n = 0; n < numexps; n++){
@@ -81,7 +82,7 @@ int main(int argc, char **argv) {
 //Enfriar T<Tf
   Equi_iter = 400; string file="coolpol"; campos.assign(1,0);
   for(unsigned int i=0;i<4;i++){
-    temperaturas = temp_array(relaxor.DeltaJ, 1-i*0.2, dT, true);
+    temperaturas = temp_array(relaxor.DeltaJ, 1-i*0.2, 0.05, false);
     for(unsigned int n = 0; n < numexps; n++){
       relaxor.init_pol(rng,true);
       for(unsigned int T = 0; T < temperaturas.size(); T++){

@@ -53,14 +53,23 @@ set title "Temperatura del maximo"
 set yrange [0:5]
 plot "Xmax_Tmaxcool.dat" using 1:3 w linespoints;
 
+set output '7_Polarizacion.png'
+set xlabel "Temperatura";
+set ylabel "polarizacion";
+set title "polarización material calentando E=0";
+set xrange [0:3]
+set yrange [0:0.35]
+plot "polarizacion_heatpol.dat" using 1:2,\
+      "polarizacion_heatunpol.dat" using 1:2;
+
 set output '8a_Polarizacion.png'
 set xlabel "Temperatura";
 set ylabel "polarizacion";
 set title "polarización material calentando E=0.2";
 set xrange [0:3]
 set yrange [0:0.35]
-plot "polarizacion_heatpol.dat" using 1:2,\
-      "polarizacion_heatunpol.dat" using 1:2;
+plot "polarizacion_heatpol.dat" using 1:3,\
+      "polarizacion_heatunpol.dat" using 1:3;
 
 set output '8b_Polarizacion.png'
 set xlabel "Temperatura";
@@ -68,8 +77,8 @@ set ylabel "polarizacion";
 set title "polarización material calentando E=0.6";
 set xrange [0:3]
 set yrange [0.2:0.55]
-plot "polarizacion_heatpol.dat" using 1:3,\
-      "polarizacion_heatunpol.dat" using 1:3;
+plot "polarizacion_heatpol.dat" using 1:4,\
+      "polarizacion_heatunpol.dat" using 1:4;
 
 set output '9_Polarizacion.png'
 set xlabel "Temperatura";
@@ -86,7 +95,7 @@ set xlabel "Temperatura";
 set ylabel "polarizacion";
 set title "polarización material enfriando E=0";
 set xrange [0:1.2]
-set yrange [0:0.55]
+set yrange [0:0.1]
 plot "polarizacion_coolpol.dat",\
       "polarizacion_coolpol_t.dat",\
       "polarizacion_coolpol_t_t.dat",\
