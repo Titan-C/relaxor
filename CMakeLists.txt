@@ -1,4 +1,3 @@
 PROJECT(relaxor)
-ADD_DEFINITIONS(-Wall -lgsl)
+SET(CMAKE_CXX_FLAGS "-Wall -lgsl")
 ADD_EXECUTABLE(relaxor impresor.cpp sistema.cpp main.cpp)
-
