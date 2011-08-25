@@ -1,4 +1,4 @@
 [Project]
-Manager=KDevCMakeManager
 Name=Relaxor
-VersionControl=
+Manager=KDevCMakeManager
+VersionControl=kdevgit
