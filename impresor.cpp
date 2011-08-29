@@ -9,7 +9,7 @@ void out(double value, std::string ARCHIVO, bool app, bool br) {
     file.open (ARCHIVO.c_str(), std::fstream::out);
 
   file<<value<<"\t";
-  if (br) file<<std::endl;
+  if (br) file<<"\n";
   file.close();
 }
 // Imprime datos de los arreglos vectoriales
@@ -21,9 +21,9 @@ void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app, boo
     file.open (ARCHIVO.c_str(), std::fstream::out);
 
   for(unsigned int i = 0; i<V.size(); i++)
-    file<<V[i]<<"\t";
+    file<<V[i]<<"\n";
 
-  if (br) file<<std::endl;
+  if (br) file<<"\n";
   file.close();
 }
 void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, bool br) {
@@ -34,9 +34,19 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, 
     file.open (ARCHIVO.c_str(), std::fstream::out);
 
   for(unsigned int i = 0; i<V.size(); i++)
-    file<<V[i]<<"\t";
+    file<<V[i]<<"\n";
 
-  if (br) file<<std::endl;
+  if (br) file<<"\n";
+  file.close();
+}
+void array_print_bin(const std::vector< double >& V, std::string ARCHIVO, bool app) {
+  std::ofstream file;
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str());
+  
+  file.write((char * )&V[0],V.size()*sizeof(double));
   file.close();
 }
 // Imprime datos de los arreglos matricales
@@ -51,7 +61,7 @@ void array_print(const std::vector< std::vector<int> >& M, std::string ARCHIVO, 
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (br) file<<std::endl;
+    if (br) file<<"\n";
   }
   file.close();
 }
@@ -66,7 +76,7 @@ void array_print(const std::vector< std::vector< unsigned int > >& M, std::strin
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (br) file<<std::endl;
+    if (br) file<<"\n";
   }
   file.close();
 }
@@ -81,7 +91,7 @@ void array_print(const std::vector< std::vector< double > >& M, std::string ARCH
     for (unsigned int j=0;j<M[i].size();j++) {
       file<<M[i][j]<<"\t";
     }
-    if (br) file<<std::endl;
+    if (br) file<<"\n";
   }
   file.close();
 }
