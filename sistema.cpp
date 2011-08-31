@@ -242,7 +242,7 @@ std::vector<double> field_array(double unidad, double H_top, double dH){
 }
 
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsigned int L, double unidad,
-	     const std::vector<double>& Temperatura, const std::vector<double>& campos, std::string id_proc){
+	     const std::vector<double>& Temperatura, const double campos, std::string id_proc){
   std::vector<double> pol_hist;
   pol_hist.resize(Niter);
   
@@ -255,36 +255,39 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
   }
   std::string name ="polarizacion_"+id_proc+".dat";
   std::ifstream file (name.c_str());
+  
   std::vector< std::vector<double> > X_mat;
   X_mat.resize(Temperatura.size());
   for(unsigned int T=0;T<Temperatura.size();T++){
-    X_mat[T].resize(2*campos.size()+1);
+    X_mat[T].resize(7);
     X_mat[T][0]=Temperatura[T]/unidad;
   }
-  for(unsigned int E = 0; E<campos.size();E++){
+  
+  double * Freal = new double [numexps*Temperatura.size()];
+  double * Fimag = new double [numexps*Temperatura.size()];
+  unsigned int periods = Niter/tau;
     for(unsigned int n = 0; n < numexps; n++){    
       for(unsigned int T=0;T<Temperatura.size();T++){
 	file.read((char * )&pol_hist[0],Niter*sizeof(double));
 	
 	unsigned int step = 0;
-	unsigned int periods = Niter/tau;
-	double Freal=0, Fimag=0;
+	double Int_cos=0, Int_sin=0;
 	for(unsigned int i = 0; i<periods; i++){
 	  for(unsigned int j = 0; j< tau; j++){
-	    Freal+=pol_hist[step]*cos_wave[j];
-	    Fimag+=pol_hist[step]*sin_wave[j];
+	    Int_cos+=pol_hist[step]*cos_wave[j];
+	    Int_sin+=pol_hist[step]*sin_wave[j];
 	    step++;
 	  }
 	}
-	X_mat[T][1+E]+=Freal;
-	X_mat[T][2+E]+=Fimag;
+	Freal[n*Temperatura.size()+T]=Int_cos;
+	Fimag[n*Temperatura.size()+T]=Int_sin;
       }
     }
+    
     for(unsigned int T=0;T<Temperatura.size();T++){
-      X_mat[T][1+E]=X_mat[T][1]/Niter/campos[E]/numexps;
-      X_mat[T][2+E]=X_mat[T][2]/Niter/campos[E]/numexps;
+      X_mat[T][1]=X_mat[T][1]/Niter;
+      X_mat[T][2]=X_mat[T][2]/Niter;
     }
-  }
   file.close();
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
   /*//vaciar datos de ejecuciones anteriores
@@ -397,7 +400,7 @@ void Pol_proc(unsigned int numexps, unsigned int Niter, unsigned int L, double u
     Polarizacion[i].clear();
   Polarizacion.clear();
 }
-void plot_data_sus(double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos, std::string id_proc){
+void plot_data_sus(double unidad, const std::vector< double >& Temperatura, const std::vector< double >& campos, std::string id_proc){
   std::vector< std::vector<double> > Frozen, Susceptibilidad, Polarizacion;
   unsigned int temp_size = Temperatura.size(), field_size = campos.size();
   import_data(Frozen, "Congelamiento_"+id_proc+".dat", field_size*temp_size, 4);

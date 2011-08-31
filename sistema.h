@@ -49,7 +49,7 @@ double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la des
 std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat);
 std::vector<double> field_array(double unidad, double H_top, double dH);
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsigned int L, double unidad,
-	      const std::vector< double >& Temperatura, const std::vector< double >& campos, std::string id_proc);
+	      const std::vector< double >& Temperatura, const double campos, std::string id_proc);
 void Pol_proc(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
 	      const std::vector< double >& Temperatura, const std::vector< double >& campos, std::string id_proc);
 void plot_data_sus(double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos, std::string id_proc);
