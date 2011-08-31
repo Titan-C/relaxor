@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
 
-  unsigned int L=12, numexps = 2, Equi_iter=200, Exp_iter= 2000;
+  unsigned int L=16, numexps = 4, Equi_iter=200, Exp_iter= 3000;
   double T=12,dT = 0.4, DeltaJ = 1;
   
   gsl_rng_set(rng, time(NULL) );

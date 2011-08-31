@@ -47,7 +47,7 @@ Sistema::~Sistema(){
   sigma.clear();
 }
 
-int Sistema::set_pol(gsl_rng* rng, bool polarizar){
+double Sistema::set_pol(gsl_rng* rng, bool polarizar){
   if (polarizar)
     sigma.assign(sigma.size(),1);
   else{

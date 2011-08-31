@@ -29,7 +29,7 @@ public:
 
 
     double init(gsl_rng* rng, double Delta_J, bool polarizar);	//Inicializa al sistema
-    int set_pol(gsl_rng* rng, bool polarizar);			//Genera la polarización inicial
+    double set_pol(gsl_rng* rng, bool polarizar);			//Genera la polarización inicial
     void set_mu(gsl_rng* rng);			//Genera los momentos dipolares
     double Jex(gsl_rng* rng, double Delta_J);	//Llena la matriz de energías de intercambio del sistema
     void set_space_config();			//localiza a las PNR generando un vector espacial. Luego encuentra los primeros vecinos
