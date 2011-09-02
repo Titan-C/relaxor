@@ -1,6 +1,7 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <sstream>
 #include "sistema.h"
 #include "impresor.h"
 #include <gsl/gsl_statistics.h>
@@ -170,7 +171,7 @@ void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng){
     sigma[idflip] *= -1;
 }
 
-int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
+int Sistema::experimento(double T, double E, double tau, unsigned int Niter,
 			 bool grabar, gsl_rng* rng, std::string id_proc){
   std::vector<double> pol_mag;
   pol_mag.resize(Niter);
@@ -217,7 +218,7 @@ double stan_dev(const std::vector< std::vector<double> >& M){
   delete[] Aij;
 }
 
-std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat){
+std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat){
   std::vector<double> temp;
   temp.resize( (int) ceil(1/dT*T_top));
   for(unsigned int i = 0; i<temp.size() ;i++){
@@ -229,16 +230,15 @@ std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat
   
   return temp;
 }
-std::vector<double> field_array(double unidad, double H_top, double dH){
-  std::vector<double> field;
-  field.resize(12);
-  for(unsigned int i = 0 ; i< 5; i++)
-    field[i] = (double) i*dH*unidad;
-  for(unsigned int i = 0 ; i< 6; i++)
-    field[i+5] = (double) (6+i*2)*dH*unidad;
-  field[11] = 2*unidad;
-
-  return field;
+std::vector<double> str2vec(double unidad, std::string magnitudes){
+  std::istringstream data(magnitudes);
+  std::vector<double> data_array;
+  double num;
+  while(!data.eof()){
+    data >> num;
+    data_array.push_back(num*unidad);
+  }
+  return data_array;
 }
 
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsigned int L, double unidad,

@@ -40,14 +40,14 @@ public:
     double norm_pol ();						//Calcula la polarización ponderada del sistema en un instante dado
     void flip (unsigned int idflip, double T, double E, gsl_rng* rng);//Realiza el cambio del spin dipolar en una ubicación dada
 
-    int experimento(double T, double E, unsigned int tau, unsigned int Niter,
+    int experimento(double T, double E, double tau, unsigned int Niter,
 		    bool grabar, gsl_rng* rng, std::string id_proc);
 };
 // Operaciones necesarias para tratar al sistema
 double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la desviación estandar de los datos de toda la matriz
 
-std::vector<double> temp_array(double unidad, double T_top, double dT, bool heat);
-std::vector<double> field_array(double unidad, double H_top, double dH);
+std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat);
+std::vector<double> str2vec(double unidad, std::string magnitudes);
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsigned int L, double unidad,
 	      const std::vector< double >& Temperatura, const double campos, std::string id_proc);
 void Pol_proc(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
