@@ -29,9 +29,10 @@ Sistema::Sistema(unsigned int lado,
     J[i].resize(vecinos);
     G[i].resize(vecinos);
   }
+  //Generar configuración espacial de PNR
+  set_space_config();
 
   // Inicializa al sistema, llenado de datos
-  //Crear arreglos auxiliares
   DeltaJ = init(rng, Delta_J, polarizar);  
 }
 
@@ -122,9 +123,6 @@ double Sistema::Jex(gsl_rng* rng, double Delta_J){
 }
 
 double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
-  //Generar configuración espacial de PNR
-  set_space_config();
-  
   // Genera las energías de intercambio de las PNR
   std::cout<<"Des stan Total= "<<Jex(rng,Delta_J)<<"\n";
   
@@ -218,14 +216,14 @@ double stan_dev(const std::vector< std::vector<double> >& M){
   delete[] Aij;
 }
 
-std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat){
+std::vector<double> step2vec(double unidad, double v_top, double dv, bool grow){
   std::vector<double> temp;
-  temp.resize( (int) ceil(1/dT*T_top));
+  temp.resize( (int) ceil(1/dv*v_top));
   for(unsigned int i = 0; i<temp.size() ;i++){
-    if (heat)
-      temp[i] = (i+1)*dT*unidad;
+    if (grow)
+      temp[i] = (i+1)*dv*unidad;
     else
-      temp[i] = (T_top - i*dT)*unidad;
+      temp[i] = (v_top - i*dv)*unidad;
   }
   
   return temp;
@@ -369,36 +367,51 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
 //   S_frozen.clear();
 //   Susceptibilidad.clear();
 }
-void Pol_proc(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
-	     const std::vector<double>& Temperatura, const std::vector<double>& campos, std::string id_proc){
-  //Procesar Polarización del sistema
-  //iniciar variables
-  std::vector< std::vector<double> > sigmas_conf, Polarizacion;
-  unsigned int L3 = L*L*L, temp_size = Temperatura.size(), field_size = campos.size(), index;
-
-  import_data(sigmas_conf, "sum_sigma_conf_"+id_proc+".dat", field_size*numexps*temp_size , Niter);
-  Polarizacion.resize(temp_size);
-  for(unsigned int T = 0; T< temp_size; T++)
-    Polarizacion[T].assign(field_size+1,0);
-  for(unsigned int E = 0; E < field_size; E++){
-    //Promediar la polarización
-    for(unsigned int n = 0; n< numexps; n++){
-      for(unsigned int T = 0; T< temp_size;T++){
-	Polarizacion[T][0] = Temperatura[T]/unidad;
-	for(unsigned int k = 0; k < Niter; k++){
-	  index = (E*numexps+n)*temp_size+T;
-	  Polarizacion[T][E+1] += (double) sigmas_conf[index][k]/L3/Niter/numexps;
-	}}}
-  }
-  array_print(Polarizacion, "polarizacion_" + id_proc +".dat");
+void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& Temperatura, std::string id_proc) {
   
-  //liberar mem
-  for(unsigned int i=0;i<sigmas_conf.size();i++)
-    sigmas_conf[i].clear();
-  sigmas_conf.clear();
-  for(unsigned int i=0;i<Polarizacion.size();i++)
-    Polarizacion[i].clear();
-  Polarizacion.clear();
+  std::string name = "polarizacion_"+id_proc+".dat";
+  std::ifstream file(name.c_str());
+  
+  double * pol_hist = new double [Niter];
+  std::vector< std::vector<double> > pol_stats;
+  pol_stats.resize(Temperatura.size());
+  for(unsigned int n=0; n<numexps; n++){
+    for(unsigned int T=0; T< Temperatura.size(); T++){
+      file.read((char *)&pol_hist[0],Niter*sizeof(double));
+      pol_stats[T].resize(2*numexps);
+      pol_stats[T][2*n] = gsl_stats_mean(pol_hist,1,Niter);
+      pol_stats[T][2*n+1] = gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[T][1]);
+    }
+  }
+  delete[] pol_hist;
+  file.close();
+  array_print(pol_stats,"info_pol.dat");
+  
+  double * data_array = new double [numexps];
+  std::vector< std::vector<double> > pol_final;
+  pol_final.resize(Temperatura.size());
+  //media de polarización absoluta
+  for(unsigned int T=0;T< Temperatura.size(); T++){
+    
+    pol_final[T].resize(3);
+    pol_final[T][0]=Temperatura[T];
+    for(unsigned int n=0;n<numexps;n++)
+      data_array[n]=std::abs(pol_stats[T][2*n]);
+    pol_final[T][1]=gsl_stats_mean(data_array,1,numexps);
+    
+    for(unsigned int n=0;n<numexps;n++)
+      data_array[n]=pol_stats[T][2*n+1];
+    pol_final[T][2]=gsl_stats_mean(data_array,1,numexps);
+  }
+  delete[] data_array;
+  
+  array_print(pol_final,"pol_"+id_proc+".dat");
+  for(unsigned int i=0;i<Temperatura.size();i++){
+    pol_stats[i].clear();
+    pol_final[i].clear();
+  }
+  pol_stats.clear();
+  pol_final.clear();
 }
 void plot_data_sus(double unidad, const std::vector< double >& Temperatura, const std::vector< double >& campos, std::string id_proc){
   std::vector< std::vector<double> > Frozen, Susceptibilidad, Polarizacion;

@@ -50,8 +50,7 @@ std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat);
 std::vector<double> str2vec(double unidad, std::string magnitudes);
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsigned int L, double unidad,
 	      const std::vector< double >& Temperatura, const double campos, std::string id_proc);
-void Pol_proc(unsigned int numexps, unsigned int Niter, unsigned int L, double unidad,
-	      const std::vector< double >& Temperatura, const std::vector< double >& campos, std::string id_proc);
+void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector< double >& Temperatura, std::string id_proc);
 void plot_data_sus(double unidad, const std::vector<double>& Temperatura, const std::vector<double>& campos, std::string id_proc);
 
 #endif // SISTEMA_H
