@@ -195,7 +195,7 @@ int Sistema::experimento(double T, double E, int tau, unsigned int Niter,
   }
   /* Guardar los datos de polarización en binario */
   if (grabar)
-    array_print_bin(pol_mag,"polarizacion_"+id_proc+".dat");
+    array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
   
   pol_mag.clear();
   field.clear();
@@ -371,9 +371,9 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
 }
 void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& Temperatura, std::string id_proc) {
   
-  std::string name = "polarizacion_"+id_proc+".dat";
+  std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
-  
+  /* Calcular la polarización media y desviación estandar para el material en cada experimento y para cada temperatura. */ 
   double * pol_hist = new double [Niter];
   std::vector< std::vector<double> > pol_stats;
   pol_stats.resize(Temperatura.size());
@@ -387,12 +387,13 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
   }
   delete[] pol_hist;
   file.close();
-  array_print(pol_stats,"info_pol.dat");
+  array_print(pol_stats,"avg_pol"+id_proc+".dat");
   
+
+  //Polarización absoluta y desviación
   double * data_array = new double [numexps];
   std::vector< std::vector<double> > pol_final;
   pol_final.resize(Temperatura.size());
-  //media de polarización absoluta
   for(unsigned int T=0;T< Temperatura.size(); T++){
     
     pol_final[T].resize(3);
@@ -406,8 +407,9 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
     pol_final[T][2]=gsl_stats_mean(data_array,1,numexps);
   }
   delete[] data_array;
-  
   array_print(pol_final,"pol_"+id_proc+".dat");
+
+  /*Liberar memoria*/
   for(unsigned int i=0;i<Temperatura.size();i++){
     pol_stats[i].clear();
     pol_final[i].clear();
