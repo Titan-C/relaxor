@@ -38,10 +38,9 @@ public:
     double total_E (double E);					//Calcula la energía total del sistema
     double delta_E (unsigned int idflip, double E);		//Calcula la variación de energía del sistema debído a un cambio del spin dipolar
     double norm_pol ();						//Calcula la polarización ponderada del sistema en un instante dado
-    void flip (unsigned int idflip, double T, double E, gsl_rng* rng);//Realiza el cambio del spin dipolar en una ubicación dada
 
-    int experimento(double T, double E, double tau, unsigned int Niter,
-		    bool grabar, gsl_rng* rng, std::string id_proc);
+    int experimento(double T, double E, int tau, unsigned int Niter,
+		    bool grabar, gsl_rng* rng, std::string id_proc);/* Realiza la simulación  del material a una temperatura dada. Para un campo alteno de amplitud E y periodo tau [MCS/dipolo] */
 };
 // Operaciones necesarias para tratar al sistema
 double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la desviación estandar de los datos de toda la matriz

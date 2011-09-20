@@ -161,48 +161,50 @@ double Sistema::norm_pol(){
   return (double) p / N;
 }
 
-void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng){
-  double dH = delta_E(idflip, E);
-  if ( dH < 0)
-    sigma[idflip] *= -1;
-  else if ( exp(-dH/T) >= gsl_rng_uniform(rng) )
-    sigma[idflip] *= -1;
-}
-
-int Sistema::experimento(double T, double E, double tau, unsigned int Niter,
+int Sistema::experimento(double T, double E, int tau, unsigned int Niter,
 			 bool grabar, gsl_rng* rng, std::string id_proc){
+  //vector historial de polarización por experimento
   std::vector<double> pol_mag;
   pol_mag.resize(Niter);
   
-  std::vector<double> wave;
-  wave.resize(tau);
+  //vector oscilación del campo alterno para un periodo
+  std::vector<double> field;
+  field.resize(tau);
   for(unsigned int i=0; i<tau; i++)
-    wave[i]=E*std::cos( _2pi*i/tau );
-    
+    field[i]=E*std::cos( _2pi*i/tau );
+  
+  /*Simulación del experimento en el número de iteraciones dadas*/
   unsigned int periods = Niter/tau;
   unsigned int step = 0;
   for(unsigned int i = 0; i<periods; i++){
     for(unsigned int j = 0; j< tau; j++){
-//       out(total_E(E), "energy_log.dat");
-      for(unsigned int idflip = 0; idflip < sigma.size(); idflip++)
-	flip(idflip, T, wave[j] , rng);
+      //       out(total_E(E), "energy_log.dat");
+      /*Realiza el cambio del spin dipolar en una ubicación dada*/
+      for(unsigned int idflip = 0; idflip < sigma.size(); idflip++){
+	double dH = delta_E(idflip, field[j]);
+	if ( dH < 0)
+	  sigma[idflip] *= -1;
+	else if ( exp(-dH/T) >= gsl_rng_uniform(rng) )
+	  sigma[idflip] *= -1;
+      }
       
       if (grabar)
 	pol_mag[step] = norm_pol();
       step++;
     }
   }
+  /* Guardar los datos de polarización en binario */
   if (grabar)
     array_print_bin(pol_mag,"polarizacion_"+id_proc+".dat");
-
+  
   pol_mag.clear();
-  wave.clear();
+  field.clear();
   
   return 1;
 }
 
 double stan_dev(const std::vector< std::vector<double> >& M){
-  //Calcular la desviación standar del las energías de intercambio.
+  //Calcular la desviación estandar de una matriz
   unsigned int celdas, columnas;
   columnas = M[1].size();
   celdas = M.size() * columnas;
