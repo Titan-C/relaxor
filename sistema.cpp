@@ -246,6 +246,9 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
   std::vector<double> pol_hist;
   pol_hist.resize(Niter);
   
+  std::string name ="log_pol_"+id_proc+".dat";
+  std::ifstream file (name.c_str());
+  /* Generar funciones sin, cos para transformada Fourier y calcular la susceptibilidad del sistema */
   std::vector<double> cos_wave, sin_wave;
   cos_wave.resize(tau);
   sin_wave.resize(tau);
@@ -253,8 +256,6 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
     cos_wave[i]=std::cos( _2pi*i/tau );
     sin_wave[i]=std::sin( _2pi*i/tau );
   }
-  std::string name ="polarizacion_"+id_proc+".dat";
-  std::ifstream file (name.c_str());
   
   std::vector< std::vector<double> > X_mat;
   X_mat.resize(Temperatura.size());
@@ -279,16 +280,29 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
 	    step++;
 	  }
 	}
-	Freal[n*Temperatura.size()+T]=Int_cos;
-	Fimag[n*Temperatura.size()+T]=Int_sin;
+	Freal[n*Temperatura.size()+T]=Int_cos/Niter/campos[0];
+	Fimag[n*Temperatura.size()+T]=Int_sin/Niter/campos[0];
       }
     }
-    
-    for(unsigned int T=0;T<Temperatura.size();T++){
-      X_mat[T][1]=X_mat[T][1]/Niter;
-      X_mat[T][2]=X_mat[T][2]/Niter;
-    }
+    pol_hist.clear();
+    cos_wave.clear();
+    sin_wave.clear();
   file.close();
+    /*Calcular susceptibildad más error*/
+    double * data_array = new double [numexps];
+    for(unsigned int T=0;T<Temperatura.size();T++){
+      for(unsigned int n=0;n<numexps;n++)
+        data_array=Freal[n*Temperatura.size()+T]
+      X_mat[T][1]=gsl_stats_mean(data_array,1,numexps);
+      X_mat[T][2]=gsl_stats_sd_m(data_array,1,numexps,X_mat[T][1]);
+      for(unsigned int n=0;n<numexps;n++)
+        data_array=Fimag[n*Temperatura.size()+T]
+      X_mat[T][3]=gsl_stats_mean(data_array,1,numexps);
+      X_mat[T][4]=gsl_stats_sd_m(data_array,1,numexps,X_mat[T][3]);
+    }
+    delete[] data_array;
+    delete[] Freal;
+    delete[] Fimag;
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
   /*//vaciar datos de ejecuciones anteriores
   file_wipe("Congelamiento.dat");
