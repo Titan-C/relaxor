@@ -161,48 +161,50 @@ double Sistema::norm_pol(){
   return (double) p / N;
 }
 
-void Sistema::flip(unsigned int idflip, double T, double E, gsl_rng* rng){
-  double dH = delta_E(idflip, E);
-  if ( dH < 0)
-    sigma[idflip] *= -1;
-  else if ( exp(-dH/T) >= gsl_rng_uniform(rng) )
-    sigma[idflip] *= -1;
-}
-
-int Sistema::experimento(double T, double E, double tau, unsigned int Niter,
+int Sistema::experimento(double T, double E, int tau, unsigned int Niter,
 			 bool grabar, gsl_rng* rng, std::string id_proc){
+  //vector historial de polarización por experimento
   std::vector<double> pol_mag;
   pol_mag.resize(Niter);
   
-  std::vector<double> wave;
-  wave.resize(tau);
+  //vector oscilación del campo alterno para un periodo
+  std::vector<double> field;
+  field.resize(tau);
   for(unsigned int i=0; i<tau; i++)
-    wave[i]=E*std::cos( _2pi*i/tau );
-    
+    field[i]=E*std::cos( _2pi*i/tau );
+  
+  /*Simulación del experimento en el número de iteraciones dadas*/
   unsigned int periods = Niter/tau;
   unsigned int step = 0;
   for(unsigned int i = 0; i<periods; i++){
     for(unsigned int j = 0; j< tau; j++){
-//       out(total_E(E), "energy_log.dat");
-      for(unsigned int idflip = 0; idflip < sigma.size(); idflip++)
-	flip(idflip, T, wave[j] , rng);
+      //       out(total_E(E), "energy_log.dat");
+      /*Realiza el cambio del spin dipolar en una ubicación dada*/
+      for(unsigned int idflip = 0; idflip < sigma.size(); idflip++){
+	double dH = delta_E(idflip, field[j]);
+	if ( dH < 0)
+	  sigma[idflip] *= -1;
+	else if ( exp(-dH/T) >= gsl_rng_uniform(rng) )
+	  sigma[idflip] *= -1;
+      }
       
       if (grabar)
 	pol_mag[step] = norm_pol();
       step++;
     }
   }
+  /* Guardar los datos de polarización en binario */
   if (grabar)
-    array_print_bin(pol_mag,"polarizacion_"+id_proc+".dat");
-
+    array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
+  
   pol_mag.clear();
-  wave.clear();
+  field.clear();
   
   return 1;
 }
 
 double stan_dev(const std::vector< std::vector<double> >& M){
-  //Calcular la desviación standar del las energías de intercambio.
+  //Calcular la desviación estandar de una matriz
   unsigned int celdas, columnas;
   columnas = M[1].size();
   celdas = M.size() * columnas;
@@ -292,9 +294,9 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
 }
 void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& Temperatura, std::string id_proc) {
   
-  std::string name = "polarizacion_"+id_proc+".dat";
+  std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
-  
+  /* Calcular la polarización media y desviación estandar para el material en cada experimento y para cada temperatura. */ 
   double * pol_hist = new double [Niter];
   std::vector< std::vector<double> > pol_stats;
   pol_stats.resize(Temperatura.size());
@@ -308,12 +310,13 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
   }
   delete[] pol_hist;
   file.close();
-  array_print(pol_stats,"info_pol.dat");
+  array_print(pol_stats,"avg_pol"+id_proc+".dat");
   
+
+  //Polarización absoluta y desviación
   double * data_array = new double [numexps];
   std::vector< std::vector<double> > pol_final;
   pol_final.resize(Temperatura.size());
-  //media de polarización absoluta
   for(unsigned int T=0;T< Temperatura.size(); T++){
     
     pol_final[T].resize(3);
@@ -328,8 +331,9 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
     pol_final[T][2]=gsl_stats_mean(data_array,1,numexps);
   }
   delete[] data_array;
-  
   array_print(pol_final,"pol_"+id_proc+".dat");
+
+  /*Liberar memoria*/
   for(unsigned int i=0;i<Temperatura.size();i++){
     pol_stats[i].clear();
     pol_final[i].clear();
