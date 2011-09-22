@@ -251,6 +251,7 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
     cos_wave[i]=std::cos( _2pi*i/tau );
     sin_wave[i]=std::sin( _2pi*i/tau );
   }
+  
   std::string name ="polarizacion_"+id_proc+".dat";
   std::ifstream file (name.c_str());
   
@@ -288,84 +289,6 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
     }
   file.close();
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
-  /*//vaciar datos de ejecuciones anteriores
-  file_wipe("Congelamiento.dat");
-  file_wipe("Susceptibilidad.dat");
-  file_wipe("Xmax_Tmax.dat");*/
-
-//   //Procesar Dipolos congelados y Correspondiente Susceptibilidad
-//   //declarar variables
-//   std::vector< std::vector<double> > sigmas_time, S_frozen, Susceptibilidad;
-// 
-//   double Xmax, Tmax;
-//   unsigned int L3 = L*L*L, temp_size = Temperatura.size(), field_size = campos.size(), index;
-//   std::string file;
-// 
-//   //iniciar o llenar variables
-//   import_data(sigmas_time, "sum_sigma_time_"+id_proc+".dat", field_size*numexps*temp_size , L3);
-//   S_frozen.resize(temp_size);
-//   Susceptibilidad.resize(temp_size);
-//   for(unsigned int i = 0; i < S_frozen.size(); i++){
-//     S_frozen[i].assign(slows.size(), 0);
-//     Susceptibilidad[i].assign(slows.size(), 0);
-//   }
-//   
-//   //Procesar para cada valor del campo
-//   for(unsigned int E = 0 ; E < field_size; E++){
-// 
-//     //Promediador de los dipolos congelados en los experimentos
-//     for(unsigned int n = 0; n < numexps; n++){
-//       for(unsigned int T = 0; T < temp_size; T++){
-// 	for(unsigned int k = 0; k < L3; k++){
-// 	  index = (E*numexps+n)*temp_size+T;
-// 	  sigmas_time[index][k] = std::abs(sigmas_time[index][k]/Niter);
-// 	  //Sumar dipolos congelados en ponderación
-// 	  for(unsigned int s = 0; s < slows.size(); s++){
-// 	    if (sigmas_time[index][k] >= slows[s] )
-// 	      S_frozen[T][s] += (double) 1/L3/numexps;
-// 	  }//termina proporción congelada por celda
-// 	}//termina todas las celdas
-//       }//termina rango temperatura del experimento
-//     }//termina ejecución del experimento
-//     array_print(S_frozen, "Congelamiento_"+id_proc+".dat", true);
-// 
-//     //Encontrar la susceptibilidad de los experimentos promediados
-//     for(unsigned int T = 0; T < temp_size; T++){
-//       for(unsigned int s = 0; s < slows.size(); s++)
-// 	Susceptibilidad[T][s] = unidad*(1 - S_frozen[T][s])/Temperatura[T];
-//     }
-//     array_print(Susceptibilidad, "Susceptibilidad_"+id_proc+".dat", true);
-// 
-//     //encontrar Xmax y Tmax
-//     Tmax = 0;
-//     Xmax = 0;
-//     for(unsigned int T = 0; T< temp_size; T++){
-//       if (Susceptibilidad[T][1] >= Xmax){
-// 	Xmax = Susceptibilidad[T][1];
-// 	Tmax = Temperatura[T];
-//       }
-//     }
-//     out(campos[E]/unidad,"Xmax_Tmax"+id_proc+".dat", true, false);
-//     out(Xmax,"Xmax_Tmax"+id_proc+".dat", true, false);
-//     out(Tmax/unidad,"Xmax_Tmax"+id_proc+".dat");
-// 
-//     //Limpiar Matriz de dipolos Congelados
-//     for(unsigned int f = 0; f < S_frozen.size(); f++){
-//       S_frozen[f].assign(slows.size(), 0);
-//     }
-//   }//termina con los experimentos a un campo dado
-// 
-//   //liberar mem
-//   for(unsigned int i=0;i<sigmas_time.size();i++)
-//     sigmas_time[i].clear();
-//   sigmas_time.clear();
-//   
-//   for(unsigned int i= 0;i<S_frozen.size();i++){
-//     S_frozen[i].clear();
-//     Susceptibilidad[i].clear();
-//   }
-//   S_frozen.clear();
-//   Susceptibilidad.clear();
 }
 void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& Temperatura, std::string id_proc) {
   
@@ -395,6 +318,7 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
     
     pol_final[T].resize(3);
     pol_final[T][0]=Temperatura[T];
+    
     for(unsigned int n=0;n<numexps;n++)
       data_array[n]=std::abs(pol_stats[T][2*n]);
     pol_final[T][1]=gsl_stats_mean(data_array,1,numexps);
