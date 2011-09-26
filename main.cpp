@@ -26,12 +26,12 @@ int main(int argc, char **argv) {
   system("rm *.dat");
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
-
-  unsigned int L=16, numexps = 8, Equi_iter=200, Exp_iter= 1000;
+  
+  unsigned int L=16, numexps = 8, Equi_iter=200, Exp_iter= 2000;
   double T=12,dT = 0.4, DeltaJ = 1;
   
   gsl_rng_set(rng, time(NULL) );
-
+  
   clock_t cl_start = clock();
   Sistema relaxor(L, rng, DeltaJ);
   vector<double> temperaturas;// =str2vec(DeltaJ, "0.5");
@@ -40,15 +40,19 @@ int main(int argc, char **argv) {
   cout<<"Iniciar sistema "<<cl_stop-cl_start<<"\n";
   // weak field
   cl_start = clock();
-  vector<double> campos = str2vec(DeltaJ, "0.1");
-  vector<double> tau = str2vec(1,"20");
+  vector<double> campos = str2vec(DeltaJ, "0.5");
+  vector<double> tau = str2vec(1,"100");
   ostringstream frec, fieldamp;
   for(unsigned int n=0;n<numexps;n++){
     relaxor.init(rng,DeltaJ,false);
-  for(unsigned int T=0; T<temperaturas.size(); T++)
-    relaxor.experimento(temperaturas[T],campos[0],100, Exp_iter,true,rng, "static_temp_field");
+    for(unsigned int T=0; T<temperaturas.size(); T++){
+      relaxor.experimento(temperaturas[T],campos[0],tau[0], Equi_iter,false,rng, "cooling_E0.5_t100");
+      relaxor.experimento(temperaturas[T],campos[0],tau[0], Exp_iter,true,rng, "cooling_E0.5_t100");
+    }
   }
-  eval_pol(Exp_iter,numexps, DeltaJ, temperaturas, "static_temp_field" );  
+  
+  eval_pol(Exp_iter,numexps, DeltaJ, temperaturas, "cooling_E0.5_t100" );
+  calc_sus(numexps,tau[0],Exp_iter,DeltaJ, temperaturas,campos[0],"cooling_E0.5_t100");
 //   for(unsigned int t=0;t<tau.size();t++){
 //     for(unsigned int E=0; E<campos.size(); E++){
 //       frec.str(""); fieldamp.str("");

@@ -161,7 +161,7 @@ double Sistema::norm_pol(){
   return (double) p / N;
 }
 
-int Sistema::experimento(double T, double E, int tau, unsigned int Niter,
+int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			 bool grabar, gsl_rng* rng, std::string id_proc){
   //vector historial de polarización por experimento
   std::vector<double> pol_mag;
@@ -241,11 +241,15 @@ std::vector<double> str2vec(double unidad, std::string magnitudes){
   return data_array;
 }
 
-void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsigned int L, double unidad,
-	     const std::vector<double>& Temperatura, const double campos, std::string id_proc){
+void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double unidad,
+	      const std::vector<double>& Temperatura, const double& campo, std::string id_proc){
+  //Vectores de información
   std::vector<double> pol_hist;
   pol_hist.resize(Niter);
+  std::string name ="log_pol_"+id_proc+".dat";
+  std::ifstream file (name.c_str());
   
+  /* Generar funciones sin, cos para transformada Fourier y calcular la integral */
   std::vector<double> cos_wave, sin_wave;
   cos_wave.resize(tau);
   sin_wave.resize(tau);
@@ -254,44 +258,63 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, unsign
     sin_wave[i]=std::sin( _2pi*i/tau );
   }
   
-  std::string name ="polarizacion_"+id_proc+".dat";
-  std::ifstream file (name.c_str());
-  
-  std::vector< std::vector<double> > X_mat;
-  X_mat.resize(Temperatura.size());
-  for(unsigned int T=0;T<Temperatura.size();T++){
-    X_mat[T].resize(7);
-    X_mat[T][0]=Temperatura[T]/unidad;
-  }
-  
   double * Freal = new double [numexps*Temperatura.size()];
   double * Fimag = new double [numexps*Temperatura.size()];
   unsigned int periods = Niter/tau;
-    for(unsigned int n = 0; n < numexps; n++){    
-      for(unsigned int T=0;T<Temperatura.size();T++){
-	file.read((char * )&pol_hist[0],Niter*sizeof(double));
-	
-	unsigned int step = 0;
-	double Int_cos=0, Int_sin=0;
-	for(unsigned int i = 0; i<periods; i++){
-	  for(unsigned int j = 0; j< tau; j++){
-	    Int_cos+=pol_hist[step]*cos_wave[j];
-	    Int_sin+=pol_hist[step]*sin_wave[j];
-	    step++;
-	  }
-	}
-	Freal[n*Temperatura.size()+T]=Int_cos;
-	Fimag[n*Temperatura.size()+T]=Int_sin;
-      }
-    }
-    
+  for(unsigned int n = 0; n < numexps; n++){    
     for(unsigned int T=0;T<Temperatura.size();T++){
-      X_mat[T][1]=X_mat[T][1]/Niter;
-      X_mat[T][2]=X_mat[T][2]/Niter;
+      file.read((char * )&pol_hist[0],Niter*sizeof(double));
+      
+      unsigned int step = 0;
+      double Int_cos=0, Int_sin=0;
+      for(unsigned int i = 0; i<periods; i++){
+	for(unsigned int j = 0; j< tau; j++){
+	  Int_cos+=pol_hist[step]*cos_wave[j];
+	  Int_sin+=pol_hist[step]*sin_wave[j];
+	  step++;
+	}
+      }
+      Freal[n*Temperatura.size()+T]=Int_cos/Niter/campo;
+      Fimag[n*Temperatura.size()+T]=Int_sin/Niter/campo;
     }
+  }
+  pol_hist.clear();
+  cos_wave.clear();
+  sin_wave.clear();
   file.close();
+  
+  /*Calcular susceptibildad más error*/
+  std::vector< std::vector<double> > X_mat;
+  X_mat.resize(Temperatura.size());
+  for(unsigned int T=0;T<Temperatura.size();T++){
+    X_mat[T].resize(5);
+    X_mat[T][0]=Temperatura[T]/unidad;
+  }
+  double * data_arrayr = new double [numexps];
+  double * data_arrayi = new double [numexps];
+  for(unsigned int T=0;T<Temperatura.size();T++){
+    
+    for(unsigned int n=0;n<numexps;n++){
+      data_arrayr[n]=Freal[n*Temperatura.size()+T];
+      data_arrayi[n]=Fimag[n*Temperatura.size()+T];
+    }
+    X_mat[T][1]=gsl_stats_mean(data_arrayr,1,numexps);
+    X_mat[T][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[T][1]);
+    X_mat[T][3]=gsl_stats_mean(data_arrayi,1,numexps);
+    X_mat[T][4]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[T][3]);
+  }
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
+  std::cout<<"impreso sus\n";
+  for(unsigned int i=0; i<X_mat.size();i++)
+    X_mat[i].clear();
+  X_mat.clear();
+  
+  delete[] data_arrayr;
+  delete[] data_arrayi;
+  delete[] Freal;
+  delete[] Fimag;
 }
+	      
 void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& Temperatura, std::string id_proc) {
   
   std::string name = "log_pol_"+id_proc+".dat";
