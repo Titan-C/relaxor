@@ -304,11 +304,11 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
     X_mat[T][4]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[T][3]);
   }
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
-  std::cout<<"impreso sus\n";
+  
+  //liberar memoria
   for(unsigned int i=0; i<X_mat.size();i++)
     X_mat[i].clear();
-  X_mat.clear();
-  
+  X_mat.clear();  
   delete[] data_arrayr;
   delete[] data_arrayi;
   delete[] Freal;
@@ -364,45 +364,4 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
   pol_stats.clear();
   pol_final.clear();
 }
-void plot_data_sus(double unidad, const std::vector< double >& Temperatura, const std::vector< double >& campos, std::string id_proc){
-  std::vector< std::vector<double> > Frozen, Susceptibilidad, Polarizacion;
-  unsigned int temp_size = Temperatura.size(), field_size = campos.size();
-  import_data(Frozen, "Congelamiento_"+id_proc+".dat", field_size*temp_size, 4);
-  import_data(Susceptibilidad, "Susceptibilidad_"+id_proc+".dat", field_size*temp_size, 4);
 
-  std::vector< std::vector<double> > plot_array;
-  plot_array.resize(temp_size);
-  //Congelados 90%
-  for(unsigned int i = 0; i < temp_size; i++){
-    plot_array[i].assign(field_size+1,0);
-    plot_array[i][0] = Temperatura[i]/unidad;
-    for(unsigned int j = 0; j < field_size; j++)
-      plot_array[i][j+1] = Frozen[j*temp_size + i][1];
-  }
-  array_print(plot_array, "Dip_cong_90_" + id_proc + ".dat");
-  
-  //Suceptibilidad 90%
-  for(unsigned int i=0; i<temp_size;i++){
-    for(unsigned int j = 0; j < field_size; j++)
-      plot_array[i][j+1] = Susceptibilidad[j*temp_size + i][1];
-  }
-  array_print(plot_array, "Sus_90_" + id_proc + ".dat");
-  
-  //Campo nulo congelados y Susceptibilidad
-  for(unsigned int i = 0; i < temp_size; i++){
-    plot_array[i].assign(5,0);
-    plot_array[i][0] = Temperatura[i]/unidad;
-    for(unsigned int j = 0; j < 4; j++)
-      plot_array[i][j+1] = Frozen[i][j];
-  }
-  array_print(plot_array, "Dip_cong_Efix" + id_proc + ".dat");
-  
-  for(unsigned int i = 0; i < temp_size; i++){
-    plot_array[i].assign(6,0);
-    plot_array[i][0] = Temperatura[i]/unidad;
-    plot_array[i][1] = unidad/Temperatura[i];
-    for(unsigned int j = 0; j < 4; j++)
-      plot_array[i][j+2] = Susceptibilidad[i][j];
-  }
-  array_print(plot_array, "Sus_Efix_" + id_proc + ".dat");
-}

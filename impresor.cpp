@@ -112,3 +112,16 @@ void import_data(std::vector< std::vector< double > >& M, std::string ARCHIVO, u
   }
   file.close();
 }
+//Cola de Gráficos
+void plot_pol(std::string id_proc)
+{
+  std::ofstream file;
+  file.open( "plots.p", std::ofstream::app);
+  
+  file<<"reset; \n set terminal png;\n";
+  
+  file<<"set output '"+id_proc+".png'\n";
+  file<<"set xlabel \"Temperatura\'; \n set ylabel \"Polarizacion\";\n";
+  file<<"set title \"Polarizacion media\";\n";
+
+}

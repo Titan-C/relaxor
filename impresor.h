@@ -22,5 +22,7 @@ void file_wipe(std::string ARCHIVO);
 void import_data(std::vector < std::vector< double > >& M,
 		 std::string ARCHIVO,
                  unsigned int filas, unsigned int columnas);
-
+//Cola de Gráficos
+void plot_pol(std::string id_proc);
+void plot_ints(std::string id_proc);
 #endif // IMPRESOR_H

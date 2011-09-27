@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
   
-  unsigned int L=16, numexps = 8, Equi_iter=200, Exp_iter= 2000;
-  double T=12,dT = 0.4, DeltaJ = 1;
+  unsigned int L=16, numexps = 10, Equi_iter=300, Exp_iter= 2500;
+  double T=12,dT = 0.3, DeltaJ = 1;
   
   gsl_rng_set(rng, time(NULL) );
   
@@ -40,32 +40,45 @@ int main(int argc, char **argv) {
   cout<<"Iniciar sistema "<<cl_stop-cl_start<<"\n";
   // weak field
   cl_start = clock();
-  vector<double> campos = str2vec(DeltaJ, "0.5");
-  vector<double> tau = str2vec(1,"100");
+  vector<double> campos = str2vec(DeltaJ, "0.1");
+  vector<double> tau = str2vec(1,"100 50 20 10");
   ostringstream frec, fieldamp;
-  for(unsigned int n=0;n<numexps;n++){
-    relaxor.init(rng,DeltaJ,false);
-    for(unsigned int T=0; T<temperaturas.size(); T++){
-      relaxor.experimento(temperaturas[T],campos[0],tau[0], Equi_iter,false,rng, "cooling_E0.5_t100");
-      relaxor.experimento(temperaturas[T],campos[0],tau[0], Exp_iter,true,rng, "cooling_E0.5_t100");
+  string id_proc;
+  for(unsigned int t=0;t<tau.size();t++){
+    frec.str(""); fieldamp.str("");
+    frec<<tau[t]; fieldamp<<campos[0];
+    id_proc="cool_E"+fieldamp.str()+"_t"+frec.str();
+    for(unsigned int n=0;n<numexps;n++){
+      relaxor.init(rng,DeltaJ,false);
+      for(unsigned int T=0; T<temperaturas.size(); T++){
+	relaxor.experimento(temperaturas[T],campos[0],tau[t], Equi_iter,false,rng, id_proc);
+	relaxor.experimento(temperaturas[T],campos[0],tau[t], Exp_iter,true,rng, id_proc);
+      }
     }
+    eval_pol(Exp_iter,numexps, DeltaJ, temperaturas, id_proc );
+    calc_sus(numexps,tau[t],Exp_iter,DeltaJ, temperaturas,campos[0],id_proc);
   }
   
-  eval_pol(Exp_iter,numexps, DeltaJ, temperaturas, "cooling_E0.5_t100" );
-  calc_sus(numexps,tau[0],Exp_iter,DeltaJ, temperaturas,campos[0],"cooling_E0.5_t100");
-//   for(unsigned int t=0;t<tau.size();t++){
-//     for(unsigned int E=0; E<campos.size(); E++){
-//       frec.str(""); fieldamp.str("");
-//       frec<<tau[t]; fieldamp<<campos[E];
-//       for(unsigned int n = 0; n < numexps; n++){
-// 	for(unsigned int T = 0; T<temperaturas.size();T++){
-// 	  relaxor.experimento(temperaturas[T], campos[E], tau[t], Equi_iter, false, rng, "cool_E"+fieldamp.str()+"_t"+frec.str());
-// 	  relaxor.experimento(temperaturas[T], campos[E], tau[t], Exp_iter, true, rng, "cool_E"+fieldamp.str()+"_t"+frec.str());
-// 	}
-//       }
-//       calc_sus(numexps,tau[t],Exp_iter,L,1,temperaturas,campos[E], "cool_E"+fieldamp.str()+"_t"+frec.str() );
-//     }
-//   }
+  //strong fields
+  campos = str2vec(DeltaJ, "0.5 1 1.5 2");
+  tau = str2vec(1,"50 10");
+  for(unsigned int E=0;E<campos.size();E++){
+    for(unsigned int t=0;t<tau.size();t++){
+      frec.str(""); fieldamp.str("");
+      frec<<tau[t]; fieldamp<<campos[E];
+      id_proc="cool_E"+fieldamp.str()+"_t"+frec.str();
+      for(unsigned int n=0;n<numexps;n++){
+	relaxor.init(rng,DeltaJ,false);
+	for(unsigned int T=0; T<temperaturas.size(); T++){
+	  relaxor.experimento(temperaturas[T],campos[E],tau[t], Equi_iter,false,rng, id_proc);
+	  relaxor.experimento(temperaturas[T],campos[E],tau[t], Exp_iter,true,rng, id_proc);
+	}
+      }
+      eval_pol(Exp_iter,numexps, DeltaJ, temperaturas, id_proc );
+      calc_sus(numexps,tau[t],Exp_iter,DeltaJ, temperaturas,campos[E],id_proc);
+    }
+  }
+
   cl_stop = clock();
   cout<<"Experimeto "<<cl_stop-cl_start<<"\n";
   
