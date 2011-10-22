@@ -48,6 +48,6 @@ double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la des
 std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat);
 std::vector<double> str2vec(double unidad, std::string magnitudes);
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double unidad,
-	      const std::vector<double>& Temperatura, const double& campo, std::string id_proc);
-void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector< double >& Temperatura, std::string id_proc); 
+	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc);
+void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector< double >& x_array, std::string id_proc); 
 #endif // SISTEMA_H

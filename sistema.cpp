@@ -242,7 +242,7 @@ std::vector<double> str2vec(double unidad, std::string magnitudes){
 }
 
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double unidad,
-	      const std::vector<double>& Temperatura, const double& campo, std::string id_proc){
+	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){
   //Vectores de información
   std::vector<double> pol_hist;
   pol_hist.resize(Niter);
@@ -257,12 +257,13 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
     cos_wave[i]=std::cos( _2pi*i/tau );
     sin_wave[i]=std::sin( _2pi*i/tau );
   }
-  
-  double * Freal = new double [numexps*Temperatura.size()];
-  double * Fimag = new double [numexps*Temperatura.size()];
+
+  double * Freal = new double [numexps*x_array.size()];
+  double * Fimag = new double [numexps*x_array.size()];
   unsigned int periods = Niter/tau;
+  bool fieldvec = (campo.size()>1) ? true : false;
   for(unsigned int n = 0; n < numexps; n++){    
-    for(unsigned int T=0;T<Temperatura.size();T++){
+    for(unsigned int x=0;x<x_array.size();x++){
       file.read((char * )&pol_hist[0],Niter*sizeof(double));
       
       unsigned int step = 0;
@@ -274,8 +275,9 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
 	  step++;
 	}
       }
-      Freal[n*Temperatura.size()+T]=Int_cos/Niter/campo;
-      Fimag[n*Temperatura.size()+T]=Int_sin/Niter/campo;
+      int ind=(fieldvec) ? x : 0;
+      Freal[n*x_array.size()+x]=Int_cos/Niter/campo[ind];
+      Fimag[n*x_array.size()+x]=Int_sin/Niter/campo[ind];
     }
   }
   pol_hist.clear();
@@ -285,18 +287,18 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   
   /*Calcular susceptibildad más error*/
   std::vector< std::vector<double> > X_mat;
-  X_mat.resize(Temperatura.size());
-  for(unsigned int T=0;T<Temperatura.size();T++){
-    X_mat[T].resize(5);
-    X_mat[T][0]=Temperatura[T]/unidad;
+  X_mat.resize(x_array.size());
+  for(unsigned int x=0;x<x_array.size();x++){
+    X_mat[x].resize(5);
+    X_mat[x][0]=x_array[x]/unidad;
   }
   double * data_arrayr = new double [numexps];
   double * data_arrayi = new double [numexps];
-  for(unsigned int T=0;T<Temperatura.size();T++){
+  for(unsigned int T=0;T<x_array.size();T++){
     
     for(unsigned int n=0;n<numexps;n++){
-      data_arrayr[n]=Freal[n*Temperatura.size()+T];
-      data_arrayi[n]=Fimag[n*Temperatura.size()+T];
+      data_arrayr[n]=Freal[n*x_array.size()+T];
+      data_arrayi[n]=Fimag[n*x_array.size()+T];
     }
     X_mat[T][1]=gsl_stats_mean(data_arrayr,1,numexps);
     X_mat[T][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[T][1]);
@@ -315,16 +317,16 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   delete[] Fimag;
 }
 	      
-void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& Temperatura, std::string id_proc) {
+void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc) {
   
   std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
   /* Calcular la polarización media y desviación estandar para el material en cada experimento y para cada temperatura. */ 
   double * pol_hist = new double [Niter];
   std::vector< std::vector<double> > pol_stats;
-  pol_stats.resize(Temperatura.size());
+  pol_stats.resize(x_array.size());
   for(unsigned int n=0; n<numexps; n++){
-    for(unsigned int T=0; T< Temperatura.size(); T++){
+    for(unsigned int T=0; T< x_array.size(); T++){
       file.read((char *)&pol_hist[0],Niter*sizeof(double));
       pol_stats[T].resize(2*numexps);
       pol_stats[T][2*n] = gsl_stats_mean(pol_hist,1,Niter);
@@ -339,11 +341,11 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
   //Polarización absoluta y desviación
   double * data_array = new double [numexps];
   std::vector< std::vector<double> > pol_final;
-  pol_final.resize(Temperatura.size());
-  for(unsigned int T=0;T< Temperatura.size(); T++){
+  pol_final.resize(x_array.size());
+  for(unsigned int T=0;T< x_array.size(); T++){
     
     pol_final[T].resize(3);
-    pol_final[T][0]=Temperatura[T];
+    pol_final[T][0]=x_array[T];
     
     for(unsigned int n=0;n<numexps;n++)
       data_array[n]=std::abs(pol_stats[T][2*n]);
@@ -357,7 +359,7 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
   array_print(pol_final,"pol_"+id_proc+".dat");
 
   /*Liberar memoria*/
-  for(unsigned int i=0;i<Temperatura.size();i++){
+  for(unsigned int i=0;i<x_array.size();i++){
     pol_stats[i].clear();
     pol_final[i].clear();
   }
