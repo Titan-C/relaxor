@@ -317,12 +317,12 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   delete[] Fimag;
 }
 	      
-void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc) {
+void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
   
   std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
-  /* Calcular la polarización media y desviación estandar para el material en cada experimento y para cada temperatura. */ 
   double * pol_hist = new double [Niter];
+  /* Calcular la polarización media y desviación estandar para el material en cada experimento y para cada temperatura. */  
   std::vector< std::vector<double> > pol_stats;
   pol_stats.resize(x_array.size());
   for(unsigned int n=0; n<numexps; n++){
@@ -330,7 +330,7 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
       file.read((char *)&pol_hist[0],Niter*sizeof(double));
       pol_stats[T].resize(2*numexps);
       pol_stats[T][2*n] = gsl_stats_mean(pol_hist,1,Niter);
-      pol_stats[T][2*n+1] = gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[T][1]);
+      pol_stats[T][2*n+1] = gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[T][2*n]);
     }
   }
   delete[] pol_hist;
@@ -338,7 +338,7 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
   array_print(pol_stats,"avg_pol"+id_proc+".dat");
   
 
-  //Polarización absoluta y desviación
+  //Polarización, o polarización absoluta y desviación estandar
   double * data_array = new double [numexps];
   std::vector< std::vector<double> > pol_final;
   pol_final.resize(x_array.size());
@@ -348,12 +348,12 @@ void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std
     pol_final[T][0]=x_array[T];
     
     for(unsigned int n=0;n<numexps;n++)
-      data_array[n]=std::abs(pol_stats[T][2*n]);
+      data_array[n]=(absolut) ? std::abs(pol_stats[T][2*n]) : pol_stats[T][2*n];
     pol_final[T][1]=gsl_stats_mean(data_array,1,numexps);
     
     for(unsigned int n=0;n<numexps;n++)
-      data_array[n]=pol_stats[T][2*n+1];
-    pol_final[T][2]=gsl_stats_mean(data_array,1,numexps);
+      pol_final[T][2]+=pol_stats[T][2*n+1]*pol_stats[T][2*n+1];
+    pol_final[T][2]=sqrt(pol_final[T][2]/numexps);
   }
   delete[] data_array;
   array_print(pol_final,"pol_"+id_proc+".dat");
