@@ -169,11 +169,10 @@ int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nite
   
   //vector oscilación del campo alterno para un periodo
   std::vector<double> field;
-  field.resize(tau);
-  for(unsigned int i=0; i<tau; i++)
-    field[i]=E*std::cos( _2pi*i/tau );
+  field = waves(tau,tau,E,true);
   
   /*Simulación del experimento en el número de iteraciones dadas*/
+
   unsigned int periods = Niter/tau;
   unsigned int step = 0;
   for(unsigned int i = 0; i<periods; i++){
@@ -240,7 +239,6 @@ std::vector<double> str2vec(double unidad, std::string magnitudes){
   }
   return data_array;
 }
-
 void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double unidad,
 	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){
   //Vectores de información
@@ -249,40 +247,31 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   std::string name ="log_pol_"+id_proc+".dat";
   std::ifstream file (name.c_str());
   
-  /* Generar funciones sin, cos para transformada Fourier y calcular la integral */
+  /*Generar arreglo de peso sin, cos para la integral*/
   std::vector<double> cos_wave, sin_wave;
-  cos_wave.resize(tau);
-  sin_wave.resize(tau);
-  for(unsigned int i=0; i<tau; i++){
-    cos_wave[i]=std::cos( _2pi*i/tau );
-    sin_wave[i]=std::sin( _2pi*i/tau );
-  }
-
+  cos_wave = waves(Niter,tau,1.0,true);
+  sin_wave = waves(Niter,tau,1.0,false);
+  
   double * Freal = new double [numexps*x_array.size()];
   double * Fimag = new double [numexps*x_array.size()];
-  unsigned int periods = Niter/tau;
   bool fieldvec = (campo.size()>1) ? true : false;
   for(unsigned int n = 0; n < numexps; n++){    
     for(unsigned int x=0;x<x_array.size();x++){
       file.read((char * )&pol_hist[0],Niter*sizeof(double));
       
-      unsigned int step = 0;
-      double Int_cos=0, Int_sin=0;
-      for(unsigned int i = 0; i<periods; i++){
-	for(unsigned int j = 0; j< tau; j++){
-	  Int_cos+=pol_hist[step]*cos_wave[j];
-	  Int_sin+=pol_hist[step]*sin_wave[j];
-	  step++;
-	}
-      }
+      /*Integración por Simpson*/
+      double Int_cos=simpson_int(pol_hist,cos_wave);
+      double Int_sin=simpson_int(pol_hist,sin_wave);
+      
       int ind=(fieldvec) ? x : 0;
       Freal[n*x_array.size()+x]=Int_cos/Niter/campo[ind];
       Fimag[n*x_array.size()+x]=Int_sin/Niter/campo[ind];
     }
   }
-  pol_hist.clear();
+  //liberar memoria
   cos_wave.clear();
   sin_wave.clear();
+  pol_hist.clear();
   file.close();
   
   /*Calcular susceptibildad más error*/
@@ -294,16 +283,16 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   }
   double * data_arrayr = new double [numexps];
   double * data_arrayi = new double [numexps];
-  for(unsigned int T=0;T<x_array.size();T++){
+  for(unsigned int x=0;x<x_array.size();x++){
     
     for(unsigned int n=0;n<numexps;n++){
-      data_arrayr[n]=Freal[n*x_array.size()+T];
-      data_arrayi[n]=Fimag[n*x_array.size()+T];
+      data_arrayr[n]=Freal[n*x_array.size()+x];
+      data_arrayi[n]=Fimag[n*x_array.size()+x];
     }
-    X_mat[T][1]=gsl_stats_mean(data_arrayr,1,numexps);
-    X_mat[T][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[T][1]);
-    X_mat[T][3]=gsl_stats_mean(data_arrayi,1,numexps);
-    X_mat[T][4]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[T][3]);
+    X_mat[x][1]=gsl_stats_mean(data_arrayr,1,numexps);
+    X_mat[x][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[x][1]);
+    X_mat[x][3]=gsl_stats_mean(data_arrayi,1,numexps);
+    X_mat[x][4]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[x][3]);
   }
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
   
@@ -316,7 +305,44 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   delete[] Freal;
   delete[] Fimag;
 }
-	      
+
+std::vector<double> waves(unsigned int length, unsigned int tau, double amplitude, bool cossin){
+  std::vector<double> wave;
+  wave.resize(length);
+  if (cossin) {
+    for(unsigned int i=0; i<tau; i++)
+      wave[i]=amplitude*std::cos(_2pi*i/tau);
+  }
+  else {
+    for(unsigned int i=0; i<tau; i++)
+      wave[i]=amplitude*std::sin(_2pi*i/tau);
+  }
+  
+  unsigned int periods = length/tau;
+  for(unsigned int i=1; i<periods;i++){
+    for(unsigned int j = 0; j<tau ;j++)
+      wave[i*tau+j]=wave[j];
+  }
+  return wave;
+}
+
+double simpson_int(const std::vector<double>& f_array, const std::vector<double>& weight){
+  unsigned int length=f_array.size();
+  
+  double Integral = f_array[0]*weight[0];
+  
+  for(unsigned int i=1; i<length-1; i+=2)
+    Integral+=4*f_array[i]*weight[i];
+  
+  for(unsigned int i=2; i<length; i+=2)
+    Integral+=2*f_array[i]*weight[i];
+  
+  length--;
+  Integral+=f_array[length]*weight[length];
+  
+  return Integral/3;
+}
+
 void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
   
   std::string name = "log_pol_"+id_proc+".dat";
