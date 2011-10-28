@@ -47,9 +47,11 @@ double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la des
 
 std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat);
 std::vector<double> str2vec(double unidad, std::string magnitudes);
-void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double unidad,
+void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int, unsigned int data_length,
+	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc);
+void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, double unidad,
 	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc);
-void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector< double >& x_array, std::string id_proc, bool absolut);
-double simpson_int(const std::vector<double>& f_array, const std::vector<double>& weight);
+void eval_pol(const std::vector< double >& pol_stats, unsigned int numexps, double unidad, const std::vector< double >& x_array, std::string id_proc, bool absolut);
+double simpson_int(const double f_array[], const std::vector< double >& weight);
 std::vector<double> waves(unsigned int length, unsigned int tau, double amplitude, bool cossin);
 #endif // SISTEMA_H

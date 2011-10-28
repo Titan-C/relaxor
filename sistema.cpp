@@ -239,55 +239,61 @@ std::vector<double> str2vec(double unidad, std::string magnitudes){
   }
   return data_array;
 }
-void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double unidad,
-	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){
-  //Vectores de información
-  std::vector<double> pol_hist;
-  pol_hist.resize(Niter);
-  std::string name ="log_pol_"+id_proc+".dat";
-  std::ifstream file (name.c_str());
+void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
+	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc){
+  //Generar vectores de Datos
+  double * pol_hist = new double[Niter];
+  pol_stats.resize(data_length*numexps*2);
+  pol_int_avg.resize(data_length*numexps*2);
   
   /*Generar arreglo de peso sin, cos para la integral*/
   std::vector<double> cos_wave, sin_wave;
   cos_wave = waves(Niter,tau,1.0,true);
   sin_wave = waves(Niter,tau,1.0,false);
   
-  double * Freal = new double [numexps*x_array.size()];
-  double * Fimag = new double [numexps*x_array.size()];
-  bool fieldvec = (campo.size()>1) ? true : false;
-  for(unsigned int n = 0; n < numexps; n++){    
-    for(unsigned int x=0;x<x_array.size();x++){
-      file.read((char * )&pol_hist[0],Niter*sizeof(double));
-      
-      /*Integración por Simpson*/
-      double Int_cos=simpson_int(pol_hist,cos_wave);
-      double Int_sin=simpson_int(pol_hist,sin_wave);
-      
-      int ind=(fieldvec) ? x : 0;
-      Freal[n*x_array.size()+x]=Int_cos/Niter/campo[ind];
-      Fimag[n*x_array.size()+x]=Int_sin/Niter/campo[ind];
+  //Abrir Archivo y leer
+  std::string name = "log_pol_"+id_proc+".dat";
+  std::ifstream file(name.c_str());
+  for(unsigned int n=0; n<numexps; n++){
+    for(unsigned int i=0; i<data_length; i++){
+      file.read((char *)&pol_hist[0],Niter*sizeof(double));
+      unsigned int ind = 2*(n*data_length+i);
+      /*Calcular media y desviación estandar de polarización por
+       numero de experimento y tipo*/
+      pol_stats[ind]=gsl_stats_mean(pol_hist,1,Niter);
+      pol_stats[ind+1]=gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[ind]);
+      /*Integración por Simpson, para promedio pesado */
+      pol_int_avg[ind]=simpson_int(pol_hist,cos_wave)/Niter;
+      pol_int_avg[ind+1]=simpson_int(pol_hist,sin_wave)/Niter;
     }
   }
+  array_print(pol_stats,"polvec_"+id_proc+".dat");
+  array_print(pol_int_avg,"integral_"+id_proc+".dat");
   //liberar memoria
   cos_wave.clear();
   sin_wave.clear();
-  pol_hist.clear();
+  delete[] pol_hist;
   file.close();
-  
+}
+void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, double unidad,
+	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){
+
   /*Calcular susceptibildad más error*/
   std::vector< std::vector<double> > X_mat;
   X_mat.resize(x_array.size());
+  double * data_arrayr = new double [numexps];
+  double * data_arrayi = new double [numexps];
+  bool fieldvec = (campo.size()>1) ? true : false;
+  double data_length = x_array.size();
   for(unsigned int x=0;x<x_array.size();x++){
     X_mat[x].resize(5);
     X_mat[x][0]=x_array[x]/unidad;
-  }
-  double * data_arrayr = new double [numexps];
-  double * data_arrayi = new double [numexps];
-  for(unsigned int x=0;x<x_array.size();x++){
     
     for(unsigned int n=0;n<numexps;n++){
-      data_arrayr[n]=Freal[n*x_array.size()+x];
-      data_arrayi[n]=Fimag[n*x_array.size()+x];
+      unsigned int ind = 2*(n*data_length+x);
+      unsigned int field_ind=(fieldvec) ? x : 0;
+      data_arrayr[n]=pol_int_avg[ind]/campo[field_ind];
+      data_arrayi[n]=pol_int_avg[ind+1]/campo[field_ind];
     }
     X_mat[x][1]=gsl_stats_mean(data_arrayr,1,numexps);
     X_mat[x][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[x][1]);
@@ -302,8 +308,6 @@ void calc_sus(unsigned int numexps, unsigned int tau, unsigned int Niter, double
   X_mat.clear();  
   delete[] data_arrayr;
   delete[] data_arrayi;
-  delete[] Freal;
-  delete[] Fimag;
 }
 
 std::vector<double> waves(unsigned int length, unsigned int tau, double amplitude, bool cossin){
@@ -326,8 +330,8 @@ std::vector<double> waves(unsigned int length, unsigned int tau, double amplitud
   return wave;
 }
 
-double simpson_int(const std::vector<double>& f_array, const std::vector<double>& weight){
-  unsigned int length=f_array.size();
+double simpson_int(const double f_array[], const std::vector<double>& weight){
+  unsigned int length=weight.size();
   
   double Integral = f_array[0]*weight[0];
   
@@ -343,53 +347,32 @@ double simpson_int(const std::vector<double>& f_array, const std::vector<double>
   return Integral/3;
 }
 
-void eval_pol(unsigned int Niter, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
-  
-  std::string name = "log_pol_"+id_proc+".dat";
-  std::ifstream file(name.c_str());
-  double * pol_hist = new double [Niter];
-  /* Calcular la polarización media y desviación estandar para el material en cada experimento y para cada temperatura. */  
-  std::vector< std::vector<double> > pol_stats;
-  pol_stats.resize(x_array.size());
-  for(unsigned int n=0; n<numexps; n++){
-    for(unsigned int T=0; T< x_array.size(); T++){
-      file.read((char *)&pol_hist[0],Niter*sizeof(double));
-      pol_stats[T].resize(2*numexps);
-      pol_stats[T][2*n] = gsl_stats_mean(pol_hist,1,Niter);
-      pol_stats[T][2*n+1] = gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[T][2*n]);
-    }
-  }
-  delete[] pol_hist;
-  file.close();
-  array_print(pol_stats,"avg_pol"+id_proc+".dat");
-  
+void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
 
   //Polarización, o polarización absoluta y desviación estandar
   double * data_array = new double [numexps];
   std::vector< std::vector<double> > pol_final;
-  pol_final.resize(x_array.size());
-  for(unsigned int T=0;T< x_array.size(); T++){
+  double data_length = x_array.size();
+  pol_final.resize(data_length);
+  for(unsigned int x=0;x< data_length; x++){
     
-    pol_final[T].resize(3);
-    pol_final[T][0]=x_array[T];
-    
-    for(unsigned int n=0;n<numexps;n++)
-      data_array[n]=(absolut) ? std::abs(pol_stats[T][2*n]) : pol_stats[T][2*n];
-    pol_final[T][1]=gsl_stats_mean(data_array,1,numexps);
-    
-    for(unsigned int n=0;n<numexps;n++)
-      pol_final[T][2]+=pol_stats[T][2*n+1]*pol_stats[T][2*n+1];
-    pol_final[T][2]=sqrt(pol_final[T][2]/numexps);
+    pol_final[x].resize(3);
+    pol_final[x][0]=x_array[x]/unidad;
+    double pol_std=0;
+    for(unsigned int n=0;n<numexps;n++){
+      unsigned int ind = 2*(n*data_length+x);
+      data_array[n]=(absolut) ? std::abs(pol_stats[ind]) : pol_stats[ind];
+      pol_std+=pol_stats[ind+1]*pol_stats[ind+1];
+    }
+    pol_final[x][1]=gsl_stats_mean(data_array,1,numexps);
+    pol_final[x][2]=sqrt(pol_std/numexps);
   }
   delete[] data_array;
   array_print(pol_final,"pol_"+id_proc+".dat");
 
   /*Liberar memoria*/
   for(unsigned int i=0;i<x_array.size();i++){
-    pol_stats[i].clear();
     pol_final[i].clear();
   }
-  pol_stats.clear();
   pol_final.clear();
 }
-
