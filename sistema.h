@@ -45,7 +45,7 @@ public:
 // Operaciones necesarias para tratar al sistema
 double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la desviación estandar de los datos de toda la matriz
 
-std::vector<double> step2vec(double unidad, double T_top, double dT, bool heat);
+std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector< double > last);
 std::vector<double> str2vec(double unidad, std::string magnitudes);
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int, unsigned int data_length,
 	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc);

@@ -217,17 +217,15 @@ double stan_dev(const std::vector< std::vector<double> >& M){
   delete[] Aij;
 }
 
-std::vector<double> step2vec(double unidad, double v_top, double dv, bool grow){
-  std::vector<double> temp;
-  temp.resize( (int) ceil(1/dv*v_top));
-  for(unsigned int i = 0; i<temp.size() ;i++){
-    if (grow)
-      temp[i] = (i+1)*dv*unidad;
-    else
-      temp[i] = (v_top - i*dv)*unidad;
+std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
+  std::vector<double> data_array;
+  data_array=last;
+  double num=v_start;
+  while(num >= v_start || num <= v_end){
+    data_array.push_back(num*unidad);
+    num+=dv;
   }
-  
-  return temp;
+  return data_array;
 }
 std::vector<double> str2vec(double unidad, std::string magnitudes){
   std::istringstream data(magnitudes);
@@ -267,8 +265,6 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
       pol_int_avg[ind+1]=simpson_int(pol_hist,sin_wave)/Niter;
     }
   }
-  array_print(pol_stats,"polvec_"+id_proc+".dat");
-  array_print(pol_int_avg,"integral_"+id_proc+".dat");
   //liberar memoria
   cos_wave.clear();
   sin_wave.clear();
