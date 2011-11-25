@@ -62,6 +62,21 @@ double Sistema::set_pol(gsl_rng* rng, bool polarizar){
 void Sistema::set_mu(gsl_rng* rng){
   for(unsigned int i=0; i<sigma.size(); i++)
     mu_E[i]  = gsl_rng_uniform(rng);
+  
+//   //Tomar la suma de interacción de cada región con sus vecinos
+//   for(unsigned int i=0; i<J.size(); i++){
+//     for(unsigned int j=0; j<J[i].size(); j++)
+//       mu_E[i]+=J[i][j];
+//   }
+//   //Encontrar el Maximo
+//   double max=0;
+//   for(unsigned int i=0;i<mu_E.size();i++)
+//     if ( std::abs(mu_E[i]) > max) max=mu_E[i];
+//   //normar
+//   for(unsigned int i=0; i<mu_E.size();i++)
+//     mu_E[i]/=max;
+//   
+  array_print(mu_E,"polarizacion.dat");
 }
 
 void Sistema::set_space_config(){
@@ -220,11 +235,14 @@ double stan_dev(const std::vector< std::vector<double> >& M){
 std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
   std::vector<double> data_array;
   data_array=last;
-  double num=v_start;
-  while(num >= v_start || num <= v_end){
-    data_array.push_back(num*unidad);
-    num+=dv;
+  if (v_start<=v_end){
+    for(v_start;v_start<v_end;v_start+=dv)
+      data_array.push_back(v_start*unidad);
+  }else{
+    for(v_start; v_start>v_end;v_start-=dv)
+      data_array.push_back(v_start*unidad);
   }
+  
   return data_array;
 }
 std::vector<double> str2vec(double unidad, std::string magnitudes){
