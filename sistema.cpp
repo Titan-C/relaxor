@@ -233,17 +233,19 @@ double stan_dev(const std::vector< std::vector<double> >& M){
 }
 
 std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
-  std::vector<double> data_array;
-  data_array=last;
   if (v_start<=v_end){
-    for(v_start;v_start<v_end;v_start+=dv)
-      data_array.push_back(v_start*unidad);
+    for(v_start;v_start<v_end;v_start+=dv){
+      if (v_start==0) continue;
+      last.push_back(v_start*unidad);
+    }
   }else{
-    for(v_start; v_start>v_end;v_start-=dv)
-      data_array.push_back(v_start*unidad);
+    for(v_start; v_start>v_end;v_start-=dv){
+      if (v_start==0) continue;
+      last.push_back(v_start*unidad);
+    }
   }
   
-  return data_array;
+  return last;
 }
 std::vector<double> str2vec(double unidad, std::string magnitudes){
   std::istringstream data(magnitudes);
