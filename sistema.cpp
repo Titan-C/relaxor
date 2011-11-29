@@ -176,7 +176,7 @@ double Sistema::norm_pol(){
   return (double) p / N;
 }
 
-std::vector<double> Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
+int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			 bool grabar, gsl_rng* rng, std::string id_proc){
   //vector historial de polarización por experimento
   std::vector<double> pol_mag;
@@ -187,6 +187,7 @@ std::vector<double> Sistema::experimento(double T, double E, unsigned int tau, u
   field = waves(tau,tau,E,true);
   
   /*Simulación del experimento en el número de iteraciones dadas*/
+
   unsigned int periods = Niter/tau;
   unsigned int step = 0;
   for(unsigned int i = 0; i<periods; i++){
@@ -206,11 +207,14 @@ std::vector<double> Sistema::experimento(double T, double E, unsigned int tau, u
       step++;
     }
   }
-//   /* Guardar los datos de polarización en binario */
-//   if (grabar)
-//     array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
-  /*Devolver resultados*/
-  return pol_mag;
+  /* Guardar los datos de polarización en binario */
+  if (grabar)
+    array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
+  
+  pol_mag.clear();
+  field.clear();
+  
+  return 1;
 }
 
 double stan_dev(const std::vector< std::vector<double> >& M){
@@ -252,7 +256,7 @@ std::vector<double> str2vec(double unidad, std::string magnitudes){
   return data_array;
 }
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
-	      unsigned int numexps, unsigned int tau, unsigned int Niter, const std::vector< std::vector<double> >& data){
+	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc){
   //Generar vectores de Datos
   double * pol_hist = new double[Niter];
   pol_stats.resize(data_length*numexps*2);
@@ -264,12 +268,11 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   sin_wave = waves(Niter,tau,1.0,false);
   
   //Abrir Archivo y leer
-//   std::string name = "log_pol_"+id_proc+".dat";
-//   std::ifstream file(name.c_str());
+  std::string name = "log_pol_"+id_proc+".dat";
+  std::ifstream file(name.c_str());
   for(unsigned int n=0; n<numexps; n++){
     for(unsigned int i=0; i<data_length; i++){
-      for(unsigned int j=0;j<Niter;j++)
-	pol_hist[j]=data[n*data_length+i][j];
+      file.read((char *)&pol_hist[0],Niter*sizeof(double));
       unsigned int ind = 2*(n*data_length+i);
       /*Calcular media y desviación estandar de polarización por
        numero de experimento y tipo*/
@@ -284,7 +287,7 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   cos_wave.clear();
   sin_wave.clear();
   delete[] pol_hist;
-  //file.close();
+  file.close();
 }
 void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, double unidad,
 	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){

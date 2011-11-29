@@ -39,7 +39,7 @@ public:
     double delta_E (unsigned int idflip, double E);		//Calcula la variación de energía del sistema debído a un cambio del spin dipolar
     double norm_pol ();						//Calcula la polarización ponderada del sistema en un instante dado
 
-    std::vector< double > experimento(double T, double E, unsigned int tau, unsigned int Niter,
+    int experimento(double T, double E, unsigned int tau, unsigned int Niter,
 		    bool grabar, gsl_rng* rng, std::string id_proc);/* Realiza la simulación  del material a una temperatura dada. Para un campo alteno de amplitud E y periodo tau [MCS/dipolo] */
 };
 // Operaciones necesarias para tratar al sistema
@@ -48,7 +48,7 @@ double stan_dev(const std::vector< std::vector< double > >& M);	//Calsula la des
 std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector< double > last);
 std::vector<double> str2vec(double unidad, std::string magnitudes);
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int, unsigned int data_length,
-	      unsigned int numexps, unsigned int tau, unsigned int Niter, const std::vector< std::vector<double> >& data);
+	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc);
 void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, double unidad,
 	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc);
 void eval_pol(const std::vector< double >& pol_stats, unsigned int numexps, double unidad, const std::vector< double >& x_array, std::string id_proc, bool absolut);
