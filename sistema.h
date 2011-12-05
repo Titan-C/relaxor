@@ -31,13 +31,13 @@ public:
      * Luego encuentra los primeros vecinos*/
     void set_space_config();
     //Llena la matriz de energías de intercambio del sistema
-    double Jex(gsl_rng* rng, double Delta_J);
+    double Jex(gsl_rng* rng);
     //Genera la polarización inicial
     double set_pol(gsl_rng* rng, bool polarizar);
     //Genera los momentos dipolares
     void set_mu(gsl_rng* rng);
     //Inicializa al sistema
-    double init(gsl_rng* rng, double Delta_J, bool polarizar);
+    double init(gsl_rng* rng, bool polarizar);
 
     //Calcula la energía total del sistema
     double total_E (double E);
@@ -46,12 +46,26 @@ public:
     //Calcula la polarización ponderada del sistema en un instante dado
     double norm_pol ();
     /*Evalúa el comportamiento del material a T[temperatura], E(t)[Campo alterno]
-     * dados durante el tiempo otorgado(t). Graba los datos de ser necesario.*/
+     * dados durante el tiempo otorgado(t) en [MCS/dipolo].
+     * Graba los datos de ser necesario.*/
     void experimento(double T, double E, unsigned int tau, unsigned int Niter,
-		    bool grabar, gsl_rng* rng, std::string id_proc);/* Realiza la simulación  del material a una temperatura dada. Para un campo alteno de amplitud E y periodo tau [MCS/dipolo] */
+		    bool grabar, gsl_rng* rng, std::string id_proc);
+    
+    //Variar temperatura del sistema, campos constantes. [Múltiples experimentos]
+    void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
+		       std::vector<double> tau, unsigned int numexps,
+		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
+    
 };
+//Operaciones necesarias para realizar los experimentos
+//Variar temperatura del sistema, campos constantes
+void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
+		       unsigned int tau, unsigned int numexps, unsigned int Equi_iter,
+		       unsigned int Exp_iter, gsl_rng* rng);
+//Variar campo externo, temperaturas constantes
+//Lazos de histeresis
 
-// Operaciones necesarias para tratar al sistema
+//Operaciones necesarias para tratar datos
 /*PreProcesa los datos almacenados de los experimentos realizados de acuerdo a sus
  * condicones y número de ejecuciones.*/
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int,
