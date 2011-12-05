@@ -116,10 +116,11 @@ double Sistema::set_pol(gsl_rng* rng, bool polarizar){
   return norm_pol();
 }
 
-void Sistema::set_mu(gsl_rng* rng){
+double Sistema::set_mu(gsl_rng* rng, bool polarizar){
   for(unsigned int i=0; i<sigma.size(); i++)
     mu_E[i]  = gsl_rng_uniform(rng);
   
+  return set_pol(rng, polarizar);
 //   //Tomar la suma de interacción de cada región con sus vecinos
 //   for(unsigned int i=0; i<J.size(); i++){
 //     for(unsigned int j=0; j<J[i].size(); j++)
@@ -136,14 +137,16 @@ void Sistema::set_mu(gsl_rng* rng){
   array_print(mu_E,"polarizacion.dat");
 }
 
-double Sistema::init(gsl_rng* rng, bool polarizar){
+double Sistema::init(gsl_rng* rng, bool polarizar, bool write){
   // Genera las energías de intercambio de las PNR
   double Delta_J=Jex(rng);
-  std::cout<<"Desvición Estandar Total= "<<Delta_J<<"\n";
-  
   //Momentos dipolares y polarización
-  set_mu(rng);//Componente del momento dipolar eléctrico en eje principal
-  std::cout<<"Polarización inicial="<<set_pol(rng, polarizar)<<"\n";
+  double pol=set_mu(rng, polarizar);
+  
+  if (write){
+    std::cout<<"Desvición Estandar Total= "<<Delta_J<<"\n";
+    std::cout<<"Polarización inicial="<<pol<<"\n";
+  }
   
   return Delta_J;
 }
@@ -217,10 +220,10 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
 void Sistema::Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
 		       std::vector<double> tau, unsigned int numexps,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng){
-  std::ostringstream id_proc;
+  clock_t cl_start = clock();
   for(unsigned int E=0;E<campos.size();E++){
     for(unsigned int t=0;t<tau.size();t++){
-      id_proc.str("");
+      std::ostringstream id_proc;
       id_proc<<"cool_J"<<DeltaJ<<"E"<<campos[E]<<"_t"<<tau[t];
       for(unsigned int n=0;n<numexps;n++){
 	init(rng,false);
@@ -239,6 +242,33 @@ void Sistema::Var_Temp(std::vector<double>& temperaturas, std::vector<double>& c
       intfield.clear();
     }
   }
+  std::cout<<"Experimeto "<<clock()-cl_start<<"\n";
+}
+
+void Sistema::Var_Field(std::vector<double>& temperaturas, std::vector<double>& campos,
+		       std::vector<double> tau, unsigned int numexps,
+		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng){
+  clock_t cl_start = clock();
+  for(unsigned int T=0;T<temperaturas.size(); T++){
+    for(unsigned int t=0; t<tau.size(); t++){
+      std::ostringstream id_proc;
+      id_proc<<"riseE_J"<<DeltaJ<<"T"<<temperaturas[T]<<"_t"<<tau[t];
+      for(unsigned int n=0;n<numexps;n++){
+	init(rng,false);
+	for(unsigned int E=0;E<campos.size();E++){
+	  experimento(temperaturas[T],campos[E],tau[t], Equi_iter,false,rng, id_proc.str());
+	  experimento(temperaturas[T],campos[E],tau[t], Exp_iter,true,rng, id_proc.str());
+	}
+      }
+      std::vector<double> pol_stats, pol_int_avg;
+      pp_data(pol_stats,pol_int_avg,campos.size(),numexps,tau[t],Exp_iter,id_proc.str());
+      eval_pol(pol_stats,numexps,DeltaJ,campos,id_proc.str(),true);
+      calc_sus(pol_int_avg,numexps,DeltaJ,campos,campos,id_proc.str());
+      pol_int_avg.clear();
+      pol_stats.clear();
+    }
+  }
+  std::cout<<"Experimeto "<<clock()-cl_start<<"\n";
 }
 
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,

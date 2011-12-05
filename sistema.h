@@ -35,9 +35,9 @@ public:
     //Genera la polarización inicial
     double set_pol(gsl_rng* rng, bool polarizar);
     //Genera los momentos dipolares
-    void set_mu(gsl_rng* rng);
+    double set_mu(gsl_rng* rng, bool polarizar);
     //Inicializa al sistema
-    double init(gsl_rng* rng, bool polarizar);
+    double init(gsl_rng* rng, bool polarizar, bool write = false);
 
     //Calcula la energía total del sistema
     double total_E (double E);
@@ -53,6 +53,10 @@ public:
     
     //Variar temperatura del sistema, campos constantes. [Múltiples experimentos]
     void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
+		       std::vector<double> tau, unsigned int numexps,
+		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
+    //Variar Campo del sistema, temperaturas constantes. [Múltiples experimentos]
+    void Var_Field(std::vector<double>& temperaturas, std::vector<double>& campos,
 		       std::vector<double> tau, unsigned int numexps,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
     
