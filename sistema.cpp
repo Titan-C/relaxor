@@ -271,6 +271,34 @@ void Sistema::Var_Field(std::vector<double>& temperaturas, std::vector<double>& 
   std::cout<<"Experimeto "<<clock()-cl_start<<"\n";
 }
 
+void Sistema::Hist_loop(std::vector< double >& temperaturas, double max_field,
+			unsigned int numexps, unsigned int Equi_iter, 
+			unsigned int Exp_iter, gsl_rng* rng)
+{
+  clock_t cl_start = clock();
+  std::vector<double> campos;
+  campos = loop2vec(DeltaJ,max_field,10);
+  
+  for(unsigned int T=0;T<temperaturas.size(); T++){
+    std::ostringstream id_proc;
+    id_proc<<"hist_loop_J"<<DeltaJ<<"T"<<temperaturas[T]<<"E_max"<<max_field;
+    for(unsigned int n=0;n<numexps;n++){
+      init(rng,false);
+      for(unsigned int E=0;E<campos.size();E++){
+	experimento(temperaturas[T],campos[E],1, Equi_iter,false,rng, id_proc.str());
+	experimento(temperaturas[T],campos[E],1, Exp_iter,true,rng, id_proc.str());
+      }
+    }
+    std::vector<double> pol_stats, pol_int_avg;
+    pp_data(pol_stats,pol_int_avg,campos.size(),numexps,1,Exp_iter,id_proc.str());
+    eval_pol(pol_stats,numexps,DeltaJ,campos,id_proc.str(),false);
+    calc_sus(pol_int_avg,numexps,DeltaJ,campos,campos,id_proc.str());
+    pol_int_avg.clear();
+    pol_stats.clear();
+  }
+  std::cout<<"Experimeto "<<clock()-cl_start<<"\n";
+}
+
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
 	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc){
   //Generar vectores de Datos
@@ -372,18 +400,38 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, doub
 
 std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
   while(v_start<=v_end) {
-    if (v_start==0) continue;
     last.push_back(v_start*unidad);
     v_start+=dv;
   }
   while (v_start>v_end) {
-    if (v_start==0) continue;
     last.push_back(v_start*unidad);
     v_start-=dv;
   }
   
   return last;
 }
+
+std::vector<double> loop2vec(double unidad, double max, int divs){
+  std::vector<double> vec;
+  double step = 1.0 / divs;
+  unsigned int l=0;
+  for(double x=step; x<=1 ;x+=step){
+    vec.push_back(x*x*x*max*unidad);
+    l++;
+  }
+  for(unsigned int i=l-1; i>0; i--)
+    vec.push_back(vec[i-1]);
+
+  unsigned int vec_size= vec.size();
+  for(unsigned int i=0; i<vec_size; i++)
+    vec.push_back(-1*vec[i]);
+
+  for(unsigned int i=0; i<=l;i++)
+    vec.push_back(vec[i]);
+
+  return vec;
+}
+
 std::vector<double> str2vec(double unidad, std::string magnitudes){
   std::istringstream data(magnitudes);
   std::vector<double> data_array;

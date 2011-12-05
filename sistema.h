@@ -51,6 +51,7 @@ public:
     void experimento(double T, double E, unsigned int tau, unsigned int Niter,
 		    bool grabar, gsl_rng* rng, std::string id_proc);
     
+    //Funciones Para tratar los experimentos del sistema
     //Variar temperatura del sistema, campos constantes. [Múltiples experimentos]
     void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
 		       std::vector<double> tau, unsigned int numexps,
@@ -59,15 +60,11 @@ public:
     void Var_Field(std::vector<double>& temperaturas, std::vector<double>& campos,
 		       std::vector<double> tau, unsigned int numexps,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
+    //Lazos de histéresis a temperaturas fijas
+    void Hist_loop(std::vector<double>& temperaturas, double max_field, unsigned int numexps,
+		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
     
 };
-//Operaciones necesarias para realizar los experimentos
-//Variar temperatura del sistema, campos constantes
-void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       unsigned int tau, unsigned int numexps, unsigned int Equi_iter,
-		       unsigned int Exp_iter, gsl_rng* rng);
-//Variar campo externo, temperaturas constantes
-//Lazos de histeresis
 
 //Operaciones necesarias para tratar datos
 /*PreProcesa los datos almacenados de los experimentos realizados de acuerdo a sus
@@ -90,6 +87,8 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
 double stan_dev(const std::vector< std::vector< double > >& M);
 //Genera un vector de datos double, entre dos números con cierto paso
 std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector< double > last);
+//Genera un vector de datos para un lazo
+std::vector<double> loop2vec(double unidad, double max, int divs);
 //Genera un vector de datos double que contiene los números declarados en el string
 std::vector<double> str2vec(double unidad, std::string magnitudes);
 //Realiza una integración por Simpson de la función f con un peso
