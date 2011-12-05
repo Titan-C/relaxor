@@ -18,6 +18,7 @@ Sistema::Sistema(unsigned int lado,
 		 bool polarizar){
   dimension = dim;
   L = lado;
+  DeltaJ = Delta_J;
   // Dimensionado de arreglos caraterísticos del sistema
   sigma.resize(pow(lado,dimension));
   mu_E.resize(sigma.size());
@@ -33,7 +34,7 @@ Sistema::Sistema(unsigned int lado,
   set_space_config();
 
   // Inicializa al sistema, llenado de datos
-  DeltaJ = init(rng, Delta_J, polarizar);  
+  //DeltaJ = init(rng, Delta_J, polarizar);  
 }
 
 /*Destructor:
@@ -47,36 +48,6 @@ Sistema::~Sistema(){
   G.clear();
   mu_E.clear();
   sigma.clear();
-}
-
-double Sistema::set_pol(gsl_rng* rng, bool polarizar){
-  if (polarizar)
-    sigma.assign(sigma.size(),1);
-  else{
-    for(unsigned int i=0; i<sigma.size(); i++)
-      sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
-  }
-  //Calcular la polarización inicial
-  return norm_pol();
-}
-void Sistema::set_mu(gsl_rng* rng){
-  for(unsigned int i=0; i<sigma.size(); i++)
-    mu_E[i]  = gsl_rng_uniform(rng);
-  
-//   //Tomar la suma de interacción de cada región con sus vecinos
-//   for(unsigned int i=0; i<J.size(); i++){
-//     for(unsigned int j=0; j<J[i].size(); j++)
-//       mu_E[i]+=J[i][j];
-//   }
-//   //Encontrar el Maximo
-//   double max=0;
-//   for(unsigned int i=0;i<mu_E.size();i++)
-//     if ( std::abs(mu_E[i]) > max) max=mu_E[i];
-//   //normar
-//   for(unsigned int i=0; i<mu_E.size();i++)
-//     mu_E[i]/=max;
-//   
-  array_print(mu_E,"polarizacion.dat");
 }
 
 void Sistema::set_space_config(){
@@ -134,12 +105,43 @@ double Sistema::Jex(gsl_rng* rng, double Delta_J){
     Jinter[i].clear();
   Jinter.clear();
 
-  return Delta_J;
+  return stan_dev(J);
+}
+
+double Sistema::set_pol(gsl_rng* rng, bool polarizar){
+  if (polarizar)
+    sigma.assign(sigma.size(),1);
+  else{
+    for(unsigned int i=0; i<sigma.size(); i++)
+      sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
+  }
+
+  return norm_pol();
+}
+
+void Sistema::set_mu(gsl_rng* rng){
+  for(unsigned int i=0; i<sigma.size(); i++)
+    mu_E[i]  = gsl_rng_uniform(rng);
+  
+//   //Tomar la suma de interacción de cada región con sus vecinos
+//   for(unsigned int i=0; i<J.size(); i++){
+//     for(unsigned int j=0; j<J[i].size(); j++)
+//       mu_E[i]+=J[i][j];
+//   }
+//   //Encontrar el Maximo
+//   double max=0;
+//   for(unsigned int i=0;i<mu_E.size();i++)
+//     if ( std::abs(mu_E[i]) > max) max=abs(mu_E[i]);
+//   //normar
+//   for(unsigned int i=0; i<mu_E.size();i++)
+//     mu_E[i]/=max;
+//   
+  array_print(mu_E,"polarizacion.dat");
 }
 
 double Sistema::init(gsl_rng* rng, double Delta_J, bool polarizar){
   // Genera las energías de intercambio de las PNR
-  std::cout<<"Des stan Total= "<<Jex(rng,Delta_J)<<"\n";
+  std::cout<<"Desvición Estandar Total= "<<Jex(rng,Delta_J)<<"\n";
   
   //Momentos dipolares y polarización
   set_mu(rng);//Componente del momento dipolar eléctrico en eje principal
@@ -176,7 +178,7 @@ double Sistema::norm_pol(){
   return (double) p / N;
 }
 
-int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
+void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			 bool grabar, gsl_rng* rng, std::string id_proc){
   //vector historial de polarización por experimento
   std::vector<double> pol_mag;
@@ -187,7 +189,6 @@ int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nite
   field = waves(tau,tau,E,true);
   
   /*Simulación del experimento en el número de iteraciones dadas*/
-
   unsigned int periods = Niter/tau;
   unsigned int step = 0;
   for(unsigned int i = 0; i<periods; i++){
@@ -213,50 +214,8 @@ int Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nite
   
   pol_mag.clear();
   field.clear();
-  
-  return 1;
 }
 
-double stan_dev(const std::vector< std::vector<double> >& M){
-  //Calcular la desviación estandar de una matriz
-  unsigned int celdas, columnas;
-  columnas = M[1].size();
-  celdas = M.size() * columnas;
-  double * Aij;
-  Aij = new double [celdas];
-  for(unsigned int i = 0 ; i<M.size(); i++){
-    for(unsigned int j = 0; j<columnas; j++)
-      Aij[i*columnas + j] = M[i][j];
-  }
-  return gsl_stats_sd (Aij, 1, celdas);
-  delete[] Aij;
-}
-
-std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
-  if (v_start<=v_end){
-    for(v_start;v_start<v_end;v_start+=dv){
-      if (v_start==0) continue;
-      last.push_back(v_start*unidad);
-    }
-  }else{
-    for(v_start; v_start>v_end;v_start-=dv){
-      if (v_start==0) continue;
-      last.push_back(v_start*unidad);
-    }
-  }
-  
-  return last;
-}
-std::vector<double> str2vec(double unidad, std::string magnitudes){
-  std::istringstream data(magnitudes);
-  std::vector<double> data_array;
-  double num;
-  while(!data.eof()){
-    data >> num;
-    data_array.push_back(num*unidad);
-  }
-  return data_array;
-}
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
 	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc){
   //Generar vectores de Datos
@@ -275,9 +234,9 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   for(unsigned int n=0; n<numexps; n++){
     for(unsigned int i=0; i<data_length; i++){
       file.read((char *)&pol_hist[0],Niter*sizeof(double));
-      unsigned int ind = 2*(n*data_length+i);
       /*Calcular media y desviación estandar de polarización por
-       numero de experimento y tipo*/
+       numero y condiciones de experimento*/
+      unsigned int ind = 2*(n*data_length+i);
       pol_stats[ind]=gsl_stats_mean(pol_hist,1,Niter);
       pol_stats[ind+1]=gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[ind]);
       /*Integración por Simpson, para promedio pesado */
@@ -291,17 +250,47 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   delete[] pol_hist;
   file.close();
 }
+void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
+
+  //Polarización, o polarización absoluta y desviación estandar
+  double * data_array = new double [numexps];
+  double data_length = x_array.size();
+  std::vector< std::vector<double> > pol_final;
+  pol_final.resize(data_length);
+  for(unsigned int x=0;x< data_length; x++){
+    pol_final[x].resize(3);
+    pol_final[x][0]=x_array[x]/unidad;
+    
+    double pol_std=0;
+    for(unsigned int n=0;n<numexps;n++){
+      unsigned int ind = 2*(n*data_length+x);
+      data_array[n]=(absolut) ? std::abs(pol_stats[ind]) : pol_stats[ind];
+      pol_std+=pol_stats[ind+1]*pol_stats[ind+1];
+    }
+    pol_final[x][1]=gsl_stats_mean(data_array,1,numexps);
+    pol_final[x][2]=sqrt(pol_std/numexps);
+  }
+  delete[] data_array;
+  array_print(pol_final,"pol_"+id_proc+".dat");
+
+  /*Liberar memoria*/
+  for(unsigned int i=0;i<data_length;i++){
+    pol_final[i].clear();
+  }
+  pol_final.clear();
+}
+
 void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, double unidad,
 	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){
 
   /*Calcular susceptibildad más error*/
-  std::vector< std::vector<double> > X_mat;
-  X_mat.resize(x_array.size());
   double * data_arrayr = new double [numexps];
   double * data_arrayi = new double [numexps];
   bool fieldvec = (campo.size()>1) ? true : false;
   double data_length = x_array.size();
-  for(unsigned int x=0;x<x_array.size();x++){
+  std::vector< std::vector<double> > X_mat;
+  X_mat.resize(data_length);
+  for(unsigned int x=0;x<data_length;x++){
     X_mat[x].resize(5);
     X_mat[x][0]=x_array[x]/unidad;
     
@@ -317,13 +306,38 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, doub
     X_mat[x][4]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[x][3]);
   }
   array_print(X_mat, "susceptibilidad_"+id_proc+".dat");
-  
+
   //liberar memoria
   for(unsigned int i=0; i<X_mat.size();i++)
     X_mat[i].clear();
   X_mat.clear();  
   delete[] data_arrayr;
   delete[] data_arrayi;
+}
+
+std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
+  while(v_start<=v_end) {
+    if (v_start==0) continue;
+    last.push_back(v_start*unidad);
+    v_start+=dv;
+  }
+  while (v_start>v_end) {
+    if (v_start==0) continue;
+    last.push_back(v_start*unidad);
+    v_start-=dv;
+  }
+  
+  return last;
+}
+std::vector<double> str2vec(double unidad, std::string magnitudes){
+  std::istringstream data(magnitudes);
+  std::vector<double> data_array;
+  double num;
+  while(!data.eof()){
+    data >> num;
+    data_array.push_back(num*unidad);
+  }
+  return data_array;
 }
 
 std::vector<double> waves(unsigned int length, unsigned int tau, double amplitude, bool cossin){
@@ -363,32 +377,17 @@ double simpson_int(const double f_array[], const std::vector<double>& weight){
   return Integral/3;
 }
 
-void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
-
-  //Polarización, o polarización absoluta y desviación estandar
-  double * data_array = new double [numexps];
-  std::vector< std::vector<double> > pol_final;
-  double data_length = x_array.size();
-  pol_final.resize(data_length);
-  for(unsigned int x=0;x< data_length; x++){
-    
-    pol_final[x].resize(3);
-    pol_final[x][0]=x_array[x]/unidad;
-    double pol_std=0;
-    for(unsigned int n=0;n<numexps;n++){
-      unsigned int ind = 2*(n*data_length+x);
-      data_array[n]=(absolut) ? std::abs(pol_stats[ind]) : pol_stats[ind];
-      pol_std+=pol_stats[ind+1]*pol_stats[ind+1];
-    }
-    pol_final[x][1]=gsl_stats_mean(data_array,1,numexps);
-    pol_final[x][2]=sqrt(pol_std/numexps);
+//Calcular la desviación estandar de una matriz
+double stan_dev(const std::vector< std::vector<double> >& M){
+  unsigned int celdas, columnas;
+  columnas = M[1].size();
+  celdas = M.size() * columnas;
+  double * Aij;
+  Aij = new double [celdas];
+  for(unsigned int i = 0 ; i<M.size(); i++){
+    for(unsigned int j = 0; j<columnas; j++)
+      Aij[i*columnas + j] = M[i][j];
   }
-  delete[] data_array;
-  array_print(pol_final,"pol_"+id_proc+".dat");
-
-  /*Liberar memoria*/
-  for(unsigned int i=0;i<x_array.size();i++){
-    pol_final[i].clear();
-  }
-  pol_final.clear();
+  return gsl_stats_sd (Aij, 1, celdas);
+  delete[] Aij;
 }
