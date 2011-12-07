@@ -13,12 +13,10 @@
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
 Sistema::Sistema(unsigned int lado,
 		 gsl_rng* rng,
-		 double Delta_J,
 		 unsigned int dim,
 		 bool polarizar){
   dimension = dim;
   L = lado;
-  DeltaJ = Delta_J;
   // Dimensionado de arreglos caraterísticos del sistema
   sigma.resize(pow(lado,dimension));
   mu_E.resize(sigma.size());
@@ -85,7 +83,7 @@ double Sistema::Jex(gsl_rng* rng){
   for(unsigned int i = 0; i<Jinter.size(); i++){
     Jinter[i].resize(sigma.size());
     for(unsigned int j = i+1; j<Jinter[i].size(); j++)
-      Jinter[i][j] = gsl_ran_gaussian(rng,DeltaJ);
+      Jinter[i][j] = gsl_ran_gaussian(rng,DeltaJ)+rho;
   }
   //Completa la parte inferior de la matriz de intercambio
   for(unsigned int i = 0; i<Jinter.size(); i++){
@@ -119,8 +117,7 @@ double Sistema::set_pol(gsl_rng* rng, bool polarizar){
 double Sistema::set_mu(gsl_rng* rng, bool polarizar){
   for(unsigned int i=0; i<sigma.size(); i++)
     mu_E[i]  = gsl_rng_uniform(rng);
-  
-  return set_pol(rng, polarizar);
+
 //   //Tomar la suma de interacción de cada región con sus vecinos
 //   for(unsigned int i=0; i<J.size(); i++){
 //     for(unsigned int j=0; j<J[i].size(); j++)
@@ -135,9 +132,13 @@ double Sistema::set_mu(gsl_rng* rng, bool polarizar){
 //     mu_E[i]/=max;
 //   
   array_print(mu_E,"polarizacion.dat");
+  return set_pol(rng, polarizar);
 }
 
-double Sistema::init(gsl_rng* rng, bool polarizar, bool write){
+double Sistema::init(gsl_rng* rng, double DJ, double p, bool polarizar, bool write){
+  //Cambia las propidades del sistema
+  DeltaJ = DJ;
+  rho = p;
   // Genera las energías de intercambio de las PNR
   double Delta_J=Jex(rng);
   //Momentos dipolares y polarización
@@ -172,11 +173,11 @@ double Sistema::delta_E(unsigned int idflip, double E){
 
 double Sistema::norm_pol(){
   unsigned int N=sigma.size();
-  double p=0;
+  double P=0;
   for(unsigned int i=0; i<N; i++)
-    p += mu_E[i]*sigma[i];
+    P += mu_E[i]*sigma[i];
 
-  return (double) p / N;
+  return (double) P / N;
 }
 
 void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
@@ -217,8 +218,14 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
   field.clear();
 }
 
+void Sistema::Gen_exp(std::vector< double >& temperaturas, std::vector< double >& campos, std::vector< double > tau, unsigned int numexps, double DJ, double p, unsigned int Equi_iter, unsigned int Exp_iter, std::string Exp_ID, gsl_rng* rng)
+{
+  clock_t cl_start = clock();
+
+}
+
 void Sistema::Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       std::vector<double> tau, unsigned int numexps,
+		       std::vector<double> tau, unsigned int numexps, double DJ, double p,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng){
   clock_t cl_start = clock();
   for(unsigned int E=0;E<campos.size();E++){
@@ -246,7 +253,7 @@ void Sistema::Var_Temp(std::vector<double>& temperaturas, std::vector<double>& c
 }
 
 void Sistema::Var_Field(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       std::vector<double> tau, unsigned int numexps,
+		       std::vector<double> tau, unsigned int numexps, double DJ, double p,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng){
   clock_t cl_start = clock();
   for(unsigned int T=0;T<temperaturas.size(); T++){
@@ -271,9 +278,7 @@ void Sistema::Var_Field(std::vector<double>& temperaturas, std::vector<double>& 
   std::cout<<"Experimeto "<<clock()-cl_start<<"\n";
 }
 
-void Sistema::Hist_loop(std::vector< double >& temperaturas, double max_field,
-			unsigned int numexps, unsigned int Equi_iter, 
-			unsigned int Exp_iter, gsl_rng* rng)
+void Sistema::Hist_loop(std::vector< double >& temperaturas, double max_field, unsigned int numexps, double DJ, double p, unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng)
 {
   clock_t cl_start = clock();
   std::vector<double> campos;
@@ -448,11 +453,11 @@ std::vector<double> waves(unsigned int length, unsigned int tau, double amplitud
   wave.resize(length);
   if (cossin) {
     for(unsigned int i=0; i<tau; i++)
-      wave[i]=amplitude*std::cos(_2pi*i/tau);
+      wave[i]=amplitude*cos(_2pi*i/tau);
   }
   else {
     for(unsigned int i=0; i<tau; i++)
-      wave[i]=amplitude*std::sin(_2pi*i/tau);
+      wave[i]=amplitude*sin(_2pi*i/tau);
   }
   
   unsigned int periods = length/tau;

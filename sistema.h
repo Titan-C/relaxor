@@ -9,20 +9,17 @@ class Sistema
 {
 private:
     unsigned int dimension, L;			// Dimensionalidad del sistema, cantidad de PNR por lado
-
-    			// Arreglo de spines dipolares
+    double DeltaJ, rho;
+    std::vector<int> sigma;			// Arreglo de spines dipolares
     std::vector<double> mu_E;			// Arreglo de proyeciones de momento al eje del campo
 
     std::vector< std::vector<double> > J;	// Energías de intercambio primeros vecinos
     std::vector< std::vector<unsigned int> > G;	// Configuración espacial de primeros vecinos
 
 public:
-  std::vector<int> sigma;
-    double DeltaJ;
     // Constructor y destructor
     Sistema(unsigned int lado,
 	    gsl_rng * rng,
-	    double Delta_J = 1,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
@@ -37,7 +34,8 @@ public:
     //Genera los momentos dipolares
     double set_mu(gsl_rng* rng, bool polarizar);
     //Inicializa al sistema
-    double init(gsl_rng* rng, bool polarizar, bool write = false);
+    double init(gsl_rng* rng, double DJ = 1, double p=0,
+		bool polarizar = true, bool write = false);
 
     //Calcula la energía total del sistema
     double total_E (double E);
@@ -52,17 +50,21 @@ public:
 		    bool grabar, gsl_rng* rng, std::string id_proc);
     
     //Funciones Para tratar los experimentos del sistema
+    void Gen_exp(std::vector<double>& temperaturas, std::vector<double>& campos,
+		 std::vector<double> tau, unsigned int numexps, double DJ, double p,
+		 unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID, gsl_rng* rng);
     //Variar temperatura del sistema, campos constantes. [Múltiples experimentos]
     void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       std::vector<double> tau, unsigned int numexps,
+		       std::vector<double> tau, unsigned int numexps, double DJ, double p,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
     //Variar Campo del sistema, temperaturas constantes. [Múltiples experimentos]
     void Var_Field(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       std::vector<double> tau, unsigned int numexps,
+		       std::vector<double> tau, unsigned int numexps, double DJ, double p,
 		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
     //Lazos de histéresis a temperaturas fijas
     void Hist_loop(std::vector<double>& temperaturas, double max_field, unsigned int numexps,
-		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
+		   double DJ, double p,
+		   unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
     
 };
 
