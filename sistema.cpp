@@ -218,10 +218,48 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
   field.clear();
 }
 
-void Sistema::Gen_exp(std::vector< double >& temperaturas, std::vector< double >& campos, std::vector< double > tau, unsigned int numexps, double DJ, double p, unsigned int Equi_iter, unsigned int Exp_iter, std::string Exp_ID, gsl_rng* rng)
+void Sistema::Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
+		      std::vector< double > tau, unsigned int numexps, double DJ,
+		      double p, unsigned int Equi_iter, unsigned int Exp_iter,
+		      std::string Exp_ID, gsl_rng* rng)
 {
   clock_t cl_start = clock();
+  for (unsigned int n=0; n<numexps;n++){
+    init(rng,DJ,p,false);
+    for (unsigned int t=0;t<tau.size();t++){
+      for (unsigned int E=0;E<Fields.size();E++){
+	for (unsigned int T=0; T<Temps.size();T++){
+	  std::ostringstream id_proc;
+	  if (Exp_ID == "cool" || Exp_ID == "heat")
+	    id_proc<<Exp_ID<<"_J"<<DeltaJ<<"_p"<<rho<<"_E"<<Fields[E]<<"_t"<<tau[t];
+	  else id_proc<<Exp_ID<<"_J"<<DeltaJ<<"_p"<<rho<<"_T"<<Temps[E]<<"_t"<<tau[t];
+	  experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
+	  experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
+  }}}}
 
+  //procesar los datos
+  for (unsigned int t=0;t<tau.size();t++){
+    for (unsigned int E=0;E<Fields.size();E++){
+      for (unsigned int T=0; T<Temps.size();T++){
+	std::ostringstream id_proc;
+	std::vector<double> pol_stats, pol_int_avg;
+	if (Exp_ID == "cool" || Exp_ID == "heat"){
+	  id_proc<<Exp_ID<<"_J"<<DeltaJ<<"_p"<<rho<<"_E"<<Fields[E]<<"_t"<<tau[t];
+	  pp_data(pol_stats,pol_int_avg,Temps.size(),numexps,tau[t],Exp_iter,id_proc.str());
+	  std::vector<double> intfield (1,Fields[E]);
+	  eval_pol(pol_stats,numexps,DeltaJ,Temps,id_proc.str(),true);
+	  calc_sus(pol_int_avg,numexps,DeltaJ,Temps,intfield,id_proc.str());
+	  intfield.clear();
+	} else {
+	  id_proc<<Exp_ID<<"_J"<<DeltaJ<<"_p"<<rho<<"_T"<<Temps[E]<<"_t"<<tau[t];
+	  pp_data(pol_stats,pol_int_avg,Fields.size(),numexps,tau[t],Exp_iter,id_proc.str());
+	  eval_pol(pol_stats,numexps,DeltaJ,Fields,id_proc.str(),(Exp_ID=="hist") ? false : true);
+	  calc_sus(pol_int_avg,numexps,DeltaJ,Fields,Fields,id_proc.str());
+	}
+	pol_int_avg.clear();
+	pol_stats.clear();
+  }}}
+  std::cout<<Exp_ID<<":"<<clock()-cl_start<<"\n";
 }
 
 void Sistema::Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
@@ -233,7 +271,7 @@ void Sistema::Var_Temp(std::vector<double>& temperaturas, std::vector<double>& c
       std::ostringstream id_proc;
       id_proc<<"cool_J"<<DeltaJ<<"E"<<campos[E]<<"_t"<<tau[t];
       for(unsigned int n=0;n<numexps;n++){
-	init(rng,false);
+	init(rng);
 	for(unsigned int T=0; T<temperaturas.size(); T++){
 	  experimento(temperaturas[T],campos[E],tau[t], Equi_iter,false,rng, id_proc.str());
 	  experimento(temperaturas[T],campos[E],tau[t], Exp_iter,true,rng, id_proc.str());
