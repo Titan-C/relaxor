@@ -1,5 +1,7 @@
 #include "impresor.h"
 #include <fstream>
+#include <sstream>
+#include <cstdlib>
 
 void out(double value, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
@@ -124,4 +126,44 @@ void plot_pol(std::string id_proc)
   file<<"set xlabel \"Temperatura\'; \n set ylabel \"Polarizacion\";\n";
   file<<"set title \"Polarizacion media\";\n";
 
+}
+void plot_sus(std::string Exp_ID, double DeltaJ, double rho, 
+	      const std::vector<double>& Fields, const std::vector<double>& tau){
+  std::ofstream file;
+  file.open( "plots.p");
+  file<<"reset;\n set terminal png;\n";
+  
+  if (Exp_ID == "cool" || Exp_ID == "heat"){
+    file<<"set xlabel \"$Temperatura [\\\\Delta J/k_B]$\";\n";
+    file<<"set ylabel\"$\\\\chi$\";\n";
+    /*Graficos de la susceptibilidad en función de la temperatura
+     * para campo fijo y frecuancias disponibles*/
+    for(unsigned int E=0; E<Fields.size() ; E++){
+      std::ostringstream id_proc;
+      id_proc<<"sus_"<<Exp_ID<<"_J"<<DeltaJ<<"_p"<<rho<<"_E"<<Fields[E];
+      
+      file<<"set output \'"<<id_proc.str()<<".png\'\n";
+      file<<"set title \"Susceptibilidad ante Campos de amplitud constante $|E|="<<Fields[E]<<"[\\\\Delta J/\\\\mu]$ y distinta frecuencia\";\n";
+      file<<"plot ";
+      for(unsigned int t=0; t< tau.size(); t++){
+	file<<"\""<<id_proc.str()<<"_t"<<tau[t]<<".dat\" w l title \"$\\\\tau= "<<tau[t];
+	(t+1-tau.size()==0)? file<<"$\";\n\n" : file<<"$\", \\\n";
+      }
+    }
+    /*Graficos de la susceptibilidad en función de la temperatura
+     * para frecuencias fijas y campos disponibles*/
+    for(unsigned int t=0;t<tau.size();t++){
+      std::ostringstream id_proc;
+      id_proc<<"sus_"<<Exp_ID<<"_J"<<DeltaJ<<"_p"<<rho;
+      file<<"set output \'"<<id_proc.str()<<"_t"<<tau[t]<<".png\'\n";
+      file<<"set title \"Susceptibilidad ante Campos de frecuencia constante $\\\\tau="<<tau[t]<<"$ y amplitud variable\";\n";
+      file<<"plot ";
+      for(unsigned int E=0; E<Fields.size(); E++){
+	file<<"\""<<id_proc.str()<<"_E"<<Fields[E]<<"_t"<<tau[t]<<".dat\" w l title \"$\\|E|= "<<Fields[E];
+	(E+1-Fields.size()==0)? file<<"$\";\n\n" : file<<"$\", \\\n";
+      }
+    }
+  }
+  file.close();
+  std::system("gnuplot plots.p");
 }
