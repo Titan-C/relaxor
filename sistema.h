@@ -53,22 +53,12 @@ public:
     void Gen_exp(std::vector<double>& temperaturas, std::vector<double>& campos,
 		 std::vector<double> tau, unsigned int numexps, double DJ, double p,
 		 unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID, gsl_rng* rng);
-    //Variar temperatura del sistema, campos constantes. [Múltiples experimentos]
-    void Var_Temp(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       std::vector<double> tau, unsigned int numexps, double DJ, double p,
-		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
-    //Variar Campo del sistema, temperaturas constantes. [Múltiples experimentos]
-    void Var_Field(std::vector<double>& temperaturas, std::vector<double>& campos,
-		       std::vector<double> tau, unsigned int numexps, double DJ, double p,
-		       unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
-    //Lazos de histéresis a temperaturas fijas
-    void Hist_loop(std::vector<double>& temperaturas, double max_field, unsigned int numexps,
-		   double DJ, double p,
-		   unsigned int Equi_iter, unsigned int Exp_iter, gsl_rng* rng);
-    
 };
 
 //Operaciones necesarias para tratar datos
+void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
+		 std::vector< double > tau, unsigned int numexps, double DJ,
+		 double p, unsigned int Niter, std::string Exp_ID);
 /*PreProcesa los datos almacenados de los experimentos realizados de acuerdo a sus
  * condicones y número de ejecuciones.*/
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int,

@@ -41,38 +41,23 @@ int main(int argc, char **argv) {
   // weak field
   temperaturas.clear();
   temperaturas=step2vec(DeltaJ,9,0.1,0.5,temperaturas);
-  campos = str2vec(DeltaJ, "0.1");
-  tau = str2vec(1,"200 100 50 30 10 5 1");
-  relaxor.Var_Temp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,rng);
+  campos = str2vec(DeltaJ, "0.5 1.7 1 2.4 3.5 4");
+  tau = str2vec(1,"100 50 30 10 5");
+  relaxor.Gen_exp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,"cool",rng);
   
-  //strong fields
-  temperaturas.clear();
-  temperaturas=step2vec(DeltaJ,9,0.1,0.5,temperaturas);
-  campos = str2vec(DeltaJ, "0.5 1 1.5 2");
-  tau = str2vec(1,"50");
-  relaxor.Var_Temp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,rng);
-
   //Multifield temperature steps
   temperaturas = str2vec(DeltaJ,"0.5 1 1.5 2 3 4 5");
   campos.clear();
   campos = step2vec(DeltaJ, 0.2,9,0.5,campos);
-  tau = str2vec(1,"10");
-  relaxor.Var_Field(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,rng);
- 
-//   Multifield, single temp, various frec
-  temperaturas = str2vec(DeltaJ,"1.5");
-  campos.clear();
-  campos = step2vec(DeltaJ, 0.2,9,0.5,campos);
-  tau = str2vec(1,"10 30 100");
-  relaxor.Var_Field(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,rng);
+  tau = str2vec(1,"10 50");
+  relaxor.Gen_exp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,"riseE",rng);
   
   //Single temp histeresis
   temperaturas = str2vec(DeltaJ, "1 2.5");
-  relaxor.Hist_loop(temperaturas,9,numexps,DeltaJ,rho,Equi_iter,Exp_iter,rng);
+  campos = loop2vec(DeltaJ,9,10);
+  tau = str2vec(1,"1");
+  relaxor.Gen_exp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,"hist_loop",rng);
 
-
-  
-//   system("gnuplot ../plots.p");
   
   time(&end);
   cout<<difftime(end,start)<<endl;
