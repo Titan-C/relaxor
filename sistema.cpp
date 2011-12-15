@@ -135,7 +135,7 @@ double Sistema::set_mu(gsl_rng* rng, bool polarizar){
   return set_pol(rng, polarizar);
 }
 
-double Sistema::init(gsl_rng* rng, double DJ, double p, bool polarizar, bool write){
+void Sistema::init(gsl_rng* rng, double DJ, double p, bool polarizar, bool write){
   //Cambia las propidades del sistema
   DeltaJ = DJ;
   rho = p;
@@ -148,8 +148,6 @@ double Sistema::init(gsl_rng* rng, double DJ, double p, bool polarizar, bool wri
     std::cout<<"Desvición Estandar Total= "<<Delta_J<<"\n";
     std::cout<<"Polarización inicial="<<pol<<"\n";
   }
-  
-  return Delta_J;
 }
 
 double Sistema::total_E(double E){
@@ -218,33 +216,34 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
   field.clear();
 }
 
-void Sistema::Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
+void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
 		      std::vector< double > tau, unsigned int numexps, double DJ,
-		      double p, unsigned int Equi_iter, unsigned int Exp_iter,
+		      double p, unsigned int L, unsigned int Equi_iter, unsigned int Exp_iter,
 		      std::string Exp_ID, gsl_rng* rng)
 {
   clock_t cl_start = clock();
+  Sistema relaxor(L, rng);
   if (Exp_ID == "cool" || Exp_ID == "heat"){
     for(unsigned int t=0; t< tau.size() ; t++){
       for(unsigned int E=0; E<Fields.size(); E++){
 	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
+	id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_E"<<Fields[E]/DJ<<"_t"<<tau[t];
 	for(unsigned int n=0; n<numexps; n++){
-	  init(rng,DJ,p,false);
+	  relaxor.init(rng,DJ,p,false);
 	  for(unsigned int T=0; T<Temps.size(); T++){
-	    experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
-	    experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
 	  }}}}}
   else {
     for(unsigned int t=0; t< tau.size() ; t++){
       for(unsigned int T=0; T<Temps.size(); T++){
 	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
+	id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_T"<<Temps[T]/DJ<<"_t"<<tau[t];
 	for(unsigned int n=0; n<numexps; n++){
-	  init(rng,DJ,p,false);
+	  relaxor.init(rng,DJ,p,false);
 	  for(unsigned int E=0; E<Fields.size(); E++){
-	    experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
-	    experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
 	  }}}}}
 
   proces_data(Temps,Fields,tau,numexps, DJ,p,Exp_iter,Exp_ID);
@@ -261,14 +260,14 @@ void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
 	std::ostringstream id_proc;
 	std::vector<double> pol_stats, pol_int_avg;
 	if (Exp_ID == "cool" || Exp_ID == "heat"){
-	  id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
+	  id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_E"<<Fields[E]/DJ<<"_t"<<tau[t];
 	  pp_data(pol_stats,pol_int_avg,Temps.size(),numexps,tau[t],Niter,id_proc.str());
 	  std::vector<double> intfield (1,Fields[E]);
 	  eval_pol(pol_stats,numexps,DJ,Temps,id_proc.str(),true);
 	  calc_sus(pol_int_avg,numexps,DJ,Temps,intfield,id_proc.str());
 	  intfield.clear();
 	} else {
-	  id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
+	  id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_T"<<Temps[T]/DJ<<"_t"<<tau[t];
 	  pp_data(pol_stats,pol_int_avg,Fields.size(),numexps,tau[t],Niter,id_proc.str());
 	  eval_pol(pol_stats,numexps,DJ,Fields,id_proc.str(),(Exp_ID=="hist_loop") ? false : true);
 	  calc_sus(pol_int_avg,numexps,DJ,Fields,Fields,id_proc.str());
@@ -398,7 +397,7 @@ std::vector<double> loop2vec(double unidad, double max, int divs){
   double step = 1.0 / divs;
   unsigned int l=0;
   for(double x=step; x<=1 ;x+=step){
-    vec.push_back(x*x*x*max*unidad);
+    vec.push_back(x*x*max*unidad);
     l++;
   }
   for(unsigned int i=l-1; i>0; i--)
