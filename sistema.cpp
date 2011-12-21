@@ -76,23 +76,24 @@ void Sistema::set_space_config(){
 
 double Sistema::Jex(gsl_rng* rng){
   std::vector< std::vector<double> > Jinter;
-  Jinter.resize(sigma.size());
+  unsigned int N=sigma.size();
+  Jinter.resize(N);
   /*Genera las matriz triangular superior de las
    * energías de intecambio segun una distribución
    * Gaussiana*/
-  for(unsigned int i = 0; i<Jinter.size(); i++){
-    Jinter[i].resize(sigma.size());
-    for(unsigned int j = i+1; j<Jinter[i].size(); j++)
+  for(unsigned int i = 0; i<N; i++){
+    Jinter[i].resize(N);
+    for(unsigned int j = i+1; j<N; j++)
       Jinter[i][j] = gsl_ran_gaussian(rng,DeltaJ)+rho;
   }
   //Completa la parte inferior de la matriz de intercambio
-  for(unsigned int i = 0; i<Jinter.size(); i++){
-    for(unsigned int j = i+1; j<Jinter.size(); j++)
+  for(unsigned int i = 0; i<N; i++){
+    for(unsigned int j = i+1; j<N; j++)
       Jinter[j][i] = Jinter[i][j];
   }
   // Elabora el arreglo de interacción de primeros vecinos
-  for(unsigned int i=0; i<J.size(); i++){
-    for(unsigned int j=0; j<J[i].size(); j++)
+  for(unsigned int i=0; i<N; i++){
+    for(unsigned int j=0; j<6; j++)
       J[i][j] = Jinter[i][G[i][j]];
   }
   //liberar mem
