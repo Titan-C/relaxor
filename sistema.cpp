@@ -295,18 +295,15 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   //Abrir Archivo y leer
   std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
-  for(unsigned int n=0; n<numexps; n++){
-    for(unsigned int i=0; i<data_length; i++){
+  for(unsigned int ind=0; ind<numexps*data_length; ind+=2){
       file.read((char *)&pol_hist[0],Niter*sizeof(double));
       /*Calcular media y desviación estandar de polarización por
        numero y condiciones de experimento*/
-      unsigned int ind = 2*(n*data_length+i);
       pol_stats[ind]=gsl_stats_mean(pol_hist,1,Niter);
       pol_stats[ind+1]=gsl_stats_sd_m(pol_hist,1,Niter, pol_stats[ind]);
       /*Integración por Simpson, para promedio pesado */
       pol_int_avg[ind]=simpson_int(pol_hist,cos_wave)/Niter;
       pol_int_avg[ind+1]=simpson_int(pol_hist,sin_wave)/Niter;
-    }
   }
   //liberar memoria
   cos_wave.clear();
