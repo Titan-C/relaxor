@@ -27,22 +27,23 @@ int main(int argc, char **argv) {
   
   gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
   
-  unsigned int L=8, numexps = 4, Equi_iter=350, Exp_iter= 1000;
-  double rho = 0.3;
+  unsigned int L=16, numexps = 10, Equi_iter=350, Exp_iter= 3000;
   gsl_rng_set(rng, time(NULL) );
   
   vector<double> tau;
   // Cooling process
-  vector<double> DeltaJ;
-  DeltaJ = str2vec(1," 0.2 0.5 1 1.5 3");
-  
-  tau = str2vec(1,"50");
+  vector<double> DeltaJ, rho;
+  DeltaJ = step2vec(1,0.2,1.5,0.1,DeltaJ);
+  rho = step2vec(1,0,0.2,0.01,rho);
+  vector<double> temperaturas, campos;
+  tau = str2vec(1,"2000 1000 500 300 100 50");
   
   for(unsigned int DJ=0; DJ<DeltaJ.size(); DJ++){
-  vector<double> temperaturas, campos;
-  temperaturas=step2vec(DeltaJ[DJ],60,0.1,2,temperaturas);
-  campos = str2vec(DeltaJ[DJ], "0.3");
-    Gen_exp(temperaturas,campos,tau,numexps,DeltaJ[DJ],rho,L,Equi_iter,Exp_iter,"cool",rng);
+    temperaturas.clear();
+    temperaturas=step2vec(DeltaJ[DJ],20,0,0.15,temperaturas);
+    campos = str2vec(DeltaJ[DJ], "0.35");
+    for(unsigned int p=0; p<rho.size(); p++)
+      Gen_exp(temperaturas,campos,tau,numexps,DeltaJ[DJ],rho[p],L,Equi_iter,Exp_iter,"cool",rng);
   }
 //   //Multifield temperature steps
 //   temperaturas = str2vec(DeltaJ,"0.5 1 1.5 2 3 4 5");
