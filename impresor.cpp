@@ -97,6 +97,15 @@ void array_print(const std::vector< std::vector< double > >& M, std::string ARCH
   }
   file.close();
 }
+void array_print_bin(const std::vector< double * >& V, std::string ARCHIVO, unsigned int cols){
+  std::ofstream file;
+  file.open (ARCHIVO.c_str());
+  
+  for (unsigned int i=0;i<V.size();i++)
+    file.write((char * )&V[i][0],cols*sizeof(double));
+  
+  file.close();
+}
 //limpia los archivos
 void file_wipe(std::string ARCHIVO){
   std::fstream file;

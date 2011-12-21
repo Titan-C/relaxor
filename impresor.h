@@ -17,6 +17,7 @@ void array_print(const std::vector< std::vector<unsigned int> >& M,
 		 std::string ARCHIVO, bool app=false, bool br = true);
 void array_print(const std::vector< std::vector<double> >& M,
 		 std::string ARCHIVO, bool app=false, bool br = true);
+void array_print_bin(const std::vector< double * >& V, std::string ARCHIVO, unsigned int cols);
 //limpia los archivos
 void file_wipe(std::string ARCHIVO);
 void import_data(std::vector < std::vector< double > >& M,
