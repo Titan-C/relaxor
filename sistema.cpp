@@ -285,8 +285,9 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
 	      unsigned int numexps, unsigned int tau, unsigned int Niter, std::string id_proc){
   //Generar vectores de Datos
   double * pol_hist = new double[Niter];
-  pol_stats.resize(data_length*numexps*2);
-  pol_int_avg.resize(data_length*numexps*2);
+  unsigned int dat_vec_size = data_length*numexps*2;
+  pol_stats.resize(dat_vec_size);
+  pol_int_avg.resize(dat_vec_size);
   
   /*Generar arreglo de peso sin, cos para la integral*/
   std::vector<double> cos_wave, sin_wave;
@@ -296,7 +297,7 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   //Abrir Archivo y leer
   std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
-  for(unsigned int ind=0; ind<numexps*data_length; ind+=2){
+  for(unsigned int ind=0; ind<dat_vec_size; ind+=2){
       file.read((char *)&pol_hist[0],Niter*sizeof(double));
       /*Calcular media y desviación estandar de polarización por
        numero y condiciones de experimento*/
