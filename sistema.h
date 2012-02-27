@@ -8,7 +8,8 @@
 class Sistema
 {
 private:
-    unsigned int dimension, L;			// Dimensionalidad del sistema, cantidad de PNR por lado
+    unsigned int dimension, L, vecinos;		// Dimensionalidad del sistema, cantidad de PNR por lado
+    unsigned int PNR;
     double DeltaJ, rho;
     std::vector<int> sigma;			// Arreglo de spines dipolares
     std::vector<double> mu_E;			// Arreglo de proyeciones de momento al eje del campo

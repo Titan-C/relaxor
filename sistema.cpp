@@ -17,13 +17,14 @@ Sistema::Sistema(unsigned int lado,
 		 bool polarizar){
   dimension = dim;
   L = lado;
+  PNR = pow(lado,dimension);
   // Dimensionado de arreglos caraterísticos del sistema
-  sigma.resize(pow(lado,dimension));
-  mu_E.resize(sigma.size());
+  sigma.resize(PNR);
+  mu_E.resize(PNR);
 
-  J.resize(sigma.size());
-  G.resize(sigma.size());
-  unsigned int vecinos = 2*dimension;
+  J.resize(PNR);
+  G.resize(PNR);
+  vecinos = 2*dimension;
   for(unsigned int i = 0; i < J.size(); i++){
     J[i].resize(vecinos);
     G[i].resize(vecinos);
@@ -48,7 +49,7 @@ Sistema::~Sistema(){
 void Sistema::set_space_config(){
   unsigned int ind_xy, L2=L*L;
   std::vector< std::vector<unsigned int> > R;
-  R.resize(sigma.size());
+  R.resize(PNR);
 
   for(unsigned int i=0; i<R.size(); i++){
     // Coeficientes vector posición i-ésima PNR
@@ -76,23 +77,22 @@ void Sistema::set_space_config(){
 
 double Sistema::Jex(gsl_rng* rng){
   std::vector< std::vector<double> > Jinter;
-  unsigned int N=sigma.size();
-  Jinter.resize(N);
+  Jinter.resize(PNR);
   /*Genera las matriz triangular superior de las
    * energías de intecambio segun una distribución
    * Gaussiana*/
-  for(unsigned int i = 0; i<N; i++){
-    Jinter[i].resize(N);
-    for(unsigned int j = i+1; j<N; j++)
+  for(unsigned int i = 0; i<PNR; i++){
+    Jinter[i].resize(PNR);
+    for(unsigned int j = i+1; j<PNR; j++)
       Jinter[i][j] = gsl_ran_gaussian(rng,DeltaJ)+rho;
   }
   //Completa la parte inferior de la matriz de intercambio
-  for(unsigned int i = 0; i<N; i++){
-    for(unsigned int j = i+1; j<N; j++)
+  for(unsigned int i = 0; i<PNR; i++){
+    for(unsigned int j = i+1; j<PNR; j++)
       Jinter[j][i] = Jinter[i][j];
   }
   // Elabora el arreglo de interacción de primeros vecinos
-  for(unsigned int i=0; i<N; i++){
+  for(unsigned int i=0; i<PNR; i++){
     for(unsigned int j=0; j<6; j++)
       J[i][j] = Jinter[i][G[i][j]];
   }
@@ -106,9 +106,9 @@ double Sistema::Jex(gsl_rng* rng){
 
 double Sistema::set_pol(gsl_rng* rng, bool polarizar){
   if (polarizar)
-    sigma.assign(sigma.size(),1);
+    sigma.assign(PNR,1);
   else{
-    for(unsigned int i=0; i<sigma.size(); i++)
+    for(unsigned int i=0; i<PNR; i++)
       sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
   }
 
@@ -116,7 +116,7 @@ double Sistema::set_pol(gsl_rng* rng, bool polarizar){
 }
 
 double Sistema::set_mu(gsl_rng* rng, bool polarizar){
-  for(unsigned int i=0; i<sigma.size(); i++)
+  for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
 
 //   //Tomar la suma de interacción de cada región con sus vecinos
@@ -164,8 +164,7 @@ double Sistema::total_E(double E){
 double Sistema::delta_E(unsigned int idflip, double E){
   double dHamil = 0;
   int s = sigma[idflip];
-  unsigned int neighbours = G[idflip].size();
-  for(unsigned int i = 0; i<neighbours; i++)
+  for(unsigned int i = 0; i<vecinos; i++)
     dHamil += J[idflip][i]*s*sigma[G[idflip][i]];
   dHamil *=4;
   dHamil += 2*E*mu_E[idflip]*s;
@@ -173,12 +172,11 @@ double Sistema::delta_E(unsigned int idflip, double E){
 }
 
 double Sistema::norm_pol(){
-  unsigned int N=sigma.size();
   double P=0;
-  for(unsigned int i=0; i<N; i++)
+  for(unsigned int i=0; i<PNR; i++)
     P += mu_E[i]*sigma[i];
 
-  return (double) P / N;
+  return (double) P / PNR;
 }
 
 void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
@@ -198,7 +196,7 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
     for(unsigned int j = 0; j< tau; j++){
       //       out(total_E(E), "energy_log.dat");
       /*Realiza el cambio del spin dipolar en una ubicación dada*/
-      for(unsigned int idflip = 0; idflip < sigma.size(); idflip++){
+      for(unsigned int idflip = 0; idflip < PNR; idflip++){
 	double dH = delta_E(idflip, field[j]);
 	if ( dH < 0)
 	  sigma[idflip] *= -1;
