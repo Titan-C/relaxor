@@ -1,13 +1,11 @@
 #Opciones variables
-CFLAGS=-Wall -lgsl -c
+CFLAGS=-Wall -c -g
+EXE=relaxor
 
-
-all:	relaxor
-#	g++ -lgsl -o relaxor -g main.cpp sistema.cpp impresor.cpp
-
+all: relaxor
 
 relaxor:	main.o sistema.o impresor.o
-	g++ main.o sistema.o impresor.o -o relaxor
+	g++ -g -Wall -lgsl $^ -o $(EXE)
 
 main.o: main.cpp
 	g++ $(CFLAGS) main.cpp
@@ -19,4 +17,4 @@ impresor.o: impresor.cpp
 	g++ $(CFLAGS) impresor.cpp
 
 clean:
-	rm -rf *o relaxor
+	rm -rf *o *~ $(EXE)
