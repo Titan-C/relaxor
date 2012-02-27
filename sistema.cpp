@@ -163,10 +163,12 @@ double Sistema::total_E(double E){
 
 double Sistema::delta_E(unsigned int idflip, double E){
   double dHamil = 0;
-  for(unsigned int i = 0; i<G[idflip].size(); i++)
-    dHamil += J[idflip][i]*sigma[idflip]*sigma[G[idflip][i]];
+  int s = sigma[idflip];
+  unsigned int neighbours = G[idflip].size();
+  for(unsigned int i = 0; i<neighbours; i++)
+    dHamil += J[idflip][i]*s*sigma[G[idflip][i]];
   dHamil *=4;
-  dHamil += 2*E*mu_E[idflip]*sigma[idflip];
+  dHamil += 2*E*mu_E[idflip]*s;
   return dHamil;
 }
 
