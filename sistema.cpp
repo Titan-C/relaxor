@@ -465,12 +465,12 @@ double stan_dev(const std::vector< std::vector<double> >& M){
   unsigned int celdas, columnas;
   columnas = M[1].size();
   celdas = M.size() * columnas;
-  double * Aij;
-  Aij = new double [celdas];
+  double * Aij = new double [celdas];
   for(unsigned int i = 0 ; i<M.size(); i++){
     for(unsigned int j = 0; j<columnas; j++)
       Aij[i*columnas + j] = M[i][j];
   }
-  return gsl_stats_sd (Aij, 1, celdas);
+  double sd = gsl_stats_sd (Aij, 1, celdas);
   delete[] Aij;
+  return sd;
 }
