@@ -11,8 +11,8 @@ private:
     unsigned int dimension, L, vecinos;		// Dimensionalidad del sistema, cantidad de PNR por lado
     unsigned int PNR;
     double DeltaJ, rho;
-    std::vector<int> sigma;			// Arreglo de spines dipolares
-    std::vector<double> mu_E;			// Arreglo de proyeciones de momento al eje del campo
+    double * sigma;				// Arreglo de spines dipolares
+    double * mu_E;				// Arreglo de proyeciones de momento al eje del campo
 
     std::vector< std::vector<double> > J;	// Energías de intercambio primeros vecinos
     std::vector< std::vector<unsigned int> > G;	// Configuración espacial de primeros vecinos

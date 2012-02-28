@@ -19,8 +19,8 @@ Sistema::Sistema(unsigned int lado,
   L = lado;
   PNR = pow(lado,dimension);
   // Dimensionado de arreglos caraterísticos del sistema
-  sigma.resize(PNR);
-  mu_E.resize(PNR);
+  sigma = new double [PNR];
+  mu_E = new double [PNR];
 
   J.resize(PNR);
   G.resize(PNR);
@@ -42,8 +42,8 @@ Sistema::~Sistema(){
   }
   J.clear();
   G.clear();
-  mu_E.clear();
-  sigma.clear();
+  delete[] mu_E;
+  delete[] sigma;
 }
 
 void Sistema::set_space_config(){
@@ -106,7 +106,7 @@ double Sistema::Jex(gsl_rng* rng){
 
 double Sistema::set_pol(gsl_rng* rng, bool polarizar){
   if (polarizar)
-    sigma.assign(PNR,1);
+    for(unsigned int i=0; i<PNR; i++) sigma[i] = 1;
   else{
     for(unsigned int i=0; i<PNR; i++)
       sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
