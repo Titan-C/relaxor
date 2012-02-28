@@ -19,15 +19,15 @@ Sistema::Sistema(unsigned int lado,
   L = lado;
   PNR = pow(lado,dimension);
   // Dimensionado de arreglos caraterísticos del sistema
-  sigma = new double [PNR];
+  sigma = new int [PNR];
   mu_E = new double [PNR];
 
-  J.resize(PNR);
-  G.resize(PNR);
   vecinos = 2*dimension;
-  for(unsigned int i = 0; i < J.size(); i++){
-    J[i].resize(vecinos);
-    G[i].resize(vecinos);
+  J = new double *[PNR];
+  G = new unsigned int *[PNR];
+  for(unsigned int i = 0; i < PNR; i++){
+    J[i] = new double [vecinos];
+    G[i] = new unsigned int [vecinos];
   }
   //Generar configuración espacial de PNR
   set_space_config();
@@ -36,12 +36,12 @@ Sistema::Sistema(unsigned int lado,
 /*Destructor:
 libera la memoria asignada a los vectores del sistema*/
 Sistema::~Sistema(){
-  for(unsigned int i = 0; i < J.size(); i++){
-    J[i].clear();
-    G[i].clear();
+  for(unsigned int i=0; i<PNR; i++){
+    delete[] J[i];
+    delete[] G[i];
   }
-  J.clear();
-  G.clear();
+  delete[] J;
+  delete[] G;
   delete[] mu_E;
   delete[] sigma;
 }
@@ -67,7 +67,7 @@ void Sistema::set_space_config(){
     G[i][2] = (R[i][1] == L-1 )	?i - (L-1)*L	:i + L;//derecha
     G[i][3] = (R[i][1] == 0)	?i + (L-1)*L	:i - L;//izquierda
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
-    G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz    
+    G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz
   }
   //liberar mem
   for(unsigned int i=0; i<R.size();i++)
@@ -93,7 +93,7 @@ double Sistema::Jex(gsl_rng* rng){
   }
   // Elabora el arreglo de interacción de primeros vecinos
   for(unsigned int i=0; i<PNR; i++){
-    for(unsigned int j=0; j<6; j++)
+    for(unsigned int j=0; j<vecinos; j++)
       J[i][j] = Jinter[i][G[i][j]];
   }
   //liberar mem
@@ -101,7 +101,7 @@ double Sistema::Jex(gsl_rng* rng){
     Jinter[i].clear();
   Jinter.clear();
 
-  return stan_dev(J);
+  return stan_dev(J,PNR,vecinos);
 }
 
 double Sistema::set_pol(gsl_rng* rng, bool polarizar){
@@ -153,8 +153,8 @@ void Sistema::init(gsl_rng* rng, double DJ, double p, bool polarizar, bool write
 
 double Sistema::total_E(double E){
   double Hamil = 0;
-  for(unsigned int i = 0; i < G.size(); i++){
-    for(unsigned int j = 0; j < G[i].size(); j++)
+  for(unsigned int i = 0; i < PNR; i++){
+    for(unsigned int j = 0; j < vecinos; j++)
       Hamil -= J[i][j]*sigma[i]*sigma[G[i][j]];
     Hamil -= E*mu_E[i]*sigma[i];
   }
@@ -463,14 +463,13 @@ double simpson_int(const double f_array[], const std::vector<double>& weight){
 }
 
 //Calcular la desviación estandar de una matriz
-double stan_dev(const std::vector< std::vector<double> >& M){
-  unsigned int celdas, columnas;
-  columnas = M[1].size();
-  celdas = M.size() * columnas;
+double stan_dev(double ** M, unsigned int rows, unsigned int cols){
+  unsigned int celdas;
+  celdas = rows * cols;
   double * Aij = new double [celdas];
-  for(unsigned int i = 0 ; i<M.size(); i++){
-    for(unsigned int j = 0; j<columnas; j++)
-      Aij[i*columnas + j] = M[i][j];
+  for(unsigned int i = 0 ; i<rows; i++){
+    for(unsigned int j = 0; j<cols; j++)
+      Aij[i*cols + j] = M[i][j];
   }
   double sd = gsl_stats_sd (Aij, 1, celdas);
   delete[] Aij;

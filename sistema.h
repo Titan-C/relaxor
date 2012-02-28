@@ -11,11 +11,11 @@ private:
     unsigned int dimension, L, vecinos;		// Dimensionalidad del sistema, cantidad de PNR por lado
     unsigned int PNR;
     double DeltaJ, rho;
-    double * sigma;				// Arreglo de spines dipolares
+    int * sigma;				// Arreglo de spines dipolares
     double * mu_E;				// Arreglo de proyeciones de momento al eje del campo
 
-    std::vector< std::vector<double> > J;	// Energías de intercambio primeros vecinos
-    std::vector< std::vector<unsigned int> > G;	// Configuración espacial de primeros vecinos
+    double ** J;					// Energías de intercambio primeros vecinos
+    unsigned int ** G;	// Configuración espacial de primeros vecinos
 
 public:
     // Constructor y destructor
@@ -75,7 +75,7 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
 
 //Funciones adicionales
 //Calcula la desviación estandar de los datos de toda la matriz
-double stan_dev(const std::vector< std::vector< double > >& M);
+double stan_dev(double ** M, unsigned int rows, unsigned int cols);
 //Genera un vector de datos double, entre dos números con cierto paso
 std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector< double > last);
 //Genera un vector de datos para un lazo
