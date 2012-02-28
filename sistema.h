@@ -77,11 +77,11 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
 //Calcula la desviación estandar de los datos de toda la matriz
 double stan_dev(double ** M, unsigned int rows, unsigned int cols);
 //Genera un vector de datos double, entre dos números con cierto paso
-std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector< double > last);
+std::vector<double> step2vec(double v_start, double v_end, double dv, std::vector< double > last, double unidad = 1);
 //Genera un vector de datos para un lazo
-std::vector<double> loop2vec(double unidad, double max, int divs);
+std::vector<double> loop2vec(double max, int divs, double unidad=1);
 //Genera un vector de datos double que contiene los números declarados en el string
-std::vector<double> str2vec(double unidad, std::string magnitudes);
+std::vector<double> str2vec(std::string magnitudes, double unidad=1);
 //Realiza una integración por Simpson de la función f con un peso
 double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales

@@ -380,7 +380,7 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, doub
   delete[] data_arrayi;
 }
 
-std::vector<double> step2vec(double unidad, double v_start, double v_end, double dv, std::vector<double> last){
+std::vector<double> step2vec(double v_start, double v_end, double dv, std::vector<double> last, double unidad){
   while(v_start<=v_end) {
     last.push_back(v_start*unidad);
     v_start+=dv;
@@ -393,7 +393,7 @@ std::vector<double> step2vec(double unidad, double v_start, double v_end, double
   return last;
 }
 
-std::vector<double> loop2vec(double unidad, double max, int divs){
+std::vector<double> loop2vec(double max, int divs, double unidad){
   std::vector<double> vec;
   double step = 1.0 / divs;
   unsigned int l=0;
@@ -414,7 +414,7 @@ std::vector<double> loop2vec(double unidad, double max, int divs){
   return vec;
 }
 
-std::vector<double> str2vec(double unidad, std::string magnitudes){
+std::vector<double> str2vec(std::string magnitudes, double unidad){
   std::istringstream data(magnitudes);
   std::vector<double> data_array;
   double num;
