@@ -84,7 +84,7 @@ double Sistema::Jex(gsl_rng* rng){
   for(unsigned int i = 0; i<PNR; i++){
     Jinter[i].resize(PNR);
     for(unsigned int j = i+1; j<PNR; j++)
-      Jinter[i][j] = gsl_ran_gaussian(rng,DeltaJ)+rho;
+      Jinter[i][j] = gsl_ran_gaussian(rng,1)+rho;
   }
   //Completa la parte inferior de la matriz de intercambio
   for(unsigned int i = 0; i<PNR; i++){
@@ -136,9 +136,8 @@ double Sistema::set_mu(gsl_rng* rng, bool polarizar){
   return set_pol(rng, polarizar);
 }
 
-void Sistema::init(gsl_rng* rng, double DJ, double p, bool polarizar, bool write){
+void Sistema::init(gsl_rng* rng, double p, bool polarizar, bool write){
   //Cambia las propidades del sistema
-  DeltaJ = DJ;
   rho = p;
   // Genera las energías de intercambio de las PNR
   double Delta_J=Jex(rng);
@@ -220,8 +219,8 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
 }
 
 void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
-		      std::vector< double > tau, unsigned int numexps, double DJ,
-		      double p, unsigned int L, unsigned int Equi_iter, unsigned int Exp_iter,
+		      std::vector< double > tau, unsigned int numexps, double p,
+		      unsigned int L, unsigned int Equi_iter, unsigned int Exp_iter,
 		      std::string Exp_ID, gsl_rng* rng)
 {
   clock_t cl_start = clock();
@@ -230,9 +229,9 @@ void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
     for(unsigned int t=0; t< tau.size() ; t++){
       for(unsigned int E=0; E<Fields.size(); E++){
 	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_E"<<Fields[E]/DJ<<"_t"<<tau[t];
+	id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
 	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(rng,DJ,p,false);
+	  relaxor.init(rng,p,false);
 	  for(unsigned int T=0; T<Temps.size(); T++){
 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
@@ -241,20 +240,20 @@ void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
     for(unsigned int t=0; t< tau.size() ; t++){
       for(unsigned int T=0; T<Temps.size(); T++){
 	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_T"<<Temps[T]/DJ<<"_t"<<tau[t];
+	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
 	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(rng,DJ,p,false);
+	  relaxor.init(rng,p,false);
 	  for(unsigned int E=0; E<Fields.size(); E++){
 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
 	  }}}}}
 
-  proces_data(Temps,Fields,tau,numexps, DJ,p,Exp_iter,Exp_ID);
+  proces_data(Temps,Fields,tau,numexps, p,Exp_iter,Exp_ID);
   std::cout<<Exp_ID<<":"<<clock()-cl_start<<"\n";
 }
 
 void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
-		 std::vector< double > tau, unsigned int numexps, double DJ,
+		 std::vector< double > tau, unsigned int numexps,
 		 double p, unsigned int Niter, std::string Exp_ID){
   //procesar los datos
   for (unsigned int t=0;t<tau.size();t++){
@@ -263,24 +262,24 @@ void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
 	std::ostringstream id_proc;
 	std::vector<double> pol_stats, pol_int_avg;
 	if (Exp_ID == "cool" || Exp_ID == "heat"){
-	  id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_E"<<Fields[E]/DJ<<"_t"<<tau[t];
+	  id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
 	  pp_data(pol_stats,pol_int_avg,Temps.size(),numexps,tau[t],Niter,id_proc.str());
 	  std::vector<double> intfield (1,Fields[E]);
-	  eval_pol(pol_stats,numexps,DJ,Temps,id_proc.str(),true);
-	  calc_sus(pol_int_avg,numexps,DJ,Temps,intfield,id_proc.str());
+	  eval_pol(pol_stats,numexps,Temps,id_proc.str(),true);
+	  calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc.str());
 	  intfield.clear();
 	} else {
-	  id_proc<<Exp_ID<<"_J"<<DJ<<"_p"<<p<<"_T"<<Temps[T]/DJ<<"_t"<<tau[t];
+	  id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
 	  pp_data(pol_stats,pol_int_avg,Fields.size(),numexps,tau[t],Niter,id_proc.str());
-	  eval_pol(pol_stats,numexps,DJ,Fields,id_proc.str(),(Exp_ID=="hist_loop") ? false : true);
-	  calc_sus(pol_int_avg,numexps,DJ,Fields,Fields,id_proc.str());
+	  eval_pol(pol_stats,numexps,Fields,id_proc.str(),(Exp_ID=="hist_loop") ? false : true);
+	  calc_sus(pol_int_avg,numexps,Fields,Fields,id_proc.str());
 	}
 	pol_int_avg.clear();
 	pol_stats.clear();
   }}}
   
   //Graficar
-  plot_sus(Exp_ID,DJ,p,Temps,Fields,tau);
+  plot_sus(Exp_ID,p,Temps,Fields,tau);
 }
 
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
@@ -315,7 +314,7 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   delete[] pol_hist;
   file.close();
 }
-void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, double unidad, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
+void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
 
   //Polarización, o polarización absoluta y desviación estandar
   double * data_array = new double [numexps];
@@ -324,7 +323,7 @@ void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, double
   pol_final.resize(data_length);
   for(unsigned int x=0;x< data_length; x++){
     pol_final[x].resize(3);
-    pol_final[x][0]=x_array[x]/unidad;
+    pol_final[x][0]=x_array[x];
     
     double pol_std=0;
     for(unsigned int n=0;n<numexps;n++){
@@ -345,7 +344,7 @@ void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, double
   pol_final.clear();
 }
 
-void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, double unidad,
+void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
 	      const std::vector<double>& x_array, const std::vector<double>& campo, std::string id_proc){
 
   /*Calcular susceptibildad más error*/
@@ -357,7 +356,7 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps, doub
   X_mat.resize(data_length);
   for(unsigned int x=0;x<data_length;x++){
     X_mat[x].resize(5);
-    X_mat[x][0]=x_array[x]/unidad;
+    X_mat[x][0]=x_array[x];
     
     for(unsigned int n=0;n<numexps;n++){
       unsigned int ind = 2*(n*data_length+x);

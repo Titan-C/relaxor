@@ -136,7 +136,7 @@ void plot_pol(std::string id_proc)
   file<<"set title \"Polarizacion media\";\n";
 
 }
-void plot_sus(std::string Exp_ID, double DJ, double rho,
+void plot_sus(std::string Exp_ID, double rho,
 	      const std::vector<double>& Temps, const std::vector<double>& Fields,
 	      const std::vector<double>& tau){
   std::ofstream file;
@@ -150,10 +150,10 @@ void plot_sus(std::string Exp_ID, double DJ, double rho,
      * para campo fijo y frecuencias disponibles*/
     for(unsigned int E=0; E<Fields.size() ; E++){
       std::ostringstream id_proc;
-      id_proc<<"sus_"<<Exp_ID<<"_J"<<DJ<<"_p"<<rho<<"_E"<<Fields[E]/DJ;
+      id_proc<<"sus_"<<Exp_ID<<"_p"<<rho<<"_E"<<Fields[E];
 
       file<<"set output \'"<<id_proc.str()<<".png\'\n";
-      file<<"set title \"Susceptibilidad ante Campos de amplitud constante $|E|="<<Fields[E]/DJ<<"[\\\\Delta J/\\\\overline{\\\\mu}]$ y distinta frecuencia\";\n";
+      file<<"set title \"Susceptibilidad ante Campos de amplitud constante $|E|="<<Fields[E]<<"[\\\\Delta J/\\\\overline{\\\\mu}]$ y distinta frecuencia\";\n";
       file<<"plot ";
       for(unsigned int t=0; t< tau.size(); t++){
 	file<<"\""<<id_proc.str()<<"_t"<<tau[t]<<".dat\" w l title \"$\\\\tau= "<<tau[t];
@@ -164,12 +164,12 @@ void plot_sus(std::string Exp_ID, double DJ, double rho,
      * para frecuencias fijas y campos disponibles*/
     for(unsigned int t=0;t<tau.size();t++){
       std::ostringstream id_proc;
-      id_proc<<"sus_"<<Exp_ID<<"_J"<<DJ<<"_p"<<rho;
+      id_proc<<"sus_"<<Exp_ID<<"_p"<<rho;
       file<<"set output \'"<<id_proc.str()<<"_t"<<tau[t]<<".png\'\n";
       file<<"set title \"Susceptibilidad ante Campos de frecuencia constante $\\\\tau="<<tau[t]<<"$ y amplitud variable\";\n";
       file<<"plot ";
       for(unsigned int E=0; E<Fields.size(); E++){
-	file<<"\""<<id_proc.str()<<"_E"<<Fields[E]/DJ<<"_t"<<tau[t]<<".dat\" w l title \"$|E|= "<<Fields[E]/DJ;
+	file<<"\""<<id_proc.str()<<"_E"<<Fields[E]<<"_t"<<tau[t]<<".dat\" w l title \"$|E|= "<<Fields[E];
 	(E+1-Fields.size()==0)? file<<"$\";\n\n" : file<<"$\", \\\n";
       }
     }
@@ -179,10 +179,10 @@ void plot_sus(std::string Exp_ID, double DJ, double rho,
      * para temperatura fija y frecuencias disponibles*/
     for(unsigned int T=0; T<Temps.size() ; T++){
       std::ostringstream id_proc;
-      id_proc<<"sus_"<<Exp_ID<<"_J"<<DJ<<"_p"<<rho<<"_T"<<Temps[T]/DJ;
+      id_proc<<"sus_"<<Exp_ID<<"_p"<<rho<<"_T"<<Temps[T];
 
       file<<"set output \'"<<id_proc.str()<<".png\'\n";
-      file<<"set title \"Susceptibilidad a temperatura constante $T="<<Temps[T]/DJ<<"[\\\\Delta J/\\\\overline{\\\\mu}]$ y distinta frecuencia\";\n";
+      file<<"set title \"Susceptibilidad a temperatura constante $T="<<Temps[T]<<"[\\\\Delta J/\\\\overline{\\\\mu}]$ y distinta frecuencia\";\n";
       file<<"plot ";
       for(unsigned int t=0; t< tau.size(); t++){
 	file<<"\""<<id_proc.str()<<"_t"<<tau[t]<<".dat\" w l title \"$\\\\tau= "<<tau[t];
@@ -193,12 +193,12 @@ void plot_sus(std::string Exp_ID, double DJ, double rho,
      * para frecuencias fijas y temperaturas disponibles*/
     for(unsigned int t=0;t<tau.size();t++){
       std::ostringstream id_proc;
-      id_proc<<"sus_"<<Exp_ID<<"_J"<<DJ<<"_p"<<rho;
+      id_proc<<"sus_"<<Exp_ID<<"_p"<<rho;
       file<<"set output \'"<<id_proc.str()<<"_t"<<tau[t]<<".png\'\n";
       file<<"set title \"Susceptibilidad ante Campos de frecuencia constante $\\\\tau="<<tau[t]<<"$ y distintas temperaturas\";\n";
       file<<"plot ";
       for(unsigned int T=0; T<Temps.size(); T++){
-	file<<"\""<<id_proc.str()<<"_T"<<Temps[T]/DJ<<"_t"<<tau[t]<<".dat\" w l title \"$T= "<<Temps[T]/DJ;
+	file<<"\""<<id_proc.str()<<"_T"<<Temps[T]<<"_t"<<tau[t]<<".dat\" w l title \"$T= "<<Temps[T];
 	(T+1-Temps.size()==0)? file<<"$\";\n\n" : file<<"$\", \\\n";
       }
     }

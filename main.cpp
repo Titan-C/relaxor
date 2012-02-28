@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     temperaturas=step2vec(12,0.1,0.25,temperaturas);
     campos = str2vec("0.35");
   //  for(unsigned int p=0; p<rho.size(); p++)
-      Gen_exp(temperaturas,campos,tau,numexps,1,0.5,L,Equi_iter,Exp_iter,"cool",rng);
+      Gen_exp(temperaturas,campos,tau,numexps,0.5,L,Equi_iter,Exp_iter,"cool",rng);
 
 //   //Multifield temperature steps
 //   temperaturas = str2vec(DeltaJ,"0.5 1 1.5 2 3 4 5");

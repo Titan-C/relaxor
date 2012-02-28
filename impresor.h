@@ -25,7 +25,7 @@ void import_data(std::vector < std::vector< double > >& M,
                  unsigned int filas, unsigned int columnas);
 //Cola de Gráficos
 void plot_pol(std::string id_proc);
-void plot_sus(std::string Exp_ID, double DJ, double rho,
+void plot_sus(std::string Exp_ID, double rho,
 	      const std::vector<double>& Temps, const std::vector<double>& Fields,
 	      const std::vector<double>& tau);
 #endif // IMPRESOR_H

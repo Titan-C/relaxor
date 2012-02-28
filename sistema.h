@@ -10,7 +10,7 @@ class Sistema
 private:
     unsigned int dimension, L, vecinos;		// Dimensionalidad del sistema, cantidad de PNR por lado
     unsigned int PNR;
-    double DeltaJ, rho;
+    double rho;
     int * sigma;				// Arreglo de spines dipolares
     double * mu_E;				// Arreglo de proyeciones de momento al eje del campo
 
@@ -35,7 +35,7 @@ public:
     //Genera los momentos dipolares
     double set_mu(gsl_rng* rng, bool polarizar);
     //Inicializa al sistema
-    void init(gsl_rng* rng, double DJ = 1, double p=0,
+    void init(gsl_rng* rng, double p=0,
 		bool polarizar = true, bool write = false);
 
     //Calcula la energía total del sistema
@@ -52,11 +52,11 @@ public:
 };
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(std::vector<double>& temperaturas, std::vector<double>& campos,
-	     std::vector<double> tau, unsigned int numexps, double DJ, double p, unsigned int L,
+	     std::vector<double> tau, unsigned int numexps, double p, unsigned int L,
 	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID, gsl_rng* rng);
 //Operaciones necesarias para tratar datos
 void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
-		 std::vector< double > tau, unsigned int numexps, double DJ,
+		 std::vector< double > tau, unsigned int numexps,
 		 double p, unsigned int Niter, std::string Exp_ID);
 /*PreProcesa los datos almacenados de los experimentos realizados de acuerdo a sus
  * condicones y número de ejecuciones.*/
@@ -66,11 +66,11 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int,
 /*Encuentra la polarización promedio de manera absoluta o respetando signo, incluye 
  * también la magnitud del error*/
 void eval_pol(const std::vector< double >& pol_stats, unsigned int numexps,
-	      double unidad, const std::vector< double >& x_array,
+	      const std::vector< double >& x_array,
 	      std::string id_proc, bool absolut);
 /*Calcula la susceptibilidad del sistema*/
 void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
-	      double unidad, const std::vector<double>& x_array,
+	      const std::vector<double>& x_array,
 	      const std::vector<double>& campo, std::string id_proc);
 
 //Funciones adicionales
