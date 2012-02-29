@@ -1,20 +1,16 @@
 #Opciones variables
-CFLAGS=-Wall -c -g
 EXE=relaxor
+SOURCES=main.cpp sistema.cpp impresor.cpp
+OBJECTS=$(SOURCES:.cpp=.o)
+CFLAGS= -march=native -Wall -g -lgsl
 
-all: relaxor
+all: $(EXE)
 
-relaxor:	main.o sistema.o impresor.o
-	g++ -g -Wall -lgsl $^ -o $(EXE)
+$(EXE): $(OBJECTS)
+	g++ $(CFLAGS) $^ -o $@
 
-main.o: main.cpp
-	g++ $(CFLAGS) main.cpp
-
-sistema.o: sistema.cpp
-	g++ $(CFLAGS) sistema.cpp
-
-impresor.o: impresor.cpp
-	g++ $(CFLAGS) impresor.cpp
+.cpp.o:
+	g++ $(CFLAGS) -c $<
 
 clean:
 	rm -rf *o *~ $(EXE)
