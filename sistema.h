@@ -14,13 +14,13 @@ private:
     int * sigma;				// Arreglo de spines dipolares
     double * mu_E;				// Arreglo de proyeciones de momento al eje del campo
 
-    double ** J;					// Energías de intercambio primeros vecinos
-    unsigned int ** G;	// Configuración espacial de primeros vecinos
+    double ** J;				// Energías de intercambio primeros vecinos
+    unsigned int ** G;				// Configuración espacial de primeros vecinos
+    gsl_rng * rng;				// Generador de números aleatorios
 
 public:
     // Constructor y destructor
     Sistema(unsigned int lado,
-	    gsl_rng * rng,
 	    unsigned int dim = 3,
 	    bool polarizar = true);
     ~Sistema();
@@ -29,14 +29,13 @@ public:
      * Luego encuentra los primeros vecinos*/
     void set_space_config();
     //Llena la matriz de energías de intercambio del sistema
-    double Jex(gsl_rng* rng);
+    double Jex();
     //Genera la polarización inicial
-    double set_pol(gsl_rng* rng, bool polarizar);
+    double set_pol(bool polarizar);
     //Genera los momentos dipolares
-    double set_mu(gsl_rng* rng, bool polarizar);
+    double set_mu(bool polarizar);
     //Inicializa al sistema
-    void init(gsl_rng* rng, double p=0,
-		bool polarizar = true, bool write = false);
+    void init(double p=0, bool polarizar = true, bool write = false);
 
     //Calcula la energía total del sistema
     double total_E (double E);
@@ -48,12 +47,12 @@ public:
      * dados durante el tiempo otorgado(t) en [MCS/dipolo].
      * Graba los datos de ser necesario.*/
     void experimento(double T, double E, unsigned int tau, unsigned int Niter,
-		    bool grabar, gsl_rng* rng, std::string id_proc);
+		    bool grabar, std::string id_proc);
 };
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(std::vector<double>& temperaturas, std::vector<double>& campos,
 	     std::vector<double> tau, unsigned int numexps, double p, unsigned int L,
-	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID, gsl_rng* rng);
+	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID);
 //Operaciones necesarias para tratar datos
 void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
 		 std::vector< double > tau, unsigned int numexps,
@@ -85,6 +84,6 @@ std::vector<double> str2vec(std::string magnitudes, double unidad=1);
 //Realiza una integración por Simpson de la función f con un peso
 double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales
-std::vector<double> waves(unsigned int length, unsigned int tau, double amplitude, bool cossin);
+std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude,  double phase);
 
 #endif // SISTEMA_H

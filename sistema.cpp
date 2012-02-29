@@ -12,12 +12,12 @@
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
 Sistema::Sistema(unsigned int lado,
-		 gsl_rng* rng,
 		 unsigned int dim,
 		 bool polarizar){
   dimension = dim;
   L = lado;
   PNR = pow(lado,dimension);
+  rng = gsl_rng_alloc (gsl_rng_taus);
   // Dimensionado de arreglos caraterísticos del sistema
   sigma = new int [PNR];
   mu_E = new double [PNR];
@@ -36,6 +36,7 @@ Sistema::Sistema(unsigned int lado,
 /*Destructor:
 libera la memoria asignada a los vectores del sistema*/
 Sistema::~Sistema(){
+  gsl_rng_free (rng);
   for(unsigned int i=0; i<PNR; i++){
     delete[] J[i];
     delete[] G[i];
@@ -75,7 +76,7 @@ void Sistema::set_space_config(){
   R.clear();
 }
 
-double Sistema::Jex(gsl_rng* rng){
+double Sistema::Jex(){
   std::vector< std::vector<double> > Jinter;
   Jinter.resize(PNR);
   /*Genera las matriz triangular superior de las
@@ -104,7 +105,7 @@ double Sistema::Jex(gsl_rng* rng){
   return stan_dev(J,PNR,vecinos);
 }
 
-double Sistema::set_pol(gsl_rng* rng, bool polarizar){
+double Sistema::set_pol(bool polarizar){
   if (polarizar)
     for(unsigned int i=0; i<PNR; i++) sigma[i] = 1;
   else{
@@ -115,7 +116,7 @@ double Sistema::set_pol(gsl_rng* rng, bool polarizar){
   return norm_pol();
 }
 
-double Sistema::set_mu(gsl_rng* rng, bool polarizar){
+double Sistema::set_mu(bool polarizar){
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
 
@@ -133,16 +134,18 @@ double Sistema::set_mu(gsl_rng* rng, bool polarizar){
 //     mu_E[i]/=max;
 //   
 //   array_print(mu_E,"polarizacion.dat");
-  return set_pol(rng, polarizar);
+  return set_pol(polarizar);
 }
 
-void Sistema::init(gsl_rng* rng, double p, bool polarizar, bool write){
+void Sistema::init(double p, bool polarizar, bool write){
+  //Cambiar la semilla del generador de números aleatorios dentro de la clase
+  gsl_rng_set(rng, std::time(NULL) );
   //Cambia las propidades del sistema
   rho = p;
   // Genera las energías de intercambio de las PNR
-  double Delta_J=Jex(rng);
+  double Delta_J=Jex();
   //Momentos dipolares y polarización
-  double pol=set_mu(rng, polarizar);
+  double pol=set_mu(polarizar);
   
   if (write){
     std::cout<<"Desvición Estandar Total= "<<Delta_J<<"\n";
@@ -181,14 +184,18 @@ double Sistema::norm_pol(){
 }
 
 void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
-			 bool grabar, gsl_rng* rng, std::string id_proc){
+			 bool grabar, std::string id_proc){
   //vector historial de polarización por experimento
   std::vector<double> pol_mag;
   pol_mag.resize(Niter);
   
   //vector oscilación del campo alterno para un periodo
   std::vector<double> field;
-  field = waves(tau,tau,E,true);
+  double phase = 0;
+  if (!grabar)
+    phase = _2pi*Niter/tau;
+  
+  field = cosarray(tau,tau,E,phase);
   
   /*Simulación del experimento en el número de iteraciones dadas*/
   unsigned int periods = Niter/tau;
@@ -199,9 +206,7 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
       /*Realiza el cambio del spin dipolar en una ubicación dada*/
       for(unsigned int idflip = 0; idflip < PNR; idflip++){
 	double dH = delta_E(idflip, field[j]);
-	if ( dH < 0)
-	  sigma[idflip] *= -1;
-	else if ( exp(-dH/T) >= gsl_rng_uniform(rng) )
+	if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
 	  sigma[idflip] *= -1;
       }
       
@@ -221,20 +226,20 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
 void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
 		      std::vector< double > tau, unsigned int numexps, double p,
 		      unsigned int L, unsigned int Equi_iter, unsigned int Exp_iter,
-		      std::string Exp_ID, gsl_rng* rng)
+		      std::string Exp_ID)
 {
   clock_t cl_start = clock();
-  Sistema relaxor(L, rng);
+  Sistema relaxor(L);
   if (Exp_ID == "cool" || Exp_ID == "heat"){
     for(unsigned int t=0; t< tau.size() ; t++){
       for(unsigned int E=0; E<Fields.size(); E++){
 	std::ostringstream id_proc;
 	id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
 	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(rng,p,false);
+	  relaxor.init(p,false);
 	  for(unsigned int T=0; T<Temps.size(); T++){
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
 	  }}}}}
   else {
     for(unsigned int t=0; t< tau.size() ; t++){
@@ -242,10 +247,10 @@ void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
 	std::ostringstream id_proc;
 	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
 	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(rng,p,false);
+	  relaxor.init(p,false);
 	  for(unsigned int E=0; E<Fields.size(); E++){
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false,rng, id_proc.str());
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true,rng, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
+	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
 	  }}}}}
 
   proces_data(Temps,Fields,tau,numexps, p,Exp_iter,Exp_ID);
@@ -292,8 +297,8 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   
   /*Generar arreglo de peso sin, cos para la integral*/
   std::vector<double> cos_wave, sin_wave;
-  cos_wave = waves(Niter,tau,1.0,true);
-  sin_wave = waves(Niter,tau,1.0,false);
+  cos_wave = cosarray(Niter,tau,1.0,0);
+  sin_wave = cosarray(Niter,tau,1.0,_2pi/4);
   
   //Abrir Archivo y leer
   std::string name = "log_pol_"+id_proc+".dat";
@@ -424,17 +429,11 @@ std::vector<double> str2vec(std::string magnitudes, double unidad){
   return data_array;
 }
 
-std::vector<double> waves(unsigned int length, unsigned int tau, double amplitude, bool cossin){
+std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude, double phase){
   std::vector<double> wave;
   wave.resize(length);
-  if (cossin) {
     for(unsigned int i=0; i<tau; i++)
-      wave[i]=amplitude*cos(_2pi*i/tau);
-  }
-  else {
-    for(unsigned int i=0; i<tau; i++)
-      wave[i]=amplitude*sin(_2pi*i/tau);
-  }
+      wave[i]=amplitude*cos(_2pi*i/tau-phase);
   
   unsigned int periods = length/tau;
   for(unsigned int i=1; i<periods;i++){

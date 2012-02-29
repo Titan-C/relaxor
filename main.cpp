@@ -1,17 +1,16 @@
 /*
-Sistema de 2 dimensiones de un ferroelectrico relaxor
-
-TO DO
-Unidades del sistema
-umbtener valor de mu según datos de l a PNR
-J intercambio debe contener valores del mu
-*/
+ * Sistema de 2 dimensiones de un ferroelectrico relaxor
+ * 
+ * TO DO
+ * Unidades del sistema
+ * umbtener valor de mu según datos de l a PNR
+ * J intercambio debe contener valores del mu
+ */
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
-#include <gsl/gsl_rng.h>
 #include "sistema.h"
 #include "impresor.h"
 
@@ -22,40 +21,20 @@ int main(int argc, char **argv) {
   time_t start, end;
   time(&start);
   
-//  vaciar archivo de datos en cada ejecución
-//   system("rm *.dat");
-  
-  gsl_rng * rng = gsl_rng_alloc (gsl_rng_taus);
-  
-  unsigned int L=7, numexps = 4, Equi_iter=100, Exp_iter= 1000;
-  gsl_rng_set(rng, time(NULL) );
-  
+  unsigned int L=atoi(argv[1]), numexps = atoi(argv[2]), Equi_iter=atoi(argv[3]), Exp_iter= atoi(argv[4]);
+  cout<<argv[0];
   vector<double> tau;
   // Cooling process
   vector<double> rho;
   rho = step2vec(0,0.2,0.01,rho);
   vector<double> temperaturas, campos;
-  tau = str2vec("500 300 100");
+  tau = str2vec("100");
   
-    temperaturas.clear();
-    temperaturas=step2vec(12,0.1,0.25,temperaturas);
-    campos = str2vec("0.35");
+  temperaturas.clear();
+  temperaturas=step2vec(12,0.1,0.15,temperaturas);
+  campos = str2vec("0.35");
   //  for(unsigned int p=0; p<rho.size(); p++)
-      Gen_exp(temperaturas,campos,tau,numexps,0.5,L,Equi_iter,Exp_iter,"cool",rng);
-
-//   //Multifield temperature steps
-//   temperaturas = str2vec(DeltaJ,"0.5 1 1.5 2 3 4 5");
-//   campos.clear();
-//   campos = step2vec(DeltaJ, 0.2,9,0.5,campos);
-//   tau = str2vec(1,"10 50");
-//   relaxor.Gen_exp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,"riseE",rng);
-//   
-//   //Single temp histeresis
-//   temperaturas = str2vec(DeltaJ, "1 2.5");
-//   campos = loop2vec(DeltaJ,9,10);
-//   tau = str2vec(1,"1");
-//   relaxor.Gen_exp(temperaturas,campos,tau,numexps,DeltaJ,rho,Equi_iter,Exp_iter,"hist_loop",rng);
-
+  Gen_exp(temperaturas,campos,tau,numexps,0.6,L,Equi_iter,Exp_iter,"cool");
   
   time(&end);
   cout<<difftime(end,start)<<endl;
