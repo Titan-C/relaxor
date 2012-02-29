@@ -2,7 +2,7 @@
 EXE=relaxor
 SOURCES=main.cpp sistema.cpp impresor.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-CFLAGS= -march=native -Wall -g -lgsl
+CFLAGS= -march=native -Wall -g -lgsl -lgslcblas
 
 all: $(EXE)
 
