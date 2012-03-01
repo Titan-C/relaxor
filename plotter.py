@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 from numpy import *
 from pylab import *
-import glob
+from sys import argv
+from glob import glob
 
-def plot_pol():
-  return None
-
+def plot_pol(file):
+  rho,E,tau = prop(file)
+  data = genfromtxt(file)
+  T = data[:,0]
+  p = data[:,1]
+  pe = data[:,2]
+  errorbar(T,p,yerr=pe,label='E='+E+' $\\tau=$'+tau)
+  return rho,E,tau
 
 def plot_sus(file):
   rho,E,tau = prop(file)
@@ -17,6 +23,7 @@ def plot_sus(file):
   Ie = data[:,4]
   plot(T,X,'o-',label='E='+E+' $\\tau=$'+tau)
   #errorbar(T,X,yerr=Xe,label='E='+E+' $\\tau=$'+tau)
+  return rho,E,tau
 
 def prop(file):
   rho = file.find('_p')
@@ -30,14 +37,15 @@ def prop(file):
 
   return rho,E,tau
 
-if __name__ == "__main__":
-  files = glob.glob('sus*.dat')
+def generator(path):
+  files = glob(path)
   for file in files:
-    plot_sus(file)
-
-
+    rho = plot_sus(file)[0]
   xlabel('Temperature [$\\Delta J /k_B$]')
   ylabel('Electric susceptibility $\\chi$')
-  title('Simulation Data')
+  title('Simulation Data for $\\rho=$'+rho)
   legend()
   show()
+
+if __name__ == "__main__":
+  generator('sus*'+argv[1]+'*.dat')
