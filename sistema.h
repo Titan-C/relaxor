@@ -50,8 +50,8 @@ public:
 		    bool grabar, std::string id_proc);
 };
 //Funciones Para tratar los experimentos del sistema
-void Gen_exp(std::vector<double>& temperaturas, std::vector<double>& campos,
-	     std::vector<double> tau, unsigned int numexps, double p, unsigned int L,
+void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>& Temps,
+	     std::vector<double>& Fields, std::vector<double> tau, 
 	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID);
 //Operaciones necesarias para tratar datos
 void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,

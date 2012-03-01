@@ -20,21 +20,23 @@ int main(int argc, char **argv) {
   //iniciar sistema
   time_t start, end;
   time(&start);
+  unsigned int Equi_iter=350;
   
-  unsigned int L=atoi(argv[1]), numexps = atoi(argv[2]), Equi_iter=atoi(argv[3]), Exp_iter= atoi(argv[4]);
-  cout<<argv[0];
-  vector<double> tau;
-  // Cooling process
-  vector<double> rho;
-  rho = step2vec(0,0.2,0.01,rho);
-  vector<double> temperaturas, campos;
-  tau = str2vec("100");
+  //Parametros de entrada
+  unsigned int L=	 atoi(argv[1]);
+  unsigned int numexps = atoi(argv[2]);
+  vector<double> rho = 	 str2vec(argv[3]);
+  vector<double> campos= str2vec(argv[4]);
+  vector<double> tau =	 str2vec(argv[5]);
+  unsigned int Exp_iter= atoi(argv[6]);
   
+  vector<double> temperaturas;
   temperaturas.clear();
-  temperaturas=step2vec(12,0.1,0.15,temperaturas);
-  campos = str2vec("0.35");
-  //  for(unsigned int p=0; p<rho.size(); p++)
-  Gen_exp(temperaturas,campos,tau,numexps,0.6,L,Equi_iter,Exp_iter,"cool");
+  temperaturas=step2vec(11,0.2,0.15,temperaturas);
+  
+  
+  for(unsigned int p=0; p<rho.size(); p++)
+    Gen_exp(L,numexps,rho[p],temperaturas,campos,tau,Equi_iter,Exp_iter,"cool");
   
   time(&end);
   cout<<difftime(end,start)<<endl;

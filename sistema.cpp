@@ -223,10 +223,9 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
   field.clear();
 }
 
-void Gen_exp(std::vector< double >& Temps, std::vector< double >& Fields,
-		      std::vector< double > tau, unsigned int numexps, double p,
-		      unsigned int L, unsigned int Equi_iter, unsigned int Exp_iter,
-		      std::string Exp_ID)
+void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>& Temps,
+	     std::vector<double>& Fields, std::vector<double> tau, 
+	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID)
 {
   clock_t cl_start = clock();
   Sistema relaxor(L);
