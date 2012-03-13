@@ -1,12 +1,8 @@
-﻿
-'''Primera función que ajusta un archivo al mi función tomada'''
-import os, sys, inspect
-
-# ensure pyeq2 can be imported
+﻿'''Primera función que ajusta un archivo al mi función tomada'''
 import pyeq2
-from numpy import *
+from plotter import *
 from pylab import *
-import glob
+from glob import glob
 
 def data_fitter(file):
   f=open(file,'r')
@@ -34,18 +30,9 @@ def data_fitterOff(file):
   f.close()
   return equation
 
-def plotter(equation):
-  T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
-  E = equation.dataCache.allDataCacheDictionary['DependentData']
-  a,b,c,d = equation.solvedCoefficients
-  x=arange(100,T.max()*1.1,T.max()/150)
-  F=a*(x-b)/(x*x+c*x+d)
-  plot(T,E,'o')
-  plot(x,F)
-  
 def scaleFitter(fit_eq):
   record = 0.0
-  files=glob.glob('/home/oscar/fineresults/sus_cool_J1*.dat')
+  files=glob('/home/oscar/fineresults/sus_cool_J1*.dat')
   for file in files:
     S=open(file)
     data = S.read()
@@ -73,13 +60,13 @@ def recorder(equation,file):
   f.close()
 
 def test_experiment():
-  files=glob.glob('data/P*K.dat')
+  files=glob('data/P*K.dat')
   
   for file in files:
     eq = data_fitter(file)
     recorder(eq,file)
     print file, eq.solvedCoefficients
-    plotter(eq)
+    fittedPlot(eq)
   xlabel('Temperature [$\\Delta J /k_B$]')
   ylabel('Electric susceptibility $\\chi$')
   title('Simulation Data & fits')
