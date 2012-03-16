@@ -50,13 +50,12 @@ public:
 		    bool grabar, std::string id_proc);
 };
 //Funciones Para tratar los experimentos del sistema
-void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>& Temps,
-	     std::vector<double>& Fields, std::vector<double> tau, 
-	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID);
+void Gen_exp(unsigned int L, unsigned int numexps,double p, std::vector<double>& Tdat,
+	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID);
 //Operaciones necesarias para tratar datos
-void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
-		 std::vector< double > tau, unsigned int numexps,
-		 double p, unsigned int Niter, std::string Exp_ID);
+void proces_data(std::vector< double >& Temps, double Field,
+		 unsigned int tau, unsigned int numexps,
+		 double p, unsigned int Niter, std::string id_proc);
 /*PreProcesa los datos almacenados de los experimentos realizados de acuerdo a sus
  * condicones y número de ejecuciones.*/
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int,
@@ -81,6 +80,8 @@ std::vector<double> step2vec(double v_start, double v_end, double dv, std::vecto
 std::vector<double> loop2vec(double max, int divs, double unidad=1);
 //Genera un vector de datos double que contiene los números declarados en el string
 std::vector<double> str2vec(std::string magnitudes, double unidad=1);
+//Devuelve la cantidad de pasos necesarios durante la simulacion para cada frecuencia
+unsigned int stepEstimator(unsigned int tau);
 //Realiza una integración por Simpson de la función f con un peso
 double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales

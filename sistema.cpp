@@ -220,67 +220,70 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
   field.clear();
 }
 
-void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>& Temps,
-	     std::vector<double>& Fields, std::vector<double> tau, 
-	     unsigned int Equi_iter, unsigned int Exp_iter,std::string Exp_ID)
+void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>& Tdat,
+	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
-  clock_t cl_start = clock();
   Sistema relaxor(L);
+  unsigned int Equi_iter=350;
+//   Código para bajar (variar) la temperatura a campos fijos
   if (Exp_ID == "cool" || Exp_ID == "heat"){
+    std::vector<double> Thermostat;
+    Thermostat.clear();
+    Thermostat=step2vec(Tdat[0],Tdat[1],Tdat[2],Thermostat);
+
     for(unsigned int t=0; t< tau.size() ; t++){
+      unsigned int Exp_iter = stepEstimator(tau[t]);
+
       for(unsigned int E=0; E<Fields.size(); E++){
 	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
-	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(p,false);
-	  for(unsigned int T=0; T<Temps.size(); T++){
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
-	  }}}}}
-  else {
-    for(unsigned int t=0; t< tau.size() ; t++){
-      for(unsigned int T=0; T<Temps.size(); T++){
-	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
-	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(p,false);
-	  for(unsigned int E=0; E<Fields.size(); E++){
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
-	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
-	  }}}}}
+	id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
+	id_proc<<"_Ti"<<Tdat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[2]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
 
-  proces_data(Temps,Fields,tau,numexps, p,Exp_iter,Exp_ID);
-  std::cout<<Exp_ID<<":"<<clock()-cl_start<<"\n";
+	clock_t cl_start = clock();
+	for(unsigned int n=0; n<numexps; n++){
+	  relaxor.init(p,false);
+	  for(unsigned int T=0; T<Thermostat.size(); T++){
+	    relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
+	    relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
+	  }}
+	proces_data(Thermostat,Fields[E],tau[t],numexps, p,Exp_iter,id_proc.str());
+	std::cout<<id_proc.str()<<":"<<clock()-cl_start<<"\n";
+    }}
+  }
+//   Código para variar el campo a temperaturas fijas, desactualizado
+//   else {
+//     for(unsigned int t=0; t< tau.size() ; t++){
+//       for(unsigned int T=0; T<Temps.size(); T++){
+// 	std::ostringstream id_proc;
+// 	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
+// 	for(unsigned int n=0; n<numexps; n++){
+// 	  relaxor.init(p,false);
+// 	  for(unsigned int E=0; E<Fields.size(); E++){
+// 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
+// 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
+// 	  }}}}}
 }
 
-void proces_data(std::vector< double >& Temps, std::vector< double >& Fields,
-		 std::vector< double > tau, unsigned int numexps,
-		 double p, unsigned int Niter, std::string Exp_ID){
-  //procesar los datos
-  for (unsigned int t=0;t<tau.size();t++){
-    for (unsigned int E=0;E<Fields.size();E++){
-      for (unsigned int T=0; T<Temps.size();T++){
-	std::ostringstream id_proc;
-	std::vector<double> pol_stats, pol_int_avg;
-	if (Exp_ID == "cool" || Exp_ID == "heat"){
-	  id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t];
-	  pp_data(pol_stats,pol_int_avg,Temps.size(),numexps,tau[t],Niter,id_proc.str());
-	  std::vector<double> intfield (1,Fields[E]);
-	  eval_pol(pol_stats,numexps,Temps,id_proc.str(),true);
-	  calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc.str());
-	  intfield.clear();
-	} else {
-	  id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
-	  pp_data(pol_stats,pol_int_avg,Fields.size(),numexps,tau[t],Niter,id_proc.str());
-	  eval_pol(pol_stats,numexps,Fields,id_proc.str(),(Exp_ID=="hist_loop") ? false : true);
-	  calc_sus(pol_int_avg,numexps,Fields,Fields,id_proc.str());
-	}
-	pol_int_avg.clear();
-	pol_stats.clear();
-  }}}
-  
-  //Graficar
-  plot_sus(Exp_ID,p,Temps,Fields,tau);
+void proces_data(std::vector< double >& Temps, double Field,
+		 unsigned int tau, unsigned int numexps,
+		 double p, unsigned int Niter, std::string id_proc){
+  //procesar los datos para casos de variación de temperatura
+    std::vector<double> pol_stats, pol_int_avg;
+    pp_data(pol_stats,pol_int_avg,Temps.size(),numexps,tau,Niter,id_proc);
+    std::vector<double> intfield (1,Field);
+    eval_pol(pol_stats,numexps,Temps,id_proc,true);
+    calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc);
+    intfield.clear();
+    pol_int_avg.clear();
+    pol_stats.clear();
+
+//       else {
+// 	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
+// 	pp_data(pol_stats,pol_int_avg,Fields.size(),numexps,tau[t],Niter,id_proc.str());
+// 	eval_pol(pol_stats,numexps,Fields,id_proc.str(),(Exp_ID=="hist_loop") ? false : true);
+// 	calc_sus(pol_int_avg,numexps,Fields,Fields,id_proc.str());
+//       }
+
 }
 
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
@@ -356,7 +359,7 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
   std::vector< std::vector<double> > X_mat;
   X_mat.resize(data_length);
   for(unsigned int x=0;x<data_length;x++){
-    X_mat[x].resize(5);
+    X_mat[x].resize(7);
     X_mat[x][0]=x_array[x];
     
     for(unsigned int n=0;n<numexps;n++){
@@ -367,8 +370,10 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
     }
     X_mat[x][1]=gsl_stats_mean(data_arrayr,1,numexps);
     X_mat[x][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[x][1]);
-    X_mat[x][3]=gsl_stats_mean(data_arrayi,1,numexps);
-    X_mat[x][4]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[x][3]);
+    X_mat[x][3]=1/X_mat[x][2];
+    X_mat[x][4]=gsl_stats_mean(data_arrayi,1,numexps);
+    X_mat[x][5]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[x][4]);
+    X_mat[x][6]=1/X_mat[x][5];
   }
   array_print(X_mat, "sus_"+id_proc+".dat");
 
@@ -423,6 +428,14 @@ std::vector<double> str2vec(std::string magnitudes, double unidad){
     data_array.push_back(num*unidad);
   }
   return data_array;
+}
+
+unsigned int stepEstimator(unsigned int tau){
+  unsigned int periods = 3000/tau;
+  if (periods > 1)
+    return periods*tau;
+  else
+    return 2*tau;
 }
 
 std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude, double phase){
