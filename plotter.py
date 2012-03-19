@@ -52,11 +52,11 @@ def identifier(file):
   rho = file.find('_p')
   E = file.find('_E')
   tau = file.find('_t')
-  dot = file.find('.d')
+  L = file.find('_L')
 
   rho = file[rho+2:E]
   E = file[E+2:tau]
-  tau = file[tau+2:dot]
+  tau = file[tau+2:L]
 
   return rho,E,tau
 

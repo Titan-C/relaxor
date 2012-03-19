@@ -4,7 +4,7 @@ from plotter import *
 from pylab import *
 from glob import glob
 
-def data_fitter(file):
+def dataFitter(file):
   f=open(file,'r')
   data = f.read()
   #Busca los coeficientes
@@ -17,7 +17,7 @@ def data_fitter(file):
   f.close()
   return equation
   
-def data_fitterOff(file):
+def dataFitterOff(file):
   f=open(file,'r')
   data = f.read()
   #Busca los coeficientes
@@ -30,9 +30,9 @@ def data_fitterOff(file):
   f.close()
   return equation
 
-def scaleFitter(fit_eq):
+def scaleFitter(fit_eq,path):
   record = 0.0
-  files=glob('/home/oscar/fineresults/sus_cool_J1*.dat')
+  files=glob(path)
   for file in files:
     S=open(file)
     data = S.read()
@@ -59,11 +59,11 @@ def recorder(equation,file):
   f.write('\n')
   f.close()
 
-def test_experiment(plot=False):
+def experimentFit(plot=False):
   files=glob('data/P*K.dat')
   
   for file in files:
-    eq = data_fitter(file)
+    eq = dataFitter(file)
     recorder(eq,file)
     print file, eq.solvedCoefficients
     if plot: fittedPlot(eq)
@@ -71,7 +71,7 @@ def test_experiment(plot=False):
   if plot: susLabel()
 
 
-def get_equation(info):
+def equationGenerator(info):
   if float(info[3]) < 0:
     fit_eq = '+'+ info[3][1:]
   else:
@@ -83,7 +83,7 @@ if __name__ == "__main__":
   Exper=open('Expdata')
   for exper in Exper:
     print '\n Para el material ', exper.split()[0]
-    fit_eq = get_equation( exper.split() )
-    scaleFitter(fit_eq)
+    fit_eq = equationGenerator( exper.split() )
+    scaleFitter(fit_eq, argv[1])
   Exper.close()
     
