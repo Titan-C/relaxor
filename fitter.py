@@ -59,20 +59,18 @@ def recorder(equation,file):
   f.write('\n')
   f.close()
 
-def test_experiment():
+def test_experiment(plot=False):
   files=glob('data/P*K.dat')
   
   for file in files:
     eq = data_fitter(file)
     recorder(eq,file)
     print file, eq.solvedCoefficients
-    fittedPlot(eq)
-  xlabel('Temperature [$\\Delta J /k_B$]')
-  ylabel('Electric susceptibility $\\chi$')
-  title('Simulation Data & fits')
-  legend(('DATA','FIT'))
-  show()
+    if plot: fittedPlot(eq)
   
+  if plot: susLabel()
+
+
 def get_equation(info):
   if float(info[3]) < 0:
     fit_eq = '+'+ info[3][1:]

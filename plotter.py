@@ -40,6 +40,14 @@ def fittedPlot(equation):
   plot(T,E,'o')
   plot(x,F)
 
+def susLabel():
+  xlabel('Temperature [$\\Delta J /k_B$]')
+  ylabel('Electric susceptibility $\\chi$')
+  title('Simulation Data & fits')
+  legend(('DATA','FIT'))
+  show()
+
+
 def identifier(file):
   rho = file.find('_p')
   E = file.find('_E')
