@@ -3,18 +3,21 @@ import pyeq2
 from plotter import *
 from pylab import *
 from glob import glob
+from sys import argv
 
-def dataFitter(file):
-  f=open(file,'r')
+def dataFitter(path, estimated):
+  f=open(path,'r')
   data = f.read()
-  #Busca los coeficientes
+  #Crea el objeto de ecuación de ajuste y lo llena de datos
   equation = pyeq2.Models_2D.BioScience.MembraneTransport('SSQABS')
   pyeq2.dataConvertorService().ConvertAndSortColumnarASCII(data,equation,False)
-  equation.estimatedCoefficients = [9e4,-13,-8e2,2.5e5]
+  f.close()
+
+  #Calcula el ajuste
+  equation.estimatedCoefficients = estimated
   equation.Solve()
   equation.CalculateCoefficientAndFitStatistics()
   print 'R-squared:',  equation.r2
-  f.close()
   return equation
   
 def dataFitterOff(file):
@@ -23,55 +26,65 @@ def dataFitterOff(file):
   #Busca los coeficientes
   equation = pyeq2.Models_2D.BioScience.MembraneTransport('SSQABS','Offset')
   pyeq2.dataConvertorService().ConvertAndSortColumnarASCII(data,equation,False)
+  f.close()
+
   equation.estimatedCoefficients = [9e5,-13,-9e2,2.5e5,200]
   equation.Solve()
   equation.CalculateCoefficientAndFitStatistics()
   print 'R-squared:',  equation.r2
-  f.close()
   return equation
 
-def scaleFitter(fit_eq,path):
-  record = 0.0
-  files=glob(path)
-  for file in files:
-    S=open(file)
-    data = S.read()
-    equation = pyeq2.Models_2D.UserDefinedFunction.UserDefinedFunction('SSQABS','Default', fit_eq)
-    pyeq2.dataConvertorService().ConvertAndSortColumnarASCII(data, equation, False)
-    equation.estimatedCoefficients = [100,0.008]
-    pyeq2.solverService().SolveUsingSimplex(equation)
-    
-    #imprimir resultados
-    equation.CalculateCoefficientAndFitStatistics()
-    if equation.r2 > record:
-      record = equation.r2
-      print "Material", file
-      print 'R-squared:',  equation.r2, equation.solvedCoefficients
-    
-  
-  
-def recorder(equation,file):
-  f=open('Expdata','a')
-  f.write(file+'\t')
+def scaleFitter(fit_eq, path, estimated=[100,0.008]):
+  f=open(path)
+  data = f.read()
+  #Crea el objeto de función a escala y lo llena de datos
+  equation = pyeq2.Models_2D.UserDefinedFunction.UserDefinedFunction('SSQABS','Default', fit_eq)
+  pyeq2.dataConvertorService().ConvertAndSortColumnarASCII(data, equation, False)
+  f.close()
+
+  #Calcula el ajuste
+  equation.estimatedCoefficients = estimated
+  pyeq2.solverService().SolveUsingSimplex(equation)
+  equation.CalculateCoefficientAndFitStatistics()
+  return equation
+
+def fitRecorder(equation, datafile, targetfile):
+  f=open(targetfile,'a')
+  f.write(datafile+'\t')
   f.write(str(equation.r2)+'\t')
   for coef in equation.solvedCoefficients:
     f.write(str(coef)+'\t')
   f.write('\n')
   f.close()
 
-def experimentFit(plot=False):
-  files=glob('data/P*K.dat')
+def filesFit(path, writefile, estimated=[9e4,-13,-8e2,2.5e5], plot=False):
+  files=glob(path)
   
   for file in files:
-    eq = dataFitter(file)
-    recorder(eq,file)
+    eq = dataFitter(file,estimated)
+    fitRecorder(eq,file,writefile)
     print file, eq.solvedCoefficients
     if plot: fittedPlot(eq)
   
   if plot: susLabel()
 
+def getfitdata(material):
+  materialFitdata = open('Expdata')
+  fit_eq = ''
+  for data in materialFitdata:
+    if data.find(material) > 0:
+      fit_eq = scale_eqGenerator(data.split())
+  materialFitdata.close()
+  return fit_eq
 
-def equationGenerator(info):
+def filesScaleFit(path, material):
+  fit_eq = fetfitdata(material)
+  files=glob(path)
+  for file in files:
+    eq = scaleFitter(fit_eq, file)
+    fitRecorder(eq,file,material+'Fits')
+
+def scale_eqGenerator(info):
   if float(info[3]) < 0:
     fit_eq = '+'+ info[3][1:]
   else:
