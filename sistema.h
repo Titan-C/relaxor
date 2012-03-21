@@ -86,5 +86,7 @@ unsigned int stepEstimator(unsigned int tau);
 double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales
 std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude,  double phase);
+//Validador que justifica realizar una simulacion
+bool needSimulation(std::string id_proc, unsigned int size);
 
 #endif // SISTEMA_H

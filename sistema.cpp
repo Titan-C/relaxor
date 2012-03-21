@@ -1,11 +1,14 @@
 #include <cmath>
 #include <ctime>
+#include <cstdio>
 #include <fstream>
 #include <sstream>
 #include "sistema.h"
 #include "impresor.h"
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_randist.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define _2pi 8*atan(1)
 
@@ -240,12 +243,15 @@ void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>
 	id_proc<<"_Ti"<<Tdat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[2]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
 
 	clock_t cl_start = clock();
+	unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
+	if (needSimulation(id_proc.str(), sim_size)) {
 	for(unsigned int n=0; n<numexps; n++){
 	  relaxor.init(p,false);
 	  for(unsigned int T=0; T<Thermostat.size(); T++){
 	    relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
 	    relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
 	  }}
+	}
 	proces_data(Thermostat,Fields[E],tau[t],numexps, p,Exp_iter,id_proc.str());
 	std::cout<<id_proc.str()<<":"<<clock()-cl_start<<"\n";
     }}
@@ -481,4 +487,20 @@ double stan_dev(double ** M, unsigned int rows, unsigned int cols){
   double sd = gsl_stats_sd (Aij, 1, celdas);
   delete[] Aij;
   return sd;
+}
+
+bool needSimulation(std::string id_proc, unsigned int size)
+{
+  struct stat file;
+  id_proc = "log_pol_"+id_proc+".dat";
+  
+  if (stat(id_proc.c_str(), &file) == -1)
+    return true;
+  
+  if (file.st_size != size){
+    std::remove(id_proc.c_str());
+    return true;
+  }
+  
+  return false;
 }
