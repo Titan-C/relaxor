@@ -18,14 +18,7 @@ void array_print(const std::vector< std::vector<unsigned int> >& M,
 void array_print(const std::vector< std::vector<double> >& M,
 		 std::string ARCHIVO, bool app=false, bool br = true);
 void array_print_bin(const std::vector< double * >& V, std::string ARCHIVO, unsigned int cols);
-//limpia los archivos
-void file_wipe(std::string ARCHIVO);
 void import_data(std::vector < std::vector< double > >& M,
 		 std::string ARCHIVO,
                  unsigned int filas, unsigned int columnas);
-//Cola de Gráficos
-void plot_pol(std::string id_proc);
-void plot_sus(std::string Exp_ID, double rho,
-	      const std::vector<double>& Temps, const std::vector<double>& Fields,
-	      const std::vector<double>& tau);
 #endif // IMPRESOR_H
