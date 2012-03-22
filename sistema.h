@@ -81,7 +81,7 @@ std::vector<double> loop2vec(double max, int divs, double unidad=1);
 //Genera un vector de datos double que contiene los números declarados en el string
 std::vector<double> str2vec(std::string magnitudes, double unidad=1);
 //Devuelve la cantidad de pasos necesarios durante la simulacion para cada frecuencia
-unsigned int stepEstimator(unsigned int tau);
+unsigned int stepEstimator(unsigned int Niter, unsigned int tau, unsigned int min_periods);
 //Realiza una integración por Simpson de la función f con un peso
 double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales

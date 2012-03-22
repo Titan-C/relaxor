@@ -123,20 +123,6 @@ double Sistema::set_mu(bool polarizar){
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
 
-//   //Tomar la suma de interacción de cada región con sus vecinos
-//   for(unsigned int i=0; i<J.size(); i++){
-//     for(unsigned int j=0; j<J[i].size(); j++)
-//       mu_E[i]+=J[i][j];
-//   }
-//   //Encontrar el Maximo
-//   double max=0;
-//   for(unsigned int i=0;i<mu_E.size();i++)
-//     if ( std::abs(mu_E[i]) > max) max=abs(mu_E[i]);
-//   //normar
-//   for(unsigned int i=0; i<mu_E.size();i++)
-//     mu_E[i]/=max;
-//   
-//   array_print(mu_E,"polarizacion.dat");
   return set_pol(polarizar);
 }
 
@@ -172,6 +158,7 @@ double Sistema::delta_E(unsigned int idflip, double E){
     dHamil += J[idflip][i]*sigma[idflip]*sigma[G[idflip][i]];
   dHamil *=4;
   dHamil += 2*E*mu_E[idflip]*sigma[idflip];
+
   return dHamil;
 }
 
@@ -184,7 +171,7 @@ double Sistema::norm_pol(){
 }
 
 void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
-			 bool grabar, std::string id_proc){
+			  bool grabar, std::string id_proc){
   //vector historial de polarización por experimento
   std::vector<double> pol_mag;
   pol_mag.resize(Niter);
@@ -194,31 +181,26 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
   double phase = 0;
   if (!grabar)
     phase = _2pi*Niter/tau;
-  
-  field = cosarray(tau,tau,E,phase);
-  
+
+  field = cosarray(Niter,tau,E,phase);
+
   /*Simulación del experimento en el número de iteraciones dadas*/
-  unsigned int periods = Niter/tau;
-  unsigned int step = 0;
-  for(unsigned int i = 0; i<periods; i++){
-    for(unsigned int j = 0; j< tau; j++){
-      //       out(total_E(E), "energy_log.dat");
-      /*Realiza el cambio del spin dipolar en una ubicación dada*/
-      for(unsigned int idflip = 0; idflip < PNR; idflip++){
-	double dH = delta_E(idflip, field[j]);
-	if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
-	  sigma[idflip] *= -1;
-      }
-      
-      if (grabar)
-	pol_mag[step] = norm_pol();
-      step++;
+  for(unsigned int i = 0; i< Niter; i++){
+    //       out(total_E(E), "energy_log.dat");
+    /*Realiza el cambio del spin dipolar en una ubicación dada*/
+    for(unsigned int idflip = 0; idflip < PNR; idflip++){
+      double dH = delta_E(idflip, field[i]);
+      if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
+	sigma[idflip] *= -1;
     }
+    if (grabar)
+      pol_mag[i] = norm_pol();
   }
+
   /* Guardar los datos de polarización en binario */
   if (grabar)
     array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
-  
+
   pol_mag.clear();
   field.clear();
 }
@@ -235,7 +217,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>
     Thermostat=step2vec(Tdat[0],Tdat[1],Tdat[2],Thermostat);
 
     for(unsigned int t=0; t< tau.size() ; t++){
-      unsigned int Exp_iter = stepEstimator(tau[t]);
+      unsigned int Exp_iter = stepEstimator(3000,tau[t],2);
 
       for(unsigned int E=0; E<Fields.size(); E++){
 	std::ostringstream id_proc;
@@ -436,18 +418,19 @@ std::vector<double> str2vec(std::string magnitudes, double unidad){
   return data_array;
 }
 
-unsigned int stepEstimator(unsigned int tau){
-  unsigned int periods = 3000/tau;
-  if (periods > 1)
+unsigned int stepEstimator(unsigned int Niter, unsigned int tau, unsigned int min_periods){
+  unsigned int periods = Niter/tau;
+  if (periods > min_periods)
     return periods*tau;
   else
-    return 2*tau;
+    return min_periods*tau;
 }
 
 std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude, double phase){
   std::vector<double> wave;
   wave.resize(length);
-    for(unsigned int i=0; i<tau; i++)
+  unsigned int wavetop = (tau>=length)? length : tau;
+    for(unsigned int i=0; i<wavetop; i++)
       wave[i]=amplitude*cos(_2pi*i/tau-phase);
   
   unsigned int periods = length/tau;
