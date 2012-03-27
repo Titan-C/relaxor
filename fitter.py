@@ -14,12 +14,13 @@ def dataFitter(file, estimated,weigth=True):
 
   #Calcula el ajuste
   equation.estimatedCoefficients = estimated
+  equation.upperCoefficientBounds = [None,0,0,None]
   equation.Solve()
   equation.CalculateCoefficientAndFitStatistics()
   print 'R-squared:',  equation.r2
   return equation
 
-def scaleFitter(fit_eq, file, estimated=[100,0.008],weigth=True):
+def scaleFitter(fit_eq, file, estimated,weigth=True):
   f=open(file)
   data = f.read()
   #Crea el objeto de función a escala y lo llena de datos
@@ -33,7 +34,7 @@ def scaleFitter(fit_eq, file, estimated=[100,0.008],weigth=True):
   equation.CalculateCoefficientAndFitStatistics()
   return equation
 
-def filesFit(path, writefile, estimated=[9e4,-13,-8e2,2.5e5], weigth=True, plot=False):
+def filesFit(path, writefile, estimated=[9e4,-200,-8e2,2.5e5], weigth=True, plot=False):
   files=glob(path)
   
   for file in files:
@@ -78,4 +79,4 @@ def scale_eqGenerator(info):
   return fit_eq
   
 if __name__ == "__main__":
-  filesFit(argv[1], argv[2], estimated=[9e4,-13,-8e2,2.5e5], weigth=True, plot=True)
+  filesFit(argv[1], argv[2], estimated=[9e4,-200,-8e2,2.5e5], weigth=True, plot=True)
