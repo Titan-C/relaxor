@@ -17,9 +17,9 @@ def simsusPlot(file):
   data = genfromtxt(file)
   T = data[:,0]
   X = data[:,1]
-  Xe = data[:,2]
-  I = data[:,3]
-  Ie = data[:,4]
+  Xe = data[:,3]
+  I = data[:,4]
+  Ie = data[:,6]
   #plot(T,X,'o-',label='E='+E+' $\\tau=$'+tau)
   errorbar(T,X,yerr=Xe,label='E='+E+' $\\tau=$'+tau)
   return rho,E,tau
@@ -28,7 +28,7 @@ def expsusPlot(file):
   data = genfromtxt(file)
   T = data[:,0]
   X = data[:,1]
-  Xe = data[:,2]*X
+  Xe = data[:,2]/100*X
   plot(T,X,T,Xe)
 
 def fittedPlot(equation):
