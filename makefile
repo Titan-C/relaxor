@@ -13,4 +13,4 @@ $(EXE): $(OBJECTS)
 	g++ $(CFLAGS) -c $<
 
 clean:
-	rm -rf *o *~ $(EXE)
+	rm -rf *o *~ $(EXE) *pyc

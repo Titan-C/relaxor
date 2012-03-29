@@ -24,13 +24,16 @@ def simsusPlot(file):
   errorbar(T,X,yerr=Xe,label='E='+E+' $\\tau=$'+tau)
   return rho,E,tau
   
-def expsusPlot(file):
+def expsusPlot(file,error=False):
   data = genfromtxt(file)
   T = data[:,0]
   X = data[:,1]
-  err = data[:,2]
-  Xe = X*data[:,3]/100
-  errorbar(T,X,yerr=Xe)
+  if not error:
+    plot(T,X,'o',label=file[11:-4])
+  else:
+    err = data[:,2]
+    Xe = X*data[:,3]/100
+    errorbar(T,X,yerr=Xe,fmt='o',label=file[11:-4])
 
 def fittedPlot(equation,comment):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
