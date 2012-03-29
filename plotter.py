@@ -28,25 +28,22 @@ def expsusPlot(file):
   data = genfromtxt(file)
   T = data[:,0]
   X = data[:,1]
-  Xe = data[:,2]/100*X
-  plot(T,X,T,Xe)
+  err = data[:,2]
+  Xe = X*data[:,3]/100
+  errorbar(T,X,yerr=Xe)
 
-def fittedPlot(equation):
+def fittedPlot(equation,comment):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
   E = equation.dataCache.allDataCacheDictionary['DependentData']
   a,b,c,d = equation.solvedCoefficients
   x=arange(T.min()*0.8,T.max()*1.1,T.max()/150)
   F=a*(x-b)/(x*x+c*x+d)
-  plot(T,E,'o')
-  plot(x,F)
+  plot(x,F,label=comment)
 
-def susLabel():
+def axisLabel():
   xlabel('Temperature [$\\Delta J /k_B$]')
   ylabel('Electric susceptibility $\\chi$')
   title('Simulation Data & fits')
-  legend(('DATA','FIT'))
-  show()
-
 
 def identifier(file):
   rho = file.find('_p')
@@ -64,8 +61,7 @@ def generator(path):
   files = glob(path)
   for file in files:
     rho = simsusPlot(file)[0]
-  xlabel('Temperature [$\\Delta J /k_B$]')
-  ylabel('Electric susceptibility $\\chi$')
+  axisLabel()
   title('Simulation Data for $\\rho=$'+rho)
   legend()
   show()
