@@ -6,8 +6,9 @@ def include_err(file,errpow):
     T=data[:,0]
     E=data[:,1]
     d=data[:,2]
-    err=(100/E/d)**(errpow)
-    new=array([T,E,err,d])
+    Ex=E*d/100
+    err=(1/Ex)**errpow
+    new=array([T,E,err,Ex,d])
     savetxt('er'+str(errpow)+file,new.T,fmt='%3.6g',delimiter='\t')
     
 if __name__ == "__main__":
