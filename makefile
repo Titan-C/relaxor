@@ -7,10 +7,10 @@ CFLAGS= -march=native -O2 -pipe -Wall -g -lgsl -lgslcblas
 all: $(EXE)
 
 $(EXE): $(OBJECTS)
-	g++ $(CFLAGS) $^ -o $@
+	g++ $^ -o $@ $(CFLAGS)
 
 .cpp.o:
-	g++ $(CFLAGS) -c $<
+	g++ -c $< $(CFLAGS)
 
 clean:
 	rm -rf *o *~ $(EXE) *pyc
