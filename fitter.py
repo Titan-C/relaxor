@@ -4,7 +4,7 @@ from plotter import *
 from glob import glob
 from sys import argv
 
-def dataFitter(file, estimated, upBound, weight):
+def dataFitter(file, estimated, upBound, lowBound, weight):
   f=open(file,'r')
   data = f.read()
   #Crea el objeto de ecuación de ajuste y lo llena de datos
@@ -15,6 +15,7 @@ def dataFitter(file, estimated, upBound, weight):
   #Calcula el ajuste
   equation.estimatedCoefficients = estimated
   equation.upperCoefficientBounds = upBound
+  equation.lowerCoefficientBounds = lowBound
   equation.Solve()
   equation.CalculateCoefficientAndFitStatistics()
   print 'R-squared:',  equation.r2
@@ -34,32 +35,40 @@ def scaleFitter(fit_eq, file, estimated,weight):
   equation.CalculateCoefficientAndFitStatistics()
   return equation
 
-def filesFit(path, writefile, estimated=[9e4,-200,-8e2,2.5e5], upBound =[None,0,0,None], weight=False, plot=True):
+def filesFit(path, writefile, estimated=[9e4,-200,-8e2,2.5e5], upBound =[None,0,0,None],lowBound =[None,None,-1013,None], weight=False, plot=True):
   files=glob(path)
-  
   for file in files:
-    eq = dataFitter(file, estimated, upBound, weight)
+    eq = dataFitter(file, estimated, upBound, lowBound, weight)
     fitRecorder(eq,file,writefile)
     print file, eq.solvedCoefficients
     if plot: fittedPlot(eq,file)
-  
-  if plot: axisLabel()
+  if plot:
+      legend()
+      axisLabel()
 
-def filesScaleFit(path, material,estimated=[100,0.008],weight=True):
+def filesScaleFit(path, material,estimated=[100,0.008],weight=True, plot=True):
   fit_eq = getfitdata(material)
   files=glob(path)
   for file in files:
-    eq = scaleFitter(fit_eq, file, estimated, weight)
-    fitRecorder(eq,file,material+'Fits')
+    eq = scaleFitter(fit_eq[0], file, estimated, weight)
+    fitRecorder(eq,file,material+'Fits.csv')
+    print file, eq.r2, eq.solvedCoefficients
+    if plot: scalefittedPlot(eq,fit_eq[1],file)
+  if plot:
+      legend()
+      axisLabel()
 
 def getfitdata(material):
+  '''Requiere el nombre del material y devuelve
+      la ecuación de ajuste
+      Ej: eq=getfitdata('P2BIT1K') '''
   materialFitdata = open('Expdata')
   fit_eq = ''
   for data in materialFitdata:
     if data.find(material) > 0:
-      fit_eq = scale_eqGenerator(data.split())
+      fit_eq = scale_eqGenerator(data.split()[2:])
   materialFitdata.close()
-  return fit_eq
+  return fit_eq,data.split()[2:]
 
 def fitRecorder(equation, datafile, writefile):
   f=open(writefile,'a')
@@ -70,12 +79,12 @@ def fitRecorder(equation, datafile, writefile):
   f.write('\n')
   f.close()
 
-def scale_eqGenerator(info):
-  if float(info[3]) < 0:
-    fit_eq = '+'+ info[3][1:]
+def scale_eqGenerator(coefs):
+  if float(coefs[1]) < 0:
+    fit_eq = 'u/j*'+coefs[0]+'*(j*X+'+ coefs[1][1:]+')'
   else:
-    fit_eq = '-'+ info[3]
-  fit_eq = 'u/j*'+info[2]+'*(j*X'+fit_eq+')/(j**2*X*X+'+info[4]+'*j*X+'+info[5]+')'
+    fit_eq = coefs[0]+'*u*X'
+  fit_eq = fit_eq+'/(j**2*X**2'+coefs[2]+'*j*X+'+coefs[3]+')'
   return fit_eq
   
 if __name__ == "__main__":
