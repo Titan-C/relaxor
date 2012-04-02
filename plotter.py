@@ -4,51 +4,48 @@ from sys import argv
 from glob import glob
 
 def simpolPlot(file):
-  rho,E,tau = identifier(file)
+  lb=legendSet(file)
   data = genfromtxt(file)
   T = data[:,0]
   p = data[:,1]
   pe = data[:,2]
-  errorbar(T,p,yerr=pe,label='E='+E+' $\\tau=$'+tau)
+  errorbar(T,p,yerr=pe,label=lb)
   return rho,E,tau
 
-def simsusPlot(file):
-  rho,E,tau = identifier(file)
-  data = genfromtxt(file)
-  T = data[:,0]
-  X = data[:,1]
-  Xe = data[:,3]
-  I = data[:,4]
-  Ie = data[:,6]
-  #plot(T,X,'o-',label='E='+E+' $\\tau=$'+tau)
-  errorbar(T,X,yerr=Xe,label='E='+E+' $\\tau=$'+tau)
-  return rho,E,tau
-  
-def expsusPlot(file,error=False):
+def susPlot(file, error=False):
+  lb=legendSet(file)
   data = genfromtxt(file)
   T = data[:,0]
   X = data[:,1]
   if not error:
-    plot(T,X,'o',label=file[11:-4])
+    plot(T,X,'o',label=lb)
   else:
-    err = data[:,2]
-    Xe = X*data[:,3]/100
-    errorbar(T,X,yerr=Xe,fmt='o',label=file[11:-4])
+    std = data[:,3]
+    errorbar(T,X,yerr=std,label=lb)
 
-def fittedPlot(equation,comment):
+def fittedPlot(equation,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
   E = equation.dataCache.allDataCacheDictionary['DependentData']
   a,b,c,d = equation.solvedCoefficients
   x=arange(T.min()*0.8,T.max()*1.1,T.max()/150)
   F=a*(x-b)/(x*x+c*x+d)
-  plot(x,F,label=comment)
+  plot(T,E,'o',x,F,label=legendSet(file))
+
+def scalefittedPlot(equation,coefs,file):
+  T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
+  E = equation.dataCache.allDataCacheDictionary['DependentData']
+  a,b,c,d = [float(x) for x in coefs]
+  j,u = equation.solvedCoefficients
+  x=arange(T.min()*0.8,T.max()*1.1,T.max()/150)
+  F=u/j*a*(j*x-b)/(j**2*x*x+c*j*x+d)
+  plot(T,E,'o',x,F,label=legendSet(file))
 
 def axisLabel():
   xlabel('Temperature [$\\Delta J /k_B$]')
   ylabel('Electric susceptibility $\\chi$')
-  title('Simulation Data & fits')
+  title('Data & fits')
 
-def identifier(file):
+def simIdentifier(file):
   rho = file.find('_p')
   E = file.find('_E')
   tau = file.find('_t')
@@ -60,12 +57,20 @@ def identifier(file):
 
   return rho,E,tau
 
+def legendSet(file):
+  if file.find('_p') > 0:
+    rho,E,tau = simIdentifier(file)
+    return '$\\rho=$'+rho+' E='+E+' $\\tau=$'+tau
+    
+  else:
+    mat = file.find('P')
+    return file[mat:mat+5]+' '+file[mat+5:-4]
+
 def generator(path):
   files = glob(path)
   for file in files:
-    rho = simsusPlot(file)[0]
+    simsusPlot(file)[0]
   axisLabel()
-  title('Simulation Data for $\\rho=$'+rho)
   legend()
   show()
 
