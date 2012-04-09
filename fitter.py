@@ -5,6 +5,9 @@ from glob import glob
 from sys import argv
 
 def dataFitter(file, estimated, upBound, lowBound, weight):
+  '''Ajusta los datos de archivo file dadas las listas,
+     de coeficientes estimados, cotas superior e inferior,
+     más una bandera de datos pesados'''
   f=open(file,'r')
   data = f.read()
   #Crea el objeto de ecuación de ajuste y lo llena de datos
@@ -35,8 +38,8 @@ def scaleFitter(fit_eq, file, estimated,weight):
   equation.CalculateCoefficientAndFitStatistics()
   return equation
 
-def filesFit(path, writefile, estimated=[9e4,-200,-8e2,2.5e5], upBound =[None,0,0,None],lowBound =[None,None,-1013,None], weight=False, plot=True):
-  files=glob(path)
+def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[72000,0,0,None],lowBound =[None,None,-1040,None], weight=False, plot=True):
+  files=sort(glob(path))
   for file in files:
     eq = dataFitter(file, estimated, upBound, lowBound, weight)
     fitRecorder(eq,file,writefile)
@@ -48,7 +51,7 @@ def filesFit(path, writefile, estimated=[9e4,-200,-8e2,2.5e5], upBound =[None,0,
 
 def filesScaleFit(path, material,estimated=[100,0.008],weight=True, plot=True):
   fit_eq = getfitdata(material)
-  files=glob(path)
+  files=sort(glob(path))
   for file in files:
     eq = scaleFitter(fit_eq[0], file, estimated, weight)
     fitRecorder(eq,file,material+'Fits.csv')
@@ -71,6 +74,9 @@ def getfitdata(material):
   return fit_eq,data.split()[2:]
 
 def fitRecorder(equation, datafile, writefile):
+  '''Graba los resultados del ajuste, requiero
+	el objeto de la ecuación ajustada, archivo de datos de origen
+	y archivo donde guardar'''
   f=open(writefile,'a')
   f.write(datafile+'\t')
   f.write(str(equation.r2)+'\t')
@@ -80,6 +86,7 @@ def fitRecorder(equation, datafile, writefile):
   f.close()
 
 def scale_eqGenerator(coefs):
+  '''Devuelve un string con la ecuación a ajustar por escala'''
   if float(coefs[1]) < 0:
     fit_eq = 'u/j*'+coefs[0]+'*(j*X+'+ coefs[1][1:]+')'
   else:
