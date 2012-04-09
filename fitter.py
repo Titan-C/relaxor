@@ -1,8 +1,6 @@
 ﻿'''Primera función que ajusta un archivo al mi función tomada'''
 import pyeq2
 from plotter import *
-from glob import glob
-from sys import argv
 
 def dataFitter(file, estimated, upBound, lowBound, weight):
   '''Ajusta los datos de archivo file dadas las listas,

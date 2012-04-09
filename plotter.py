@@ -12,13 +12,13 @@ def simpolPlot(file):
   errorbar(T,p,yerr=pe,label=lb)
   return rho,E,tau
 
-def susPlot(file, error=False):
+def susPlot(file,fmt='-o', error=False):
   lb=legendSet(file)
   data = genfromtxt(file)
   T = data[:,0]
   X = data[:,1]
   if not error:
-    plot(T,X,'o',label=lb)
+    plot(T,X,fmt,label=lb)
   else:
     std = data[:,3]
     errorbar(T,X,yerr=std,label=lb)
@@ -41,7 +41,7 @@ def scalefittedPlot(equation,coefs,file):
   plot(T,E,'o',x,F,label=legendSet(file))
 
 def axisLabel():
-  xlabel('Temperature [$\\Delta J /k_B$]')
+  xlabel('Temperatura [$\\Delta J /k_B$]')
   ylabel('Electric susceptibility $\\chi$')
   title('Data & fits')
 
@@ -66,13 +66,13 @@ def legendSet(file):
     mat = file.find('P')
     return file[mat:mat+5]+' '+file[mat+5:-4]
 
-def generator(path):
-  files = glob(path)
+def filesusPlot(path,fmt='-o',error=False):
+  files = sort(glob(path))
   for file in files:
-    simsusPlot(file)[0]
+    susPlot(file,fmt,error)
   axisLabel()
   legend()
   show()
 
 if __name__ == "__main__":
-  generator('sus*'+argv[1]+'*.dat')
+  filesusPlot(argv[1])
