@@ -25,6 +25,8 @@ def dataFitter(file, estimated, upBound, lowBound, weight):
   return equation
 
 def scaleFitter(fit_eq, file, estimated,weight):
+  '''Ajusta datos del archivo para mi función arbitraria
+     que es un escalamiento de la función Membrane Transport'''
   f=open(file)
   data = f.read()
   #Crea el objeto de función a escala y lo llena de datos
@@ -39,6 +41,7 @@ def scaleFitter(fit_eq, file, estimated,weight):
   return equation
 
 def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[72000,0,0,None],lowBound =[None,None,-1040,None], weight=False, plot=True):
+  '''Permite llamar a la función de ajuste para todos los archivos que se encuentran en path'''
   files=sort(glob(path))
   for file in files:
     eq = dataFitter(file, estimated, upBound, lowBound, weight)
@@ -50,6 +53,7 @@ def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[72000,0
       axisLabel()
 
 def filesScaleFit(path, material,estimated=[100,0.008],weight=True, plot=True):
+  '''Permite llamar a la función de ajuste de escala para todos los archivos que se encuentran en path, para el material deseado'''
   fit_eq = getfitdata(material)
   files=sort(glob(path))
   for file in files:
