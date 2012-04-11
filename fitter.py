@@ -38,7 +38,7 @@ def scaleFitter(fit_eq, file, estimated,weight):
   equation.CalculateCoefficientAndFitStatistics()
   return equation
 
-def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[72000,0,0,None],lowBound =[None,None,-1040,None], weight=False, plot=True):
+def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,0,None],lowBound =[None,None,-1040,None], weight=False, plot=True):
   '''Permite llamar a la función de ajuste para todos los archivos que se encuentran en path'''
   files=sort(glob(path))
   for file in files:
@@ -50,11 +50,6 @@ def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[72000,0
       legend()
       axisLabel()
 
-def thesisFitter(path):
-  materiales=['P2BIT1K','P2BIT10K', 'P2BIT100K', 'P3BIT1K', 'P3BIT10K', 'P3BIT100K']
-  for material in materiales:
-    filesScaleFit(path, material)
-
 def filesScaleFit(path, material,estimated=[100,0.008],weight=False, plot=False):
   '''Permite llamar a la función de ajuste de escala para todos los archivos que se encuentran en path, para el material deseado'''
   fit_eq = getfitdata(material)
@@ -62,11 +57,27 @@ def filesScaleFit(path, material,estimated=[100,0.008],weight=False, plot=False)
   for file in files:
     eq = scaleFitter(fit_eq[0], file, estimated, weight)
     fitRecorder(eq,file,material+'Fits.csv')
-    print file, eq.r2, eq.solvedCoefficients
+    #print file, eq.r2, eq.solvedCoefficients
     if plot: scalefittedPlot(eq,fit_eq[1],file)
   if plot:
       legend()
       axisLabel()
+
+def thesisFitter(path):
+  materiales=['P2BIT1K','P2BIT10K', 'P2BIT100K', 'P3BIT1K', 'P3BIT10K', 'P3BIT100K']
+  for material in materiales:
+    filesScaleFit(path, material)
+    resultsGive(material)
+
+def resultsGive(material,best=10):
+  Fits=genfromtxt(material+'Fits.csv')[:,:-1]
+  Fits=Fits[Fits[:,0].argsort()]#Ordena por la columna del r2 que es la primera
+  parameters=['r2','DJ','mu','rho','E','tau']
+  mean=Fits[-best:].mean(0)
+  std=Fits[-best:].std(0)
+  print material
+  for i in range(len(parameters)):
+    print parameters[i],'=',mean[i],'+/-',std[i]
 
 def getfitdata(material):
   '''Requiere el nombre del material y devuelve
@@ -85,11 +96,11 @@ def fitRecorder(equation, datafile, writefile):
 	el objeto de la ecuación ajustada, archivo de datos de origen
 	y archivo donde guardar'''
   f=open(writefile,'a')
-  for parameters in simIdentifier(datafile):
-    f.write(str(parameters)+'\t')
   f.write(str(equation.r2)+'\t')
   for coef in equation.solvedCoefficients:
     f.write(str(coef)+'\t')
+  for parameters in simIdentifier(datafile):
+    f.write(str(parameters)+'\t')
   f.write(datafile[datafile.find('sus'):-4]+'\t')
   f.write('\n')
   f.close()
