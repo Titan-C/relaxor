@@ -3,6 +3,14 @@ from pylab import *
 from sys import argv
 from glob import glob
 
+def elogPlot(file,fmt='+'):
+  H=genfromtxt(file)
+  plot(H,fmt)
+  xlabel('Iteraciones $[MCS/dipolo]$')
+  ylabel(u'Energía del  sistema $[\Delta J]$')
+  title(u'Evolución de la energía en un proceso de enfriamiento')
+  show()
+
 def simpolPlot(file):
   lb=legendSet(file)
   data = genfromtxt(file)

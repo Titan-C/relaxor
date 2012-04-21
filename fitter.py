@@ -115,4 +115,4 @@ def scale_eqGenerator(coefs):
   return fit_eq
   
 if __name__ == "__main__":
-  filesFit(argv[1], argv[2], estimated=[9e4,-200,-8e2,2.5e5], weight=False, plot=True)
+  thesisFitter(argv[1])

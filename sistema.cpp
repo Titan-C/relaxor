@@ -173,8 +173,9 @@ double Sistema::norm_pol(){
 void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			  bool grabar, std::string id_proc){
   //vector historial de polarización por experimento
-  std::vector<double> pol_mag;
+  std::vector<double> pol_mag, Elog;
   pol_mag.resize(Niter);
+  Elog.resize(Niter);
   
   //vector oscilación del campo alterno para un periodo
   std::vector<double> field;
@@ -186,7 +187,6 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
 
   /*Simulación del experimento en el número de iteraciones dadas*/
   for(unsigned int i = 0; i< Niter; i++){
-    //       out(total_E(E), "energy_log.dat");
     /*Realiza el cambio del spin dipolar en una ubicación dada*/
     for(unsigned int idflip = 0; idflip < PNR; idflip++){
       double dH = delta_E(idflip, field[i]);
@@ -195,13 +195,17 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
     }
     if (grabar)
       pol_mag[i] = norm_pol();
+    Elog[i]=total_E(E);
   }
+  
 
   /* Guardar los datos de polarización en binario */
   if (grabar)
     array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
+  array_print(Elog,"Elog"+id_proc+".dat");
 
   pol_mag.clear();
+  Elog.clear();
   field.clear();
 }
 
