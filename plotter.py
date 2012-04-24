@@ -19,7 +19,7 @@ def polPlot(file,stl='-o', error=False):
     pe = data[:,2]
     errorbar(T,p,yerr=pe,fmt=stl,label=lb)
 
-def susPlot(file,stl='-o', error=False):
+def susPlot(file,stl='-o', error=False, IM=False):
   lb=legendSet(file)
   data = genfromtxt(file)
   T = data[:,0]
@@ -29,6 +29,9 @@ def susPlot(file,stl='-o', error=False):
   else:
     std = data[:,3]
     errorbar(T,X,yerr=std,fmt=stl, label=lb)
+  if IM:
+    Xi = data[:,4]
+    plot(T,Xi,stl,label='$\\mathcal{I}m$')
 
 def fittedPlot(equation,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -83,10 +86,10 @@ def legendSet(file):
     mat = file.find('P')
     return file[mat:mat+5]+' '+file[mat+5:-4]
 
-def filesusPlot(path,stl='-o',error=False):
+def filesusPlot(path,stl='-o',error=False,IM=False):
   files = sort(glob(path))
   for file in files:
-    susPlot(file,stl,error)
+    susPlot(file,stl,error,IM)
   susLabel()
   legend()
   show()
