@@ -50,7 +50,7 @@ public:
 		    bool grabar, std::string id_proc);
 };
 //Funciones Para tratar los experimentos del sistema
-void Gen_exp(unsigned int L, unsigned int numexps,double p, std::vector<double>& Tdat,
+void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID);
 //Operaciones necesarias para tratar datos
 void proces_data(std::vector< double >& Temps, double Field,
@@ -74,6 +74,8 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
 //Funciones adicionales
 //Calcula la desviación estandar de los datos de toda la matriz
 double stan_dev(double ** M, unsigned int rows, unsigned int cols);
+//Genera el arreglo de temperaturas
+std::vector<double> thermostat(unsigned int n, unsigned int i, double rho, double dT, double Tf);
 //Genera un vector de datos double, entre dos números con cierto paso
 std::vector<double> step2vec(double v_start, double v_end, double dv, std::vector< double > last, double unidad = 1);
 //Genera un vector de datos para un lazo

@@ -30,8 +30,8 @@ int main(int argc, char **argv) {
   vector<double> campos=str2vec(argv[5]);
   vector<double> tau =	str2vec(argv[6]);
   
-  for(unsigned int p=0; p<rho.size(); p++)
-    Gen_exp(L,numexps,rho[p],Temp,campos,tau,"cool");
+  
+    Gen_exp(L,numexps,rho,Temp,campos,tau,"cool");
   
   time(&end);
   cout<<difftime(end,start)<<endl;

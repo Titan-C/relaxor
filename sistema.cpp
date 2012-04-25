@@ -173,9 +173,8 @@ double Sistema::norm_pol(){
 void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			  bool grabar, std::string id_proc){
   //vector historial de polarización por experimento
-  std::vector<double> pol_mag, Elog;
+  std::vector<double> pol_mag;
   pol_mag.resize(Niter);
-  Elog.resize(Niter);
   
   //vector oscilación del campo alterno para un periodo
   std::vector<double> field;
@@ -195,52 +194,49 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
     }
     if (grabar)
       pol_mag[i] = norm_pol();
-    Elog[i]=total_E(E);
   }
   
 
   /* Guardar los datos de polarización en binario */
   if (grabar)
     array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
-  array_print(Elog,"Elog"+id_proc+".dat");
 
   pol_mag.clear();
-  Elog.clear();
   field.clear();
 }
 
-void Gen_exp(unsigned int L, unsigned int numexps, double p, std::vector<double>& Tdat,
+void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
   Sistema relaxor(L);
   unsigned int Equi_iter=350;
-//   Código para bajar (variar) la temperatura a campos fijos
+  //   Código para bajar (variar) la temperatura a campos fijos
   if (Exp_ID == "cool" || Exp_ID == "heat"){
-    std::vector<double> Thermostat;
-    Thermostat.clear();
-    Thermostat=step2vec(Tdat[0],Tdat[1],Tdat[2],Thermostat);
-
-    for(unsigned int t=0; t< tau.size() ; t++){
-      unsigned int Exp_iter = stepEstimator(3000,tau[t],2);
-
-      for(unsigned int E=0; E<Fields.size(); E++){
-	std::ostringstream id_proc;
-	id_proc<<Exp_ID<<"_p"<<p<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
-	id_proc<<"_Ti"<<Tdat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[2]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
-
-	clock_t cl_start = clock();
-	unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
-	if (needSimulation(id_proc.str(), sim_size)) {
-	for(unsigned int n=0; n<numexps; n++){
-	  relaxor.init(p,false);
-	  for(unsigned int T=0; T<Thermostat.size(); T++){
-	    relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
-	    relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
-	  }}
-	}
-	proces_data(Thermostat,Fields[E],tau[t],numexps, p,Exp_iter,id_proc.str());
-	std::cout<<id_proc.str()<<":"<<clock()-cl_start<<"\n";
-    }}
+    for(unsigned int p=0; p<rho.size(); p++){
+      std::vector<double> Thermostat;
+      Thermostat= thermostat(rho.size(), p, rho[p], Tdat[0], Tdat[1]);
+      for(unsigned int t=0; t< tau.size() ; t++){
+	unsigned int Exp_iter = stepEstimator(3000,tau[t],2);
+	
+	for(unsigned int E=0; E<Fields.size(); E++){
+	  std::ostringstream id_proc;
+	  id_proc<<Exp_ID<<"_p"<<rho[p]<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
+	  id_proc<<"_Ti"<<Thermostat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[0]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
+	  
+	  clock_t cl_start = clock();
+	  unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
+	  if (needSimulation(id_proc.str(), sim_size)) {
+	    for(unsigned int n=0; n<numexps; n++){
+	      relaxor.init(rho[p],false);
+	      for(unsigned int T=0; T<Thermostat.size(); T++){
+		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
+		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
+	      }}
+	  }
+	  proces_data(Thermostat,Fields[E],tau[t],numexps, rho[p],Exp_iter,id_proc.str());
+	  std::cout<<id_proc.str()<<":"<<clock()-cl_start<<"\n";
+	}}
+    }
   }
 //   Código para variar el campo a temperaturas fijas, desactualizado
 //   else {
@@ -375,6 +371,17 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
   X_mat.clear();  
   delete[] data_arrayr;
   delete[] data_arrayi;
+}
+std::vector< double > thermostat(unsigned int n, unsigned int i, double rho, double dT, double Tf){
+  double Ti = (rho>0.5) ? 10*rho+2.5 : 6;
+  double shift = (double) i/n;
+  Ti+=shift;
+  
+  std::vector<double> Temparray;
+  Temparray.clear();
+  Temparray=step2vec(Ti,Tf,dT,Temparray);
+  
+  return Temparray;
 }
 
 std::vector<double> step2vec(double v_start, double v_end, double dv, std::vector<double> last, double unidad){
