@@ -1,12 +1,15 @@
 #Opciones variables
 EXE=relaxor
-SOURCES=main.cpp sistema.cpp impresor.cpp
+SOURCES=sistema.cpp impresor.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 CFLAGS= -march=native -O2 -pipe -Wall -g -lgsl -lgslcblas
 
 all: $(EXE)
 
-$(EXE): $(OBJECTS)
+$(EXE): main.o $(OBJECTS)
+	g++ $^ -o $@ $(CFLAGS)
+
+tests: tester.o $(OBJECTS)
 	g++ $^ -o $@ $(CFLAGS)
 
 .cpp.o:
@@ -14,3 +17,5 @@ $(EXE): $(OBJECTS)
 
 clean:
 	rm -rf *o *~ $(EXE) *pyc
+
+
