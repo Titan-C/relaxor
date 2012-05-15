@@ -1,21 +1,24 @@
 #Opciones variables
 EXE=relaxor
+TEST=test
 SOURCES=sistema.cpp impresor.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-CFLAGS= -march=native -O2 -pipe -Wall -g -lgsl -lgslcblas
+LIBS=$(shell pkg-config --libs gsl)
+CFLAGS= -march=native -O2 -pipe -Wall -g
 
 all: $(EXE)
 
 $(EXE): main.o $(OBJECTS)
-	g++ $^ -o $@ $(CFLAGS)
+	g++ $^ -o $@ $(CFLAGS) $(LIBS)
 
-tests: tester.o $(OBJECTS)
-	g++ $^ -o $@ $(CFLAGS)
+$(TEST): tester.o $(OBJECTS)
+	g++ $^ -o $@ $(CFLAGS) $(LIBS)
+	./$@
 
 .cpp.o:
 	g++ -c $< $(CFLAGS)
 
 clean:
-	rm -rf *o *~ $(EXE) *pyc
+	rm -vf *o *~ $(EXE) $(TEST) *pyc *dat
 
 
