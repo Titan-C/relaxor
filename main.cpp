@@ -1,11 +1,3 @@
-/*
- * Sistema de 2 dimensiones de un ferroelectrico relaxor
- * 
- * TO DO
- * Unidades del sistema
- * umbtener valor de mu según datos de l a PNR
- * J intercambio debe contener valores del mu
- */
 #include <iostream>
 #include <fstream>
 #include <sstream>
