@@ -373,8 +373,8 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
   delete[] data_arrayi;
 }
 std::vector< double > thermostat(unsigned int n, unsigned int i, double rho, double dT, double Tf){
-  double Ti = (rho>0.5) ? 10*rho+2.5 : 6;
-  double shift = (double) i/n;
+  double Ti = (rho>0.5) ? 10*rho+2.5 : 8;
+  double shift = (double) dT/(i+1);
   Ti+=shift;
   
   std::vector<double> Temparray;
@@ -498,3 +498,7 @@ bool needSimulation(std::string id_proc, unsigned int size)
   
   return false;
 }
+
+void Sistema::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
+unsigned int Sistema::return_PNR(){return PNR;}
+int Sistema::ret_sig(unsigned int i){return sigma[i];}

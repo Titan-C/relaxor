@@ -48,6 +48,9 @@ public:
      * Graba los datos de ser necesario.*/
     void experimento(double T, double E, unsigned int tau, unsigned int Niter,
 		    bool grabar, std::string id_proc);
+    void flip_sigma(unsigned int idsigma);
+    unsigned int return_PNR();
+    int ret_sig(unsigned int i);
 };
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,
