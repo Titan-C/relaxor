@@ -28,6 +28,16 @@ void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app, boo
   if (br) file<<"\n";
   file.close();
 }
+void array_print_bin(int * V, unsigned int size, std::string ARCHIVO, bool app) {
+  std::ofstream file;
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str());
+  
+  file.write((char * )&V[0],size*sizeof(int));
+  file.close();
+}
 void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
   if (app)
