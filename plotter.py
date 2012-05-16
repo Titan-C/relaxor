@@ -14,7 +14,7 @@ def polPlot(file,stl='-o', error=False):
   T = data[:,0]
   p = data[:,1]
   if not error:
-    plot(T,p,stl,label=lb)
+    plot(T,p,stl,label=u'Polarización')
   else:
     pe = data[:,2]
     errorbar(T,p,yerr=pe,fmt=stl,label=lb)
@@ -25,13 +25,13 @@ def susPlot(file,stl='-o', error=False, IM=False):
   T = data[:,0]
   X = data[:,1]
   if not error:
-    plot(T,X,stl,label=lb)
+    plot(T,X,stl,label='$\\chi$ $\\mathcal{R}eal$')
   else:
     std = data[:,3]
-    errorbar(T,X,yerr=std,fmt=stl, label=lb)
+    errorbar(T,X,yerr=std,fmt=stl, label='$\\mathcal{R}eal$')
   if IM:
     Xi = data[:,4]
-    plot(T,Xi,stl,label='$\\mathcal{I}m$')
+    plot(T,Xi,stl,label='$\\chi$ $\\mathcal{I}maginaria$')
 
 def fittedPlot(equation,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -53,11 +53,16 @@ def scalefittedPlot(equation,coefs,file):
 def susLabel():
   xlabel('Temperatura [$\\Delta J /k_B$]')
   ylabel(u'Susceptibilidad dieléctrica $\\chi$')
-  title('Data & fits')
+  title(u'Susceptibilidad en un proceso de enfriamiento\n $\\rho=0.8$, $E_0=0.4$ y $\\tau=1500$')
+  
+def dieLabel():
+  xlabel('Temperatura [$^{\circ}K$]')
+  ylabel(u'Constante dieléctrica $\\varepsilon_r$')
+  title(u'Curvas de ajuste a los datos experimentales')
 
 def polLabel():
   xlabel('Temperatura [$\\Delta J /k_B$]')
-  ylabel(u'Polarización normada del sistema $[\\frac{1}{N\\mu}]$')
+  ylabel(u'Polarización normada del sistema $[\\overline{\\mu}/N]$')
   title(u'Polarización global en un proceso de enfriamiento\nCampo externo nulo')
 
 def HlogLabel():
@@ -80,7 +85,7 @@ def simIdentifier(file):
 def legendSet(file):
   if file.find('_p') > 0:
     rho,E,tau = simIdentifier(file)
-    return '$\\rho=$'+rho#+' E='+E+' $\\tau=$'+tau
+    return '$E=$'+E
     
   else:
     mat = file.find('P')
@@ -97,7 +102,8 @@ def filesusPlot(path,stl='-o',error=False,IM=False):
 def filepolPlot(path,stl='-o',error=False):
   files = sort(glob(path))
   for file in files:
-    polPlot(file,stl,error)
+  #  if (float(simIdentifier(file)[0]) > 0.4):
+      polPlot(file,stl,error)
   polLabel()
   legend()
   show()

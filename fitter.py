@@ -38,7 +38,7 @@ def scaleFitter(fit_eq, file, estimated,weight):
   equation.CalculateCoefficientAndFitStatistics()
   return equation
 
-def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,0,None],lowBound =[None,None,-1040,None], weight=False, plot=True):
+def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,0,None],lowBound =[None,None,-1100,None], weight=False, plot=True):
   '''Permite llamar a la función de ajuste para todos los archivos que se encuentran en path'''
   files=sort(glob(path))
   for file in files:
@@ -47,8 +47,10 @@ def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,
     print file, eq.solvedCoefficients
     if plot: fittedPlot(eq,file)
   if plot:
-      legend()
-      axisLabel()
+      #legend()
+      dieLabel()
+      annotate('P2BIT', xy=(600,2850),xytext=(595,2850))
+      annotate('P3BIT', xy=(530,2250),xytext=(525,2250))
 
 def filesScaleFit(path, material,estimated=[100,0.008],weight=False, plot=False):
   '''Permite llamar a la función de ajuste de escala para todos los archivos que se encuentran en path, para el material deseado'''
