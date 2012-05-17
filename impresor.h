@@ -3,13 +3,15 @@
 
 #include <iostream>
 #include <vector>
+#include <sys/types.h>
 
 // Imprime datos de variables double
 void out(double value, std::string ARCHIVO, bool app = true, bool br = true);
 // Imprime datos de los arreglos vectoriales
-void array_print_bin(int * V, unsigned int size, std::string ARCHIVO, bool app = true);
+void array_print_bin(int8_t * V, unsigned int size, std::string ARCHIVO, bool app = true);
 void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app = true, bool br = true);
 void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app = true, bool br = true);
+void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale);
 void array_print_bin(const std::vector< double >& V, std::string ARCHIVO, bool app = true);
 // Imprime datos de los arreglos matricales
 void array_print(const std::vector< std::vector<int> >& M,

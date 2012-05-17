@@ -28,14 +28,14 @@ void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app, boo
   if (br) file<<"\n";
   file.close();
 }
-void array_print_bin(int * V, unsigned int size, std::string ARCHIVO, bool app) {
+void array_print_bin(int8_t* V, unsigned int size, std::string ARCHIVO, bool app) {
   std::ofstream file;
   if (app)
     file.open (ARCHIVO.c_str(), std::fstream::app);
   else
     file.open (ARCHIVO.c_str());
   
-  file.write((char * )&V[0],size*sizeof(int));
+  file.write((char * )&V[0],size*sizeof(int8_t));
   file.close();
 }
 void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, bool br) {
@@ -49,6 +49,18 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, 
     file<<V[i]<<"\n";
 
   if (br) file<<"\n";
+  file.close();
+}
+void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale){
+  std::fstream file;
+  file.open (ARCHIVO.c_str(), std::fstream::out);
+  unsigned int rowsize = V.size()/colsize;
+
+  for(unsigned int i = 0; i<rowsize; i++){
+    for(unsigned int j = 0; j<colsize;j++)
+      file<<V[i*colsize+j]/scale<<" ";
+    file<<"\n";
+  }
   file.close();
 }
 void array_print_bin(const std::vector< double >& V, std::string ARCHIVO, bool app) {
