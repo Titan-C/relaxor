@@ -14,10 +14,10 @@ def polPlot(file,stl='-o', error=False):
   T = data[:,0]
   p = data[:,1]
   if not error:
-    plot(T,p,stl,label=u'Polarización')
+    return plot(T,p,stl,label=u'Polarización')
   else:
     pe = data[:,2]
-    errorbar(T,p,yerr=pe,fmt=stl,label=lb)
+    return errorbar(T,p,yerr=pe,fmt=stl,label=lb)
 
 def susPlot(file,stl='-o', error=False, IM=False):
   lb=legendSet(file)
@@ -51,8 +51,8 @@ def scalefittedPlot(equation,coefs,file):
   plot(T,E,'o',x,F,label=legendSet(file))
 
 def susLabel():
-  xlabel('Temperatura [$\\Delta J /k_B$]')
-  ylabel(u'Susceptibilidad dieléctrica $\\chi$')
+  xlabel(tempLabel())
+  ylabel(chiLabel())
   title(u'Susceptibilidad en un proceso de enfriamiento\n $\\rho=0.8$, $E_0=0.4$ y $\\tau=1500$')
   
 def dieLabel():
@@ -61,14 +61,30 @@ def dieLabel():
   title(u'Curvas de ajuste a los datos experimentales')
 
 def polLabel():
-  xlabel('Temperatura [$\\Delta J /k_B$]')
-  ylabel(u'Polarización normada del sistema $[\\overline{\\mu}/N]$')
-  title(u'Polarización global en un proceso de enfriamiento\nCampo externo nulo')
+  xlabel(tempLabel())
+  ylabel(polLabel())
+  #title(u'Polarización global en un proceso de enfriamiento\nCampo externo nulo')
 
 def HlogLabel():
   xlabel('Iteraciones $[MCS/dipolo]$')
   ylabel(u'Energía del sistema $[\Delta J]$')
   suptitle(u'Evolución de la energía en un proceso de enfriamiento\nCampo externo nulo')
+
+def tempLabel():
+  return 'Temperatura [$\\Delta J /k_B$]'
+
+def polLabel():
+  return u'Polarización normada del sistema $[\\overline{\\mu}/N]$'
+
+def fropolLabel():
+  return u'Fracción de dipolos congelados'
+
+def chiLabel():
+  return u'Susceptibilidad dieléctrica $\\chi$'
+
+def procTitle(setup):
+  return setup+' en un proceso de enfriamiento\n'
+
 
 def simIdentifier(file):
   rho = file.find('_p')
@@ -107,6 +123,25 @@ def filepolPlot(path,stl='-o',error=False):
   polLabel()
   legend()
   show()
+
+def sigmahist(rho):
+  file = glob('sigmas*'+str(rho)+'*')[0]
+  n=int(file[file.find('_n')+2])
+  sigmas = genfromtxt(file)
+  T = genfromtxt('pol'+file[6:])[:,0]
+  Sigstat = array([concatenate([sigmas[temps+i*len(T)] for i in range(n)]) for temps in range(len(T))])
+  for temp in linspace(0,0.98,8):
+    tempind=int(temp*len(T))
+    hist(Sigstat[tempind],30,normed=True, label=str(T[tempind]))
+
+def frozenpol(rho):
+  filepol = glob('pol'+str(rho)+'*')[0]
+  filefro = 'frozen'+filepol[3:]
+  fig = figure()
+  ax1 = fig.add_subplot(111)
+  polPlot(filepol)
+  polLabel()
+
 
 def fileHlogPlot(path,stl='+',error=False):
   '''Grafica el historial de la energía del sistema y hace
