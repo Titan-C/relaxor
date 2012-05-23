@@ -22,7 +22,7 @@ Sistema::Sistema(unsigned int lado,
   PNR = pow(lado,dimension);
   rng = gsl_rng_alloc (gsl_rng_taus);
   // Dimensionado de arreglos caraterísticos del sistema
-  sigma = new int [PNR];
+  sigma = new int8_t [PNR];
   mu_E = new double [PNR];
 
   vecinos = 2*dimension;
@@ -192,8 +192,10 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
       if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
 	sigma[idflip] *= -1;
     }
-    if (grabar)
+    if (grabar){
       pol_mag[i] = norm_pol();
+      array_print_bin(ret_sigarr(),PNR,"log_sigma_"+id_proc+".dat");
+    }
   }
   
 
@@ -233,7 +235,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
 	      }}
 	  }
-	  proces_data(Thermostat,Fields[E],tau[t],numexps, rho[p],Exp_iter,id_proc.str());
+	  proces_data(Thermostat,Fields[E],tau[t],numexps,relaxor.return_PNR(), rho[p],Exp_iter,id_proc.str());
 	  std::cout<<id_proc.str()<<":"<<clock()-cl_start<<"\n";
 	}}
     }
@@ -253,7 +255,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 }
 
 void proces_data(std::vector< double >& Temps, double Field,
-		 unsigned int tau, unsigned int numexps,
+		 unsigned int tau, unsigned int numexps, unsigned int PNR,
 		 double p, unsigned int Niter, std::string id_proc){
   //procesar los datos para casos de variación de temperatura
     std::vector<double> pol_stats, pol_int_avg;
@@ -261,6 +263,7 @@ void proces_data(std::vector< double >& Temps, double Field,
     std::vector<double> intfield (1,Field);
     eval_pol(pol_stats,numexps,Temps,id_proc,true);
     calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc);
+    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
     intfield.clear();
     pol_int_avg.clear();
     pol_stats.clear();
@@ -306,6 +309,49 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   delete[] pol_hist;
   file.close();
 }
+void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>& Temps, unsigned int numexps, std::string id_proc){
+  int8_t * sigma_hist = new int8_t[PNR];
+  std::vector< double > sigmaTemp;
+  sigmaTemp.assign(Temps.size()*PNR,0);
+  
+  //Abrir Archivo, leer guardar datos
+  std::string name = "log_sigma_"+id_proc+".dat";
+  std::ifstream file(name.c_str());
+  for(unsigned int n=0; n<numexps ; n++){
+    for(unsigned int T=0; T<Temps.size(); T++){
+      for(unsigned int iter = 0; iter < Niter ; iter++){
+	file.read((char *)&sigma_hist[0],PNR*sizeof(int8_t));
+	for(unsigned int s = 0; s<PNR ; s++)
+	  sigmaTemp[T*PNR + s] += sigma_hist[s];
+  }}}
+  array_print(sigmaTemp, "sigmas_"+id_proc+".dat", PNR, Niter*numexps);
+  delete[] sigma_hist;
+  //Evaluar % congelamiento
+  std::vector< std::vector<double> > Frozen;
+  Frozen.resize(Temps.size());
+  for(unsigned int T=0; T<Temps.size(); T++){
+    Frozen[T].assign(4,0);
+    Frozen[T][0]=Temps[T];
+    for(unsigned int s = 0; s<PNR ; s++){
+      double avgabssigma= std::abs(sigmaTemp[T*PNR + s]/Niter/numexps);
+      if (avgabssigma > 0.9){
+	Frozen[T][3]++;
+	if (avgabssigma > 0.95){
+	  Frozen[T][2]++;
+	  if (avgabssigma > 0.999999)
+	    Frozen[T][1]++;
+	}}
+    }
+    for(unsigned int f=1; f<4;f++)
+      Frozen[T][f]/=PNR;
+  }
+  array_print(Frozen,"frozen_"+id_proc+".dat");
+  /*Liberar memoria*/
+  sigmaTemp.clear();
+  for(unsigned int T=0; T<Temps.size(); T++)
+    Frozen[T].clear();
+  Frozen.clear();
+}
 void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, const std::vector<double>& x_array, std::string id_proc, bool absolut) {
 
   //Polarización, o polarización absoluta y desviación estandar
@@ -330,9 +376,8 @@ void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, const 
   array_print(pol_final,"pol_"+id_proc+".dat");
 
   /*Liberar memoria*/
-  for(unsigned int i=0;i<data_length;i++){
+  for(unsigned int i=0;i<data_length;i++)
     pol_final[i].clear();
-  }
   pol_final.clear();
 }
 
@@ -502,3 +547,4 @@ bool needSimulation(std::string id_proc, unsigned int size)
 void Sistema::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
 unsigned int Sistema::return_PNR(){return PNR;}
 int Sistema::ret_sig(unsigned int i){return sigma[i];}
+int8_t* Sistema::ret_sigarr(){ return sigma;}

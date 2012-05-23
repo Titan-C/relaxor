@@ -4,7 +4,7 @@ TEST=test
 SOURCES=sistema.cpp impresor.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LIBS=$(shell pkg-config --libs gsl)
-CFLAGS= -march=native -O2 -pipe -Wall -g
+CFLAGS= -g -march=native -O2 -pipe -Wall
 
 all: $(EXE)
 

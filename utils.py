@@ -4,6 +4,7 @@ from matplotlib.transforms import Bbox, TransformedBbox, \
 from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector,\
      BboxConnectorPatch
 
+from numpy import sqrt
 
 def connect_bbox(bbox1, bbox2,
                  loc1a, loc2a, loc1b, loc2b,
@@ -59,6 +60,23 @@ def zoom_effect02(ax1, ax2, **kwargs):
     ax2.add_patch(p)
 
     return c1, c2, bbox_patch1, bbox_patch2, p
+
+def volcalc(j,dj,u,du,e):
+  Units=e**2*1.38e-23/8.85e-12
+  V=j**2*Units/u
+  dj1=2*j*dj/u
+  du1=(j/u)**2*du
+  dV=sqrt(dj1**2+du1**2)*Units
+  return V,dV,Units
+
+def dimcalc(j,dj,u,du,e):
+  V,dV,Units=volcalc(j,dj,u,du,e)
+  print V,'+',dV,'m3'
+  D=V**(1/3.0)
+  dj1=2*dj/(3*u)*j**(-1/3.0)
+  du1=j**(2/3.0)*du/(3*u**(4/3.0))
+  dD=sqrt(dj1**2+du1**2)
+  print D,'+',dD,'m'
 
 if __name__ == "__main__":
   import matplotlib.pyplot as plt

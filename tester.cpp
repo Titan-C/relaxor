@@ -58,25 +58,30 @@ void tester::rw_sigma()
   clock_t cl_start = clock();
   cout<<"Almacenar arreglos de sigma tamaño "<<relaxor.return_PNR()<<": ";
   string savefile = "sigmasave.dat";
-  int * oldsigma = relaxor.ret_sigarr();
-  array_print_bin(oldsigma,relaxor.return_PNR(),savefile,false);
+  int8_t * oldsigma = relaxor.ret_sigarr();
+  unsigned int rep =2030;
+  for(unsigned int i=0;i<rep;i++)
+    array_print_bin(oldsigma,relaxor.return_PNR(),savefile,true);
+  
   struct stat file;
   if (stat(savefile.c_str(), &file) == -1)
     cerr<<"no hay archivo";
-  assert (file.st_size == relaxor.return_PNR()*sizeof(int));
+  assert (file.st_size == rep*relaxor.return_PNR()*sizeof(int8_t));
   std::ifstream ifile(savefile.c_str());
-  int * newsigma = new int[relaxor.return_PNR()];
-  ifile.read((char *)&newsigma[0],relaxor.return_PNR()*sizeof(double));
-  for(unsigned int i=0;i<relaxor.return_PNR();i++){
-    cout<<newsigma[i]<<" "<<oldsigma[i]<<"\n";
-    assert(newsigma[i]==oldsigma[i]);
+  
+  int8_t * newsigma = new int8_t[relaxor.return_PNR()];
+  for(unsigned int i=0;i<rep;i++){
+  ifile.read((char *)&newsigma[0],relaxor.return_PNR()*sizeof(int8_t));
+  for(unsigned int s=0;s<relaxor.return_PNR();s++)
+    assert(newsigma[s]==oldsigma[s]);
   }
+  std::remove(savefile.c_str());
   cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"s\n";
 }
 
 int main(int argc, char **argv) {
   //Parametros de entrada
-  unsigned int L=3;
+  unsigned int L=16;
   double eps	=5e-12;
   
   if (argc==3){

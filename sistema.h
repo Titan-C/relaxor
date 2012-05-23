@@ -11,7 +11,7 @@ private:
     unsigned int dimension, L, vecinos;		// Dimensionalidad del sistema, cantidad de PNR por lado
     unsigned int PNR;
     double rho;
-    int * sigma;				// Arreglo de spines dipolares
+    int8_t * sigma;				// Arreglo de spines dipolares
     double * mu_E;				// Arreglo de proyeciones de momento al eje del campo
 
     double ** J;				// Energías de intercambio primeros vecinos
@@ -51,13 +51,14 @@ public:
     void flip_sigma(unsigned int idsigma);
     unsigned int return_PNR();
     int ret_sig(unsigned int i);
+    int8_t * ret_sigarr();
 };
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID);
 //Operaciones necesarias para tratar datos
 void proces_data(std::vector< double >& Temps, double Field,
-		 unsigned int tau, unsigned int numexps,
+		 unsigned int tau, unsigned int numexps, unsigned int PNR,
 		 double p, unsigned int Niter, std::string id_proc);
 /*PreProcesa los datos almacenados de los experimentos realizados de acuerdo a sus
  * condicones y número de ejecuciones.*/
@@ -73,6 +74,9 @@ void eval_pol(const std::vector< double >& pol_stats, unsigned int numexps,
 void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
 	      const std::vector<double>& x_array,
 	      const std::vector<double>& campo, std::string id_proc);
+/*Calcula la polarización congelada*/
+void eval_frozen(unsigned int array_size, unsigned int Niter, const std::vector<double>& Temps,
+		 unsigned int numexps, std::string id_proc);
 
 //Funciones adicionales
 //Calcula la desviación estandar de los datos de toda la matriz
