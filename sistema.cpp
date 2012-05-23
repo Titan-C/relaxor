@@ -312,7 +312,7 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
 void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>& Temps, unsigned int numexps, std::string id_proc){
   int8_t * sigma_hist = new int8_t[PNR];
   std::vector< double > sigmaTemp;
-  sigmaTemp.assign(Temps.size()*PNR,0);
+  sigmaTemp.assign(numexps*Temps.size()*PNR,0);
   
   //Abrir Archivo, leer guardar datos
   std::string name = "log_sigma_"+id_proc+".dat";
@@ -322,9 +322,9 @@ void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>
       for(unsigned int iter = 0; iter < Niter ; iter++){
 	file.read((char *)&sigma_hist[0],PNR*sizeof(int8_t));
 	for(unsigned int s = 0; s<PNR ; s++)
-	  sigmaTemp[T*PNR + s] += sigma_hist[s];
+	  sigmaTemp[n*Temps.size()*PNR+T*PNR + s] += sigma_hist[s];
   }}}
-  array_print(sigmaTemp, "sigmas_"+id_proc+".dat", PNR, Niter*numexps);
+  array_print(sigmaTemp, "sigmas_"+id_proc+".dat", PNR, Niter);
   delete[] sigma_hist;
   //Evaluar % congelamiento
   std::vector< std::vector<double> > Frozen;
@@ -333,7 +333,7 @@ void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>
     Frozen[T].assign(4,0);
     Frozen[T][0]=Temps[T];
     for(unsigned int s = 0; s<PNR ; s++){
-      double avgabssigma= std::abs(sigmaTemp[T*PNR + s]/Niter/numexps);
+      double avgabssigma= std::abs(sigmaTemp[T*PNR + s]/Niter);
       if (avgabssigma > 0.9){
 	Frozen[T][3]++;
 	if (avgabssigma > 0.95){
