@@ -4,34 +4,25 @@ from sys import argv
 from glob import glob
 from utils import zoom_effect02
 
+#Plotters
+# Single files plots
+
 def HlogPlot(file,stl='+'):
   H=genfromtxt(file)
   plot(H,stl,label=legendSet(file))
 
-def polPlot(file,stl='-o', error=False):
-  lb=legendSet(file)
+def uPlot(file, lb, stl='-o', error=False, IM=False):
   data = genfromtxt(file)
   T = data[:,0]
-  p = data[:,1]
+  Y1 = data[:,1]
   if not error:
-    return plot(T,p,stl,label=u'Polarización')
+    plot(T,Y1,stl,label=lb)
   else:
-    pe = data[:,2]
-    return errorbar(T,p,yerr=pe,fmt=stl,label=lb)
-
-def susPlot(file,stl='-o', error=False, IM=False):
-  lb=legendSet(file)
-  data = genfromtxt(file)
-  T = data[:,0]
-  X = data[:,1]
-  if not error:
-    plot(T,X,stl,label='$\\chi$ $\\mathcal{R}eal$')
-  else:
-    std = data[:,3]
-    errorbar(T,X,yerr=std,fmt=stl, label='$\\mathcal{R}eal$')
+    Y1e = data[:,2]
+    errorbar(T,Y1,yerr=Y1e,fmt=stl,label=lb)
   if IM:
-    Xi = data[:,4]
-    plot(T,Xi,stl,label='$\\chi$ $\\mathcal{I}maginaria$')
+    Y2 = data[:,4]
+    plot(T,Y2,stl,label=lb+'$\\mathcal{I}maginaria$')
 
 def fittedPlot(equation,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -50,98 +41,32 @@ def scalefittedPlot(equation,coefs,file):
   F=u/j*a*(j*x-b)/(j**2*x*x+c*j*x+d)
   plot(T,E,'o',x,F,label=legendSet(file))
 
-def susLabel():
-  xlabel(tempLabel())
-  ylabel(chiLabel())
-  title(u'Susceptibilidad en un proceso de enfriamiento\n $\\rho=0.8$, $E_0=0.4$ y $\\tau=1500$')
-  
-def dieLabel():
-  xlabel('Temperatura [$^{\circ}K$]')
-  ylabel(u'Constante dieléctrica $\\varepsilon_r$')
-  title(u'Curvas de ajuste a los datos experimentales')
-
-def polLabel():
-  xlabel(tempLabel())
-  ylabel(polLabel())
-  #title(u'Polarización global en un proceso de enfriamiento\nCampo externo nulo')
-
-def HlogLabel():
-  xlabel('Iteraciones $[MCS/dipolo]$')
-  ylabel(u'Energía del sistema $[\Delta J]$')
-  suptitle(u'Evolución de la energía en un proceso de enfriamiento\nCampo externo nulo')
-
-def tempLabel():
-  return 'Temperatura [$\\Delta J /k_B$]'
-
-def polLabel():
-  return u'Polarización normada del sistema $[\\overline{\\mu}/N]$'
-
-def fropolLabel():
-  return u'Fracción de dipolos congelados'
-
-def chiLabel():
-  return u'Susceptibilidad dieléctrica $\\chi$'
-
-def procTitle(setup):
-  return setup+' en un proceso de enfriamiento\n'
-
-
-def simIdentifier(file):
-  rho = file.find('_p')
-  E = file.find('_E')
-  tau = file.find('_t')
-  L = file.find('_L')
-
-  rho = file[rho+2:E]
-  E = file[E+2:tau]
-  tau = file[tau+2:L]
-
-  return rho,E,tau
-
-def legendSet(file):
-  if file.find('_p') > 0:
-    rho,E,tau = simIdentifier(file)
-    return '$E=$'+E
-    
-  else:
-    mat = file.find('P')
-    return file[mat:mat+5]+' '+file[mat+5:-4]
-
-def filesusPlot(path,stl='-o',error=False,IM=False):
-  files = sort(glob(path))
+#Multifile plots
+def filesPlot(files,Frho,FE,Ftau,yAxis,stl,error,IM):
   for file in files:
-    susPlot(file,stl,error,IM)
-  susLabel()
+    uPlot(file,legendSet(file,Frho,FE,Ftau),stl,error,IM)
+  ylabel(yAxis)
   legend()
+
+def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
+  '''Grafica para los procesos *procs*(pol,sus,frozen) los datos que
+     correspondan a simulaciones con rho, E y tau fijos'''
+
+  fig=figure()
+  ax1 = subplot(111)
+  procs = procs.split()
+  files = glob(procs[0]+searchstr(rho,E,tau))
+  filesPlot(files,rho,E,tau,axisLabel(procs[0]),stl,error,IM)
+
+  if len(procs)>1:
+    ax2 = twinx()
+    files = [procs[1]+file[3:] for file in files]
+    filesPlot(files,rho,E,tau,axisLabel(procs[1]),'p-',error,IM=False)
+
+  ax1.set_xlabel(tempLabel())
+  title(procTitle(procs,rho,E,tau))
+
   show()
-
-def filepolPlot(path,stl='-o',error=False):
-  files = sort(glob(path))
-  for file in files:
-  #  if (float(simIdentifier(file)[0]) > 0.4):
-      polPlot(file,stl,error)
-  polLabel()
-  legend()
-  show()
-
-def sigmahist(rho):
-  file = glob('sigmas*'+str(rho)+'*')[0]
-  n=int(file[file.find('_n')+2])
-  sigmas = genfromtxt(file)
-  T = genfromtxt('pol'+file[6:])[:,0]
-  Sigstat = array([concatenate([sigmas[temps+i*len(T)] for i in range(n)]) for temps in range(len(T))])
-  for temp in linspace(0,0.98,8):
-    tempind=int(temp*len(T))
-    hist(Sigstat[tempind],30,normed=True, label=str(T[tempind]))
-
-def frozenpol(rho):
-  filepol = glob('pol'+str(rho)+'*')[0]
-  filefro = 'frozen'+filepol[3:]
-  fig = figure()
-  ax1 = fig.add_subplot(111)
-  polPlot(filepol)
-  polLabel()
-
 
 def fileHlogPlot(path,stl='+',error=False):
   '''Grafica el historial de la energía del sistema y hace
@@ -161,6 +86,116 @@ def fileHlogPlot(path,stl='+',error=False):
   HlogLabel()
   legend()
   show()
+
+# Labelers
+def tempLabel():
+  return 'Temperatura [$\\Delta J /k_B$]'
+
+def polLabel():
+  return u'Polarización normada del sistema $[\\overline{\\mu}/N]$'
+
+def frozenLabel():
+  return u'Fracción de dipolos congelados'
+
+def susLabel():
+  return u'Susceptibilidad dieléctrica $\\chi$'
+
+def axisLabel(proc):
+  if proc == 'sus':
+    return susLabel()
+  if proc == 'pol':
+    return polLabel()
+  if proc == 'frozen':
+    return frozenLabel()
+
+def procTitle(proc,rho,E,tau):
+  setup = u''
+  for i in range(len(proc)):
+    if proc[i] == 'sus':
+      setup += u'Susceptibilidad'
+    if proc[i] == 'pol':
+      setup += u'Polarización espontanea'
+    if proc[i] == 'frozen':
+      setup += u'Dipolos congelados'
+    if i<len(proc)-1:
+      setup += u' y '
+  setup +=' en un proceso de enfriamiento'
+
+  cond = str()
+  if rho!=None:
+    cond += '$\\rho = $'+str(rho)
+  if E!=None:
+    cond += '; $E_0 =$'+str(E)
+  if tau!=None and E!=0:
+    cond += '; $\\tau =$'+str(tau)
+  if len(cond)==0:
+    return setup
+  if cond[0]==';':
+    cond = cond[1:]
+
+  return setup+'\npara: '+cond
+
+def dieLabel():
+  xlabel('Temperatura [$^{\circ}K$]')
+  ylabel(u'Constante dieléctrica $\\varepsilon_r$')
+  title(u'Curvas de ajuste a los datos experimentales')
+
+def HlogLabel(rho,E,tau):
+  xlabel('Iteraciones $[MCS/dipolo]$')
+  ylabel(u'Energía del sistema $[\Delta J]$')
+  suptitle(procTitle(u'Evolución de la energía',rho,E,tau))
+
+def simIdentifier(file):
+  rho = file.find('_p')
+  E = file.find('_E')
+  tau = file.find('_t')
+  L = file.find('_L')
+
+  rho = file[rho+2:E]
+  E = file[E+2:tau]
+  tau = file[tau+2:L]
+
+  return rho,E,tau
+
+def legendSet(file,Frho=None,FE=None,Ftau=None):
+  if file.find('_p') > 0:
+    rho,E,tau = simIdentifier(file)
+
+    legend = str()
+    if Frho==None:
+      legend += '$\\rho = $'+str(rho)
+    if FE==None:
+      legend += '; $E_0 =$'+str(E)
+    if Ftau==None and E!=0:
+      legend += '; $\\tau =$'+str(tau)
+    if legend[0]==';':
+      legend = legend[1:]
+    return legend
+    
+  else:
+    mat = file.find('P')
+    return file[mat:mat+5]+' '+file[mat+5:-4]
+
+def sigmahist(rho):
+  file = glob('sigmas*'+str(rho)+'*')[0]
+  n=int(file[file.find('_n')+2])
+  sigmas = genfromtxt(file)
+  T = genfromtxt('pol'+file[6:])[:,0]
+  Sigstat = array([concatenate([sigmas[temps+i*len(T)] for i in range(n)]) for temps in range(len(T))])
+  for temp in linspace(0,0.98,8):
+    tempind=int(temp*len(T))
+    hist(Sigstat[tempind],30,normed=True, label=str(T[tempind]))
+
+def searchstr(rho,E,tau):
+  Sstr='*'
+  if rho!=None:
+    Sstr+='_p'+str(rho)
+  if E!=None:
+    Sstr+='_E'+str(E)
+  if tau!=None:
+    Sstr+='_t'+str(tau)
+  return Sstr+'*'
+
 
 if __name__ == "__main__":
   filesusPlot(argv[1])
