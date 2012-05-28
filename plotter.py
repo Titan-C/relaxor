@@ -41,6 +41,21 @@ def scalefittedPlot(equation,coefs,file):
   F=u/j*a*(j*x-b)/(j**2*x*x+c*j*x+d)
   plot(T,E,'o',x,F,label=legendSet(file))
 
+def sigmahist(rho,tempind,sigmas = None,tr=0.7):
+  fig=figure()
+  file = glob('sigmas*'+str(rho)+'*')[0]
+  n=int(file[file.find('_n')+2])
+  if sigmas == None:
+    sigmas = genfromtxt(file)
+  T = genfromtxt('pol'+file[6:])[:,0]
+  Sigstat = array([concatenate([sigmas[temps+i*len(T)] for i in range(n)]) for temps in range(len(T))])
+  for temp in tempind:
+    hist(Sigstat[temp],25,normed=True, label='T='+str(T[temp])+'[$\\Delta J /k_B$]',alpha=tr)
+  legend()
+  rho,E,tau = simIdentifier(file)
+  dist_sig_avgTitle(rho,E,tau)
+  return sigmas
+    
 #Multifile plots
 def filesPlot(files,Frho,FE,Ftau,yAxis,stl,error,IM):
   for file in files:
@@ -62,6 +77,7 @@ def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
     ax2 = twinx()
     files = [procs[1]+file[3:] for file in files]
     filesPlot(files,rho,E,tau,axisLabel(procs[1]),'p-',error,IM=False)
+    ax2.yaxis.label.set_color('g')
 
   ax1.set_xlabel(tempLabel())
   title(procTitle(procs,rho,E,tau))
@@ -91,6 +107,12 @@ def fileHlogPlot(path,stl='+',error=False):
 def tempLabel():
   return 'Temperatura [$\\Delta J /k_B$]'
 
+def sig_avgLabel():
+  return '$\\overline{\\sigma}$'
+
+def dist_sig_avgLabel():
+  return '$\\mathcal{P}(\\overline{\\sigma})$'
+
 def polLabel():
   return u'Polarización normada del sistema $[\\overline{\\mu}/N]$'
 
@@ -114,13 +136,16 @@ def procTitle(proc,rho,E,tau):
     if proc[i] == 'sus':
       setup += u'Susceptibilidad'
     if proc[i] == 'pol':
-      setup += u'Polarización espontanea'
+      setup += u'Polarización espontánea'
     if proc[i] == 'frozen':
       setup += u'Dipolos congelados'
     if i<len(proc)-1:
       setup += u' y '
   setup +=' en un proceso de enfriamiento'
 
+  return setup+'\npara: '+fixedCond(rho,E,tau)
+
+def fixedCond(rho,E,tau):
   cond = str()
   if rho!=None:
     cond += '$\\rho = $'+str(rho)
@@ -129,11 +154,10 @@ def procTitle(proc,rho,E,tau):
   if tau!=None and E!=0:
     cond += '; $\\tau =$'+str(tau)
   if len(cond)==0:
-    return setup
+    return ''
   if cond[0]==';':
     cond = cond[1:]
-
-  return setup+'\npara: '+cond
+  return '\npara: '+cond
 
 def dieLabel():
   xlabel('Temperatura [$^{\circ}K$]')
@@ -144,6 +168,11 @@ def HlogLabel(rho,E,tau):
   xlabel('Iteraciones $[MCS/dipolo]$')
   ylabel(u'Energía del sistema $[\Delta J]$')
   suptitle(procTitle(u'Evolución de la energía',rho,E,tau))
+
+def dist_sig_avgTitle(rho,E,tau):
+  xlabel(sig_avgLabel())
+  ylabel(dist_sig_avgLabel())
+  title(u'Densidad de probabilidad del parámetro de orden '+sig_avgLabel()+fixedCond(rho,E,tau))
 
 def simIdentifier(file):
   rho = file.find('_p')
@@ -175,16 +204,6 @@ def legendSet(file,Frho=None,FE=None,Ftau=None):
   else:
     mat = file.find('P')
     return file[mat:mat+5]+' '+file[mat+5:-4]
-
-def sigmahist(rho):
-  file = glob('sigmas*'+str(rho)+'*')[0]
-  n=int(file[file.find('_n')+2])
-  sigmas = genfromtxt(file)
-  T = genfromtxt('pol'+file[6:])[:,0]
-  Sigstat = array([concatenate([sigmas[temps+i*len(T)] for i in range(n)]) for temps in range(len(T))])
-  for temp in linspace(0,0.98,8):
-    tempind=int(temp*len(T))
-    hist(Sigstat[tempind],30,normed=True, label=str(T[tempind]))
 
 def searchstr(rho,E,tau):
   Sstr='*'
