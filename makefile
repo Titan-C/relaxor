@@ -19,6 +19,6 @@ $(TEST): tester.o $(OBJECTS)
 	g++ -c $< $(CFLAGS)
 
 clean:
-	rm -vf *o *~ $(EXE) $(TEST) *pyc *dat
+	rm -vf *o *~ $(EXE) $(TEST) *pyc
 
 

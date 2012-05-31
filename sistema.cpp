@@ -73,6 +73,7 @@ void Sistema::set_space_config(){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz
   }
+  array_print(G,"topologia.dat");
   //liberar mem
   for(unsigned int i=0; i<R.size();i++)
     R[i].clear();
@@ -104,7 +105,20 @@ double Sistema::Jex(){
   for(unsigned int i=0; i<Jinter.size();i++)
     Jinter[i].clear();
   Jinter.clear();
-
+ array_print(J,"Jexmatold.dat");
+ //Genera directamente el arregle de energías de intercambio
+//para la simulación ahorrando memoria
+  for(unsigned int i=0;i<PNR;i++){
+    for(unsigned int j=0;j<vecinos;j++){
+      if (J[i][j] == -1000){
+        for(unsigned int k=0; k<vecinos;k++){
+	  if (G[ G[i][j] ][k] == i){
+	    if (J [G[i][j] ][k] == -1000)
+	      J[ G[i][j] ][k] = gsl_ran_gaussian(rng,1)+rho;
+	    J[i][j] = J[ G[i][j] ][k];
+	  }
+	}}}}
+  array_print(J,"Jexmatnew.dat");
   return stan_dev(J,PNR,vecinos);
 }
 
@@ -194,7 +208,7 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
     }
     if (grabar){
       pol_mag[i] = norm_pol();
-      array_print_bin(ret_sigarr(),PNR,"log_sigma_"+id_proc+".dat");
+//      array_print_bin(ret_sigarr(),PNR,"log_sigma_"+id_proc+".dat");
     }
   }
   
@@ -263,7 +277,7 @@ void proces_data(std::vector< double >& Temps, double Field,
     std::vector<double> intfield (1,Field);
     eval_pol(pol_stats,numexps,Temps,id_proc,true);
     calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc);
-    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
+//    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
     intfield.clear();
     pol_int_avg.clear();
     pol_stats.clear();

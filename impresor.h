@@ -14,6 +14,8 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app =
 void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale);
 void array_print_bin(const std::vector< double >& V, std::string ARCHIVO, bool app = true);
 // Imprime datos de los arreglos matricales
+void array_print(unsigned int ** M, std::string ARCHIVO, unsigned int len);
+void array_print(double ** M, std::string ARCHIVO, unsigned int len);
 void array_print(const std::vector< std::vector<int> >& M,
 		 std::string ARCHIVO, bool app=false, bool br = true);
 void array_print(const std::vector< std::vector<unsigned int> >& M,

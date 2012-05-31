@@ -52,14 +52,14 @@ def sigmahist(rho,tempind,sigmas = None,tr=0.7):
   for temp in tempind:
     hist(Sigstat[temp],25,normed=True, label='T='+str(T[temp])+'[$\\Delta J /k_B$]',alpha=tr)
   legend()
-  rho,E,tau = simIdentifier(file)
+  rho,E,tau,L = simIdentifier(file)
   dist_sig_avgTitle(rho,E,tau)
   return sigmas
     
 #Multifile plots
 def filesPlot(files,Frho,FE,Ftau,yAxis,stl,error,IM):
   for file in files:
-    rho,E,tau=simIdentifier(file)
+    rho,E,tau,L=simIdentifier(file)
 #    if float(rho) < 0.55:
     uPlot(file,legendSet(file,Frho,FE,Ftau),stl,error,IM)
   ylabel(yAxis)
@@ -185,12 +185,13 @@ def simIdentifier(file):
   rho = file[rho+2:E]
   E = file[E+2:tau]
   tau = file[tau+2:L]
+  L = file[L+2:L+4]
 
-  return rho,E,tau
+  return rho,E,tau,L
 
 def legendSet(file,Frho=None,FE=None,Ftau=None):
   if file.find('_p') > 0:
-    rho,E,tau = simIdentifier(file)
+    rho,E,tau,L = simIdentifier(file)
 
     legend = str()
     if Frho==None:
@@ -199,6 +200,8 @@ def legendSet(file,Frho=None,FE=None,Ftau=None):
       legend += '; $E_0 =$'+str(E)
     if Ftau==None and E!=0:
       legend += '; $\\tau =$'+str(tau)
+    if len(legend)==0:
+      legend = '$L=$'+str(L)+'$^3$'
     if legend[0]==';':
       legend = legend[1:]
     return legend

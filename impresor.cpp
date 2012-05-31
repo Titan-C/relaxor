@@ -89,6 +89,34 @@ void array_print(const std::vector< std::vector<int> >& M, std::string ARCHIVO, 
   }
   file.close();
 }
+
+
+void array_print(unsigned int ** M, std::string ARCHIVO, unsigned int len) {
+  std::fstream file;
+  file.open (ARCHIVO.c_str(), std::fstream::out);
+
+  for (unsigned int i=0;i<len;i++) {
+    for (unsigned int j=0;j<6;j++) {
+      file<<M[i][j]<<"\t";
+    }
+    file<<"\n";
+  }
+  file.close();
+}
+
+void array_print(double ** M, std::string ARCHIVO, unsigned int len) {
+  std::fstream file;
+  file.open (ARCHIVO.c_str(), std::fstream::out);
+
+  for (unsigned int i=0;i<len;i++) {
+    for (unsigned int j=0;j<6;j++) {
+      file<<M[i][j]<<"\t";
+    }
+    file<<"\n";
+  }
+  file.close();
+}
+
 void array_print(const std::vector< std::vector< unsigned int > >& M, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
   if (app)
