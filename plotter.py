@@ -59,6 +59,8 @@ def sigmahist(rho,tempind,sigmas = None,tr=0.7):
 #Multifile plots
 def filesPlot(files,Frho,FE,Ftau,yAxis,stl,error,IM):
   for file in files:
+    rho,E,tau=simIdentifier(file)
+#    if float(rho) < 0.55:
     uPlot(file,legendSet(file,Frho,FE,Ftau),stl,error,IM)
   ylabel(yAxis)
   legend()
@@ -70,7 +72,7 @@ def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
   fig=figure()
   ax1 = subplot(111)
   procs = procs.split()
-  files = glob(procs[0]+searchstr(rho,E,tau))
+  files = sort(glob(procs[0]+searchstr(rho,E,tau)))
   filesPlot(files,rho,E,tau,axisLabel(procs[0]),stl,error,IM)
 
   if len(procs)>1:
@@ -114,7 +116,7 @@ def dist_sig_avgLabel():
   return '$\\mathcal{P}(\\overline{\\sigma})$'
 
 def polLabel():
-  return u'Polarización normada del sistema $[\\overline{\\mu}/N]$'
+  return u'Polarización normada absoluta $[\\overline{\\mu}/N]$'
 
 def frozenLabel():
   return u'Fracción de dipolos congelados'
@@ -143,7 +145,7 @@ def procTitle(proc,rho,E,tau):
       setup += u' y '
   setup +=' en un proceso de enfriamiento'
 
-  return setup+'\npara: '+fixedCond(rho,E,tau)
+  return setup+fixedCond(rho,E,tau)
 
 def fixedCond(rho,E,tau):
   cond = str()
