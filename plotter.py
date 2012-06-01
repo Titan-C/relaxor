@@ -213,12 +213,12 @@ def legendSet(file,Frho=None,FE=None,Ftau=None):
 def searchstr(rho,E,tau):
   Sstr='*'
   if rho!=None:
-    Sstr+='_p'+str(rho)
+    Sstr+='p'+str(rho)+'_*'
   if E!=None:
-    Sstr+='_E'+str(E)
+    Sstr+='E'+str(E)+'_*'
   if tau!=None:
-    Sstr+='_t'+str(tau)
-  return Sstr+'*'
+    Sstr+='t'+str(tau)+'_*'
+  return Sstr
 
 
 if __name__ == "__main__":

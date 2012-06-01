@@ -54,7 +54,6 @@ void tester::test_deltaH()
 
 void tester::rw_sigma()
 {
-  cout<<sizeof(int)<<""<<sizeof(double);
   clock_t cl_start = clock();
   cout<<"Almacenar arreglos de sigma tamaño "<<relaxor.return_PNR()<<": ";
   string savefile = "sigmasave.dat";

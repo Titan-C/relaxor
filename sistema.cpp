@@ -31,6 +31,8 @@ Sistema::Sistema(unsigned int lado,
   for(unsigned int i = 0; i < PNR; i++){
     J[i] = new double [vecinos];
     G[i] = new unsigned int [vecinos];
+    for(unsigned int j=0;j<vecinos;j++)
+      J[i][j] = -1000;
   }
   //Generar configuración espacial de PNR
   set_space_config();
@@ -73,7 +75,6 @@ void Sistema::set_space_config(){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz
   }
-  array_print(G,"topologia.dat");
   //liberar mem
   for(unsigned int i=0; i<R.size();i++)
     R[i].clear();
@@ -81,32 +82,7 @@ void Sistema::set_space_config(){
 }
 
 double Sistema::Jex(){
-  std::vector< std::vector<double> > Jinter;
-  Jinter.resize(PNR);
-  /*Genera las matriz triangular superior de las
-   * energías de intecambio segun una distribución
-   * Gaussiana*/
-  for(unsigned int i = 0; i<PNR; i++){
-    Jinter[i].resize(PNR);
-    for(unsigned int j = i+1; j<PNR; j++)
-      Jinter[i][j] = gsl_ran_gaussian(rng,1)+rho;
-  }
-  //Completa la parte inferior de la matriz de intercambio
-  for(unsigned int i = 0; i<PNR; i++){
-    for(unsigned int j = i+1; j<PNR; j++)
-      Jinter[j][i] = Jinter[i][j];
-  }
-  // Elabora el arreglo de interacción de primeros vecinos
-  for(unsigned int i=0; i<PNR; i++){
-    for(unsigned int j=0; j<vecinos; j++)
-      J[i][j] = Jinter[i][G[i][j]];
-  }
-  //liberar mem
-  for(unsigned int i=0; i<Jinter.size();i++)
-    Jinter[i].clear();
-  Jinter.clear();
- array_print(J,"Jexmatold.dat");
- //Genera directamente el arregle de energías de intercambio
+//Genera directamente el arreglo de energías de intercambio
 //para la simulación ahorrando memoria
   for(unsigned int i=0;i<PNR;i++){
     for(unsigned int j=0;j<vecinos;j++){
@@ -118,7 +94,6 @@ double Sistema::Jex(){
 	    J[i][j] = J[ G[i][j] ][k];
 	  }
 	}}}}
-  array_print(J,"Jexmatnew.dat");
   return stan_dev(J,PNR,vecinos);
 }
 
