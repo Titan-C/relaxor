@@ -38,6 +38,17 @@ void array_print_bin(int8_t* V, unsigned int size, std::string ARCHIVO, bool app
   file.write((char * )&V[0],size*sizeof(int8_t));
   file.close();
 }
+void array_print(double * V, unsigned int size, std::string ARCHIVO, bool app) {
+  std::ofstream file;
+  if (app)
+    file.open (ARCHIVO.c_str(), std::fstream::app);
+  else
+    file.open (ARCHIVO.c_str());
+  
+  for(unsigned int i = 0; i<size; i++)
+    file<<V[i]<<"\n";
+  file.close();
+}
 void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app, bool br) {
   std::fstream file;
   if (app)

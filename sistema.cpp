@@ -111,7 +111,7 @@ double Sistema::set_pol(bool polarizar){
 double Sistema::set_mu(bool polarizar){
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
-
+  array_print(mu_E,PNR,"mu.dat");
   return set_pol(polarizar);
 }
 
@@ -183,7 +183,7 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
     }
     if (grabar){
       pol_mag[i] = norm_pol();
-//      array_print_bin(ret_sigarr(),PNR,"log_sigma_"+id_proc+".dat");
+      array_print_bin(ret_sigarr(),PNR,"log_sigma_"+id_proc+".dat");
     }
   }
   
@@ -252,7 +252,7 @@ void proces_data(std::vector< double >& Temps, double Field,
     std::vector<double> intfield (1,Field);
     eval_pol(pol_stats,numexps,Temps,id_proc,true);
     calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc);
-//    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
+    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
     intfield.clear();
     pol_int_avg.clear();
     pol_stats.clear();
