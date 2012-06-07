@@ -61,22 +61,23 @@ def zoom_effect02(ax1, ax2, **kwargs):
 
     return c1, c2, bbox_patch1, bbox_patch2, p
 
-def volcalc(j,dj,u,du,e):
+def volcalc(j,dj,E,dE,u2,du2,e):
   Units=e**2*1.38e-23/8.85e-12
-  V=j**2*Units/u
-  dj1=2*j*dj/u
-  du1=(j/u)**2*du
-  dV=sqrt(dj1**2+du1**2)*Units
+  V=(E*j)**2*Units/u2
+  dj1=E*dj
+  dE1=j*dE
+  du1=E*j*sqrt(du2/u2)
+  S=2*E*j/u2
+  dV=S*sqrt(dj1**2+dE1**2+du1**2)*Units
   return V,dV,Units
 
-def dimcalc(j,dj,u,du,e):
-  V,dV,Units=volcalc(j,dj,u,du,e)
+def dimcalc(j,dj,E,dE,u2,du2,e):
+  V,dV,Units=volcalc(j,dj,E,dE,u2,du2,e)
   print V,'+',dV,'m3'
-  D=V**(1/3.0)
-  dj1=2*dj/(3*u)*j**(-1/3.0)
-  du1=j**(2/3.0)*du/(3*u**(4/3.0))
-  dD=sqrt(dj1**2+du1**2)
-  print D,'+',dD,'m'
+  L=V**(1/3.0)
+  dL=V**(-2/3.0)*dV/3.0
+  print L,'+',dL,'m'
+  print L/16,'+',dL/16,'m'
 
 if __name__ == "__main__":
   import matplotlib.pyplot as plt
