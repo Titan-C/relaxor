@@ -50,7 +50,10 @@ def sigmahist(rho,tempind,sigmas = None,tr=0.7):
   T = genfromtxt('pol'+file[6:])[:,0]
   Sigstat = array([concatenate([sigmas[temps+i*len(T)] for i in range(n)]) for temps in range(len(T))])
   for temp in tempind:
-    hist(Sigstat[temp],25,normed=True, label='T='+str(T[temp])+'[$\\Delta J /k_B$]',alpha=tr)
+#    n,bins,patches = hist(Sigstat[temp],96,normed=True, label='T='+str(T[temp])+'[$\\Delta J /k_B$]',alpha=tr)
+    hist(Sigstat[temp]*rand(len(Sigstat[temp])),96,normed=True,label='T='+str(T[temp])+'[$\\Delta J /k_B$]',alpha=tr)
+#    w=bins[:-1]*n
+#    plot(bins, normpdf(bins, mean(w),std(w)/2), 'g+-', label='fit', linewidth=3)
   legend()
   rho,E,tau,L = simIdentifier(file)
   dist_sig_avgTitle(rho,E,tau)
@@ -201,7 +204,7 @@ def legendSet(file,Frho=None,FE=None,Ftau=None):
     if Ftau==None and E!=0:
       legend += '; $\\tau =$'+str(tau)
     if len(legend)==0:
-      legend = '$L=$'+str(L)+'$^3$'
+      legend = '$L=$'+L.split('_')[0]+'$^3$'
     if legend[0]==';':
       legend = legend[1:]
     return legend
