@@ -11,10 +11,10 @@ def HlogPlot(file,stl='+'):
   H=genfromtxt(file)
   plot(H,stl,label=legendSet(file))
 
-def uPlot(file, lb, stl='-o', error=False, IM=False):
+def uPlot(file, lb, stl='-o', error=False, IM=False,col=1):
   data = genfromtxt(file)
   T = data[:,0]
-  Y1 = data[:,1]
+  Y1 = data[:,col]
   if not error:
     plot(T,Y1,stl,label=lb)
   else:
@@ -43,7 +43,7 @@ def scalefittedPlot(equation,coefs,file):
 
 def sigmahist(rho,tempind,sigmas = None,tr=0.7):
   fig=figure()
-  file = glob('sigmas*'+str(rho)+'*')[0]
+  file = glob('sigmas*p'+str(rho)+'_*')[0]
   n=int(file[file.find('_n')+2])
   if sigmas == None:
     sigmas = genfromtxt(file)
@@ -88,6 +88,28 @@ def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
   title(procTitle(procs,rho,E,tau))
 
   show()
+  
+def matplot(material,stl='-o'):
+  '''Grafica Las curvas de constante dieléctrica y pérdidas para el
+     material asignado colocar 'P2BIT' o 'P3BIT' '''
+  fig=figure()
+  ax1 = subplot(111)  
+  freqs = ['1K','10K','100K']
+  for file in freqs:
+    uPlot('data/'+material+file+'.dat',file+'Hz',stl)
+  xlabel(tempLabelexp())
+  ylabel(dieLabel())
+  legend(loc=2)
+  ax2 = twinx()
+  ax2.set_xlim(290, 880)
+  ax2.set_ylim(0, 50)
+  for file in freqs:
+    uPlot('data/'+material+file+'.dat',file,stl,col=2)
+  ylabel(lossLabel())
+  arrow(380,36,-30,0,width=1,color='k')
+  arrow(430,8,30,0,width=1,color='k')
+  
+  show()
 
 def fileHlogPlot(path,stl='+',error=False):
   '''Grafica el historial de la energía del sistema y hace
@@ -112,6 +134,9 @@ def fileHlogPlot(path,stl='+',error=False):
 def tempLabel():
   return 'Temperatura [$\\Delta J /k_B$]'
 
+def tempLabelexp():
+  return 'Temperatura [$^{\circ}K$]'
+
 def sig_avgLabel():
   return '$\\overline{\\sigma}$'
 
@@ -126,6 +151,12 @@ def frozenLabel():
 
 def susLabel():
   return u'Susceptibilidad dieléctrica $\\chi$'
+
+def dieLabel():
+  return u'Constante dieléctrica $\\varepsilon_r$'
+
+def lossLabel():
+  return u'Pérdidas dieléctricas %'
 
 def axisLabel(proc):
   if proc == 'sus':
@@ -164,9 +195,7 @@ def fixedCond(rho,E,tau):
     cond = cond[1:]
   return '\npara: '+cond
 
-def dieLabel():
-  xlabel('Temperatura [$^{\circ}K$]')
-  ylabel(u'Constante dieléctrica $\\varepsilon_r$')
+def fitTitle():
   title(u'Curvas de ajuste a los datos experimentales')
 
 def HlogLabel(rho,E,tau):
