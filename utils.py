@@ -71,13 +71,23 @@ def volcalc(j,dj,E,dE,u2,du2,e):
   dV=S*sqrt(dj1**2+dE1**2+du1**2)*Units
   return V,dV,Units
 
-def dimcalc(j,dj,E,dE,u2,du2,e):
+def muCalc(u2,du2,V,dV):
+  Units=sqrt(1.38e-23*8.85e-12)
+  mu=sqrt(u2*V)*Units
+  dmu=sqrt(du2*V/sqrt(u2)+dV**2*sqrt(u2)/V)*Units/2
+  P=mu/V
+  dP=sqrt((dmu/V)**2+(mu*dV/V**2)**2)
+  return mu,dmu,P,dP
+
+def strucCalc(j,dj,E,dE,u2,du2,e):
   V,dV,Units=volcalc(j,dj,E,dE,u2,du2,e)
-  print V,'+',dV,'m3'
+  print 'V=',V,'+',dV,'m3'
   L=V**(1/3.0)
   dL=V**(-2/3.0)*dV/3.0
-  print L,'+',dL,'m'
-  print L/16,'+',dL/16,'m'
+  print 'd=',L,'+',dL,'m'
+  mu,dmu,P,dP=muCalc(u2,du2,V,dV)
+  print 'mu=',mu,'+',dmu,'C*m'
+  print 'P=',P*100,'+',dP*100,'uC/cm2'
 
 if __name__ == "__main__":
   import matplotlib.pyplot as plt
