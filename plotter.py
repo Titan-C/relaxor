@@ -15,14 +15,15 @@ def uPlot(file, lb, stl='-o', error=False, IM=False,col=1):
   data = genfromtxt(file)
   T = data[:,0]
   Y1 = data[:,col]
+#  lb='$\\chi$ $\\mathcal{R}eal$'
   if not error:
-    plot(T,Y1,stl,label=lb)
+    return plot(T,Y1,stl,label=lb)
   else:
     Y1e = data[:,2]
-    errorbar(T,Y1,yerr=Y1e,fmt=stl,label=lb)
+    return errorbar(T,Y1,yerr=Y1e,fmt=stl,label=lb)
   if IM:
     Y2 = data[:,4]
-    plot(T,Y2,stl,label=lb+'$\\mathcal{I}maginaria$')
+    return plot(T,Y2,stl,label='$\\chi$ $\\mathcal{I}maginaria$')
 
 def fittedPlot(equation,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -30,7 +31,8 @@ def fittedPlot(equation,file):
   a,b,c,d = equation.solvedCoefficients
   x=arange(T.min()*0.8,T.max()*1.1,T.max()/150)
   F=a*(x-b)/(x*x+c*x+d)
-  plot(T,E,'o',x,F,label=legendSet(file))
+  plot(T,E,'o',label=legendSet(file))
+  plot(x,F,label='Ajuste '+legendSet(file))
 
 def scalefittedPlot(equation,coefs,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -61,12 +63,13 @@ def sigmahist(rho,tempind,sigmas = None,tr=0.7):
     
 #Multifile plots
 def filesPlot(files,Frho,FE,Ftau,yAxis,stl,error,IM):
+  plots=list()
   for file in files:
     rho,E,tau,L=simIdentifier(file)
 #    if float(rho) < 0.55:
-    uPlot(file,legendSet(file,Frho,FE,Ftau),stl,error,IM)
+    plots.append(uPlot(file,legendSet(file,Frho,FE,Ftau),stl,error,IM)[0])
   ylabel(yAxis)
-  legend()
+  return plots
 
 def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
   '''Grafica para los procesos *procs*(pol,sus,frozen) los datos que
@@ -76,15 +79,15 @@ def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
   ax1 = subplot(111)
   procs = procs.split()
   files = sort(glob(procs[0]+searchstr(rho,E,tau)))
-  filesPlot(files,rho,E,tau,axisLabel(procs[0]),stl,error,IM)
-
+  lin=filesPlot(files,rho,E,tau,axisLabel(procs[0]),stl,error,IM)
+  legend()
   if len(procs)>1:
     ax2 = twinx()
     files = [procs[1]+file[3:] for file in files]
-    filesPlot(files,rho,E,tau,axisLabel(procs[1]),'p-',error,IM=False)
-    ax2.yaxis.label.set_color('g')
+    lin.append(filesPlot(files,rho,E,tau,axisLabel(procs[1]),'gp-',error,IM))
 
   ax1.set_xlabel(tempLabel())
+#  legend(lin,[l.get_label() for l in lin])
   title(procTitle(procs,rho,E,tau))
 
   show()
@@ -99,7 +102,7 @@ def matplot(material,stl='-o'):
     uPlot('data/'+material+file+'.dat',file+'Hz',stl)
   xlabel(tempLabelexp())
   ylabel(dieLabel())
-  legend(loc=2)
+  legend(loc=9)
   ax2 = twinx()
   ax2.set_xlim(290, 880)
   ax2.set_ylim(0, 50)
@@ -138,16 +141,16 @@ def tempLabelexp():
   return 'Temperatura [$^{\circ}K$]'
 
 def sig_avgLabel():
-  return '$\\overline{\\sigma}$'
+  return '$\\overline{p}$'
 
 def dist_sig_avgLabel():
-  return '$\\mathcal{P}(\\overline{\\sigma})$'
+  return '$\\mathcal{P}(\\overline{p})$'
 
 def polLabel():
   return u'Polarización normada absoluta $[\\overline{\\mu}/N]$'
 
 def frozenLabel():
-  return u'Fracción de dipolos congelados'
+  return u'Fracción de PNRs congeladas'
 
 def susLabel():
   return u'Susceptibilidad dieléctrica $\\chi$'
@@ -163,7 +166,7 @@ def axisLabel(proc):
     return susLabel()
   if proc == 'pol':
     return polLabel()
-  if proc == 'frozen':
+  if proc == 'fro':
     return frozenLabel()
 
 def procTitle(proc,rho,E,tau):
@@ -173,11 +176,11 @@ def procTitle(proc,rho,E,tau):
       setup += u'Susceptibilidad'
     if proc[i] == 'pol':
       setup += u'Polarización espontánea'
-    if proc[i] == 'frozen':
-      setup += u'Dipolos congelados'
+    if proc[i] == 'fro':
+      setup += u'PNRs congeladas'
     if i<len(proc)-1:
       setup += u' y '
-  setup +=' en un proceso de enfriamiento'
+  setup +=' en función de la tempertatura'
 
   return setup+fixedCond(rho,E,tau)
 
@@ -206,7 +209,7 @@ def HlogLabel(rho,E,tau):
 def dist_sig_avgTitle(rho,E,tau):
   xlabel(sig_avgLabel())
   ylabel(dist_sig_avgLabel())
-  title(u'Densidad de probabilidad del parámetro de orden '+sig_avgLabel()+fixedCond(rho,E,tau))
+  title(u'Densidad de probabilidad de la polarización local'+fixedCond(rho,E,tau))
 
 def simIdentifier(file):
   rho = file.find('_p')
@@ -227,20 +230,25 @@ def legendSet(file,Frho=None,FE=None,Ftau=None):
 
     legend = str()
     if Frho==None:
-      legend += '$\\rho = $'+str(rho)
+      if rho == '0':
+        rho = '0.0'
+      legend += '$\\rho = $'+rho
     if FE==None:
-      legend += '; $E_0 =$'+str(E)
+      legend += '; $E_0 =$'+E
     if Ftau==None and E!=0:
-      legend += '; $\\tau =$'+str(tau)
+      legend += '; $\\tau =$'+tau
     if len(legend)==0:
-      legend = '$L=$'+L.split('_')[0]+'$^3$'
+      legend = '$N=$'+L.split('_')[0]+'$^3$'
+      if file[:3] == 'sus': legend='Susceptibilidad'
+      elif file[:3] == 'pol': legend = u'Polarización \n espontánea'
+      else: legend = 'PNRs congeladas'
     if legend[0]==';':
       legend = legend[1:]
     return legend
     
   else:
     mat = file.find('P')
-    return file[mat:mat+5]+' '+file[mat+5:-4]
+    return file[mat+5:-4]
 
 def searchstr(rho,E,tau):
   Sstr='*'
@@ -251,6 +259,35 @@ def searchstr(rho,E,tau):
   if tau!=None:
     Sstr+='t'+str(tau)+'_*'
   return Sstr
+
+def p2anot():
+  ##sus
+  #axvline(x=5.3,ls='--')
+  #arrow(6.9,0.27,-0.55,0,color='k', head_length=0.25,head_width=0.01)
+  #annotate('$T_m$',xy=(5.3,0),xytext=(5.5,0.05),arrowprops=dict(arrowstyle="->"))
+  #pol
+  plot([3.9,4.9],[0.35,0],'g--')
+  arrow(3.3,0.22,0.55,0,color='k', head_length=0.25,head_width=0.01)
+  annotate('$T_C$',xy=(4.9,0),xytext=(4.2,0.05),arrowprops=dict(arrowstyle="->"))
+  #frozen
+  axvline(x=4,ls='--')
+  arrow(2.7,0.17,-0.55,0,color='k', head_length=0.25,head_width=0.01)
+  annotate('$T_f$',xy=(4,0),xytext=(3.5,0.05),arrowprops=dict(arrowstyle="->"))
+
+def p3anot():
+  #sus
+  #axvline(x=4.3,ls='--')
+  #arrow(6.5,0.055,-0.5,0,color='k', head_length=0.5)
+  #annotate('$T_m$',xy=(4.3,0),xytext=(4.5,0.01),arrowprops=dict(arrowstyle="->"))
+  #pol
+  plot([2.9,3.9],[0.09,0],'g--')
+  arrow(2.7,0.015,0.55,0,color='k', head_length=0.5)
+  annotate('$T_C$',xy=(3.9,0),xytext=(3.1,0.007),arrowprops=dict(arrowstyle="->"))
+  #frozen
+  axvline(x=2.9,ls='--')
+  arrow(2.5,0.04,-0.55,0,color='k', head_length=0.5)
+  annotate('$T_f$',xy=(2.9,0),xytext=(2.5,0.007),arrowprops=dict(arrowstyle="->"))
+  
 
 
 if __name__ == "__main__":
