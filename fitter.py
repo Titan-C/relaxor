@@ -38,7 +38,7 @@ def scaleFitter(fit_eq, file, estimated,weight):
   equation.CalculateCoefficientAndFitStatistics()
   return equation
 
-def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,0,None],lowBound =[None,None,-1100,None], weight=False, plot=True):
+def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,0,None],lowBound =[None,None,-1100,None], weight=True, plot=True):
   '''Permite llamar a la función de ajuste para todos los archivos que se encuentran en path'''
   files=sort(glob(path))
   for file in files:
@@ -52,7 +52,29 @@ def filesFit(path, writefile, estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,
       annotate('P2BIT', xy=(600,2850),xytext=(595,2850))
       annotate('P3BIT', xy=(530,2250),xytext=(525,2250))
 
-def filesScaleFit(path, material,estimated=[100,0.008],weight=False, plot=False):
+def matFit(estimated=[5e4,-3e2,-9e2,2.2e5], upBound =[None,0,0,None],lowBound =[None,None,-1100,None]):
+  '''Permite llamar a la función de ajuste para todos los archivos que se encuentran en path'''
+  fig=figure()
+  ax1 = subplot(111)
+  freqs = ['1K','10K','100K']
+  for file in freqs:
+    eq = dataFitter('data/er0.25P2BIT'+file+'.dat', estimated, upBound, lowBound,1)
+    print file, eq.solvedCoefficients
+    fittedPlot(eq,'data/er0.25P2BIT'+file+'.dat')
+  xlabel(tempLabelexp())
+  ylabel(dieLabel())
+  fitTitle()
+  legend()
+  annotate('P2BIT', xy=(600,2850),xytext=(595,2850))
+  annotate('P3BIT', xy=(530,2250),xytext=(525,2250))
+  ax2 = twinx()
+  ax2.set_ylim(0, 4500)
+  for file in freqs:
+    eq = dataFitter('data/er0.25P3BIT'+file+'.dat', estimated, upBound, lowBound,1)
+    print file, eq.solvedCoefficients
+    fittedPlot(eq,'data/er0.25P3BIT'+file+'.dat')
+
+def filesScaleFit(path, material,estimated=[100,6e5],weight=False, plot=False):
   '''Permite llamar a la función de ajuste de escala para todos los archivos que se encuentran en path, para el material deseado'''
   fit_eq = getfitdata(material)
   files=sort(glob(path))
@@ -110,9 +132,9 @@ def fitRecorder(equation, datafile, writefile):
 def scale_eqGenerator(coefs):
   '''Devuelve un string con la ecuación a ajustar por escala'''
   if float(coefs[1]) < 0:
-    fit_eq = 'u/j*'+coefs[0]+'*(j*X+'+ coefs[1][1:]+')'
+    fit_eq = 'j/u*'+coefs[0]+'*(j*X+'+ coefs[1][1:]+')'
   else:
-    fit_eq = coefs[0]+'*u*X'
+    fit_eq = coefs[0]+'*j**2*X/u'
   fit_eq = fit_eq+'/(j**2*X**2'+coefs[2]+'*j*X+'+coefs[3]+')'
   return fit_eq
   
