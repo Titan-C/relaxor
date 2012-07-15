@@ -31,8 +31,8 @@ def fittedPlot(equation,file):
   a,b,c,d = equation.solvedCoefficients
   x=arange(T.min()*0.8,T.max()*1.1,T.max()/150)
   F=a*(x-b)/(x*x+c*x+d)
-  plot(T,E,'o',label=legendSet(file))
-  plot(x,F,label='Ajuste '+legendSet(file))
+  plot(T,E,'o',label=legendSet(file)+'Hz')
+  plot(x,F,label='Ajuste '+legendSet(file)+'Hz')
 
 def scalefittedPlot(equation,coefs,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -80,14 +80,14 @@ def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
   procs = procs.split()
   files = sort(glob(procs[0]+searchstr(rho,E,tau)))
   lin=filesPlot(files,rho,E,tau,axisLabel(procs[0]),stl,error,IM)
-  legend()
+  #legend()
   if len(procs)>1:
     ax2 = twinx()
     files = [procs[1]+file[3:] for file in files]
-    lin.append(filesPlot(files,rho,E,tau,axisLabel(procs[1]),'gp-',error,IM))
-
+    lin+=filesPlot(files,rho,E,tau,axisLabel(procs[1]),'gp-',error,IM)
+  print lin
   ax1.set_xlabel(tempLabel())
-#  legend(lin,[l.get_label() for l in lin])
+  legend(lin,[l.get_label() for l in lin])
   title(procTitle(procs,rho,E,tau))
 
   show()
@@ -199,7 +199,7 @@ def fixedCond(rho,E,tau):
   return '\npara: '+cond
 
 def fitTitle():
-  title(u'Curvas de ajuste a los datos experimentales')
+  title(u'Curvas de ajuste de los datos experimentales')
 
 def HlogLabel(rho,E,tau):
   xlabel('Iteraciones $[MCS/dipolo]$')
@@ -261,31 +261,31 @@ def searchstr(rho,E,tau):
   return Sstr
 
 def p2anot():
-  ##sus
+  #sus
   #axvline(x=5.3,ls='--')
-  #arrow(6.9,0.27,-0.55,0,color='k', head_length=0.25,head_width=0.01)
+  #arrow(5,0.295,-1.5,0,color='k', head_length=0.25,head_width=0.01)
   #annotate('$T_m$',xy=(5.3,0),xytext=(5.5,0.05),arrowprops=dict(arrowstyle="->"))
   #pol
   plot([3.9,4.9],[0.35,0],'g--')
-  arrow(3.3,0.22,0.55,0,color='k', head_length=0.25,head_width=0.01)
+  arrow(4.4,0.2,0.75,0,color='k', head_length=0.25,head_width=0.01)
   annotate('$T_C$',xy=(4.9,0),xytext=(4.2,0.05),arrowprops=dict(arrowstyle="->"))
   #frozen
   axvline(x=4,ls='--')
-  arrow(2.7,0.17,-0.55,0,color='k', head_length=0.25,head_width=0.01)
+  arrow(1.6,0.16,-0.55,0,color='k', head_length=0.25,head_width=0.01)
   annotate('$T_f$',xy=(4,0),xytext=(3.5,0.05),arrowprops=dict(arrowstyle="->"))
 
 def p3anot():
   #sus
   #axvline(x=4.3,ls='--')
-  #arrow(6.5,0.055,-0.5,0,color='k', head_length=0.5)
+  #arrow(3,0.04,-0.75,0,color='k', head_length=0.5)
   #annotate('$T_m$',xy=(4.3,0),xytext=(4.5,0.01),arrowprops=dict(arrowstyle="->"))
   #pol
   plot([2.9,3.9],[0.09,0],'g--')
-  arrow(2.7,0.015,0.55,0,color='k', head_length=0.5)
+  arrow(3.65,0.025,0.75,0,color='k', head_length=0.5)
   annotate('$T_C$',xy=(3.9,0),xytext=(3.1,0.007),arrowprops=dict(arrowstyle="->"))
   #frozen
   axvline(x=2.9,ls='--')
-  arrow(2.5,0.04,-0.55,0,color='k', head_length=0.5)
+  arrow(1.3,0.036,-0.55,0,color='k', head_length=0.5)
   annotate('$T_f$',xy=(2.9,0),xytext=(2.5,0.007),arrowprops=dict(arrowstyle="->"))
   
 
