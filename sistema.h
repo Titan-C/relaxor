@@ -14,21 +14,24 @@ private:
     int8_t * sigma;	// Dipolar "Spin States"
     double * mu_E;	// Dipolar momentum, projected magnitude on main axis
 
-    unsigned int ** G;	// Topological configuration of PNRs
-    double ** J;	// Exchange energies between PNRs
+    // Topological configuration of PNRs
+    std::vector< std::vector<unsigned int> > G;
+    // Exchange energies between PNRs
+    std::vector< std::vector<double> >  J;
 
     gsl_rng * rng;	// GSL Random number Generator
 
 public:
-    // Constructor y destructor
+    // Constructor & destructor
     Material(unsigned int L,
 	    bool polarizar = true);
     ~Material();
 
-    /*localiza a las PNR generando un vector espacial.
-     * Luego encuentra los primeros vecinos*/
+    /*Setup Topological configuration of
+     * PNRs inside the material */
     void set_space_config(unsigned int L);
-    //Llena la matriz de energías de intercambio del sistema
+    /* Fills values for the interaction energy between
+     * PNRs according to spatial configuration */
     double Jex();
     //Genera la polarización inicial
     double set_pol(bool polarizar);
@@ -80,7 +83,7 @@ void eval_frozen(unsigned int array_size, unsigned int Niter, const std::vector<
 
 //Funciones adicionales
 //Calcula la desviación estandar de los datos de toda la matriz
-double stan_dev(double ** M, unsigned int rows, unsigned int cols);
+double stan_dev(std::vector< std::vector< double > > M);
 //Genera el arreglo de temperaturas
 std::vector<double> thermostat(unsigned int n, unsigned int i, double rho, double dT, double Tf);
 //Genera un vector de datos double, entre dos números con cierto paso

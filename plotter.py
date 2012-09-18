@@ -291,4 +291,4 @@ def p3anot():
 
 
 if __name__ == "__main__":
-  filesusPlot(argv[1])
+  ufilePlot('sus',0.1,0.3,1000)

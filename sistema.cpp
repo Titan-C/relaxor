@@ -27,15 +27,9 @@ Material::Material(unsigned int L,
 
   /*Setup Topological configuration of
     PNRs inside the material */
+  G.resize(PNR);
   set_space_config(L);
-  
-  J = new double *[PNR];
-  for(unsigned int i = 0; i < PNR; i++){
-    J[i] = new double [6];
-    for(unsigned int j=0;j<6;j++)
-      J[i][j] = -1000;
-  }
-
+  J.resize(PNR);
 }
 
 /*Destructor:
@@ -43,11 +37,11 @@ Frees Memory*/
 Material::~Material(){
   gsl_rng_free (rng);
   for(unsigned int i=0; i<PNR; i++){
-    delete[] J[i];
-    delete[] G[i];
+    J[i].clear();
+    G[i].clear();
   }
-  delete[] J;
-  delete[] G;
+  J.clear();
+  G.clear();
   delete[] mu_E;
   delete[] sigma;
 }
@@ -58,10 +52,9 @@ void Material::set_space_config(unsigned int L){
    * PNRs is assigned to a lattice point,
    * this is only a topological consideration, not
    * a real spatial configuration */
-  
-  G = new unsigned int *[PNR];
+
   for(unsigned int i = 0; i < PNR; i++)
-    G[i] = new unsigned int [6];
+    G[i].resize(6);
 
   unsigned int ind_xy, L2=L*L;
   std::vector< std::vector<unsigned int> > R;
@@ -85,26 +78,34 @@ void Material::set_space_config(unsigned int L){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz
   }
-  //liberar mem
+  
+  //Free memory
   for(unsigned int i=0; i<R.size();i++)
     R[i].clear();
   R.clear();
 }
 
 double Material::Jex(){
-//Genera directamente el arreglo de energías de intercambio
-//para la simulación ahorrando memoria
+  // Assigns J with same structure as G
+  for(unsigned int i = 0; i < PNR; i++)
+    J[i].assign (G[i].size(),-1000);
+
+  // Look for the interaction of the j neighbour with PNR i
   for(unsigned int i=0;i<PNR;i++){
-    for(unsigned int j=0;j<6;j++){
-      if (J[i][j] == -1000){
-        for(unsigned int k=0; k<6;k++){
-	  if (G[ G[i][j] ][k] == i){
-	    if (J [G[i][j] ][k] == -1000)
-	      J[ G[i][j] ][k] = gsl_ran_gaussian(rng,1)+rho;
+    for(unsigned int j=0; j<J[i].size() ;j++){
+      if ( J[i][j] == -1000 ){ /* if not assigned
+	* look if the neighbour has already an assigned value*/
+        for(unsigned int k=0; k<G[ G[i][j] ].size() ;k++){
+	  if (G[ G[i][j] ][k] == i){ // find matching neighbour
+	    /* if neighbour hasn't an interaction energy assigned
+	     * yet, assign it, then copy it */
+	    if ( J[ G[i][j] ][k] == -1000)
+		 J[ G[i][j] ][k] = gsl_ran_gaussian(rng,1)+rho;
 	    J[i][j] = J[ G[i][j] ][k];
+	    k=G[ G[i][j] ].size();//end loop
 	  }
 	}}}}
-  return stan_dev(J,PNR,6);
+  return stan_dev(J);
 }
 
 double Material::set_pol(bool polarizar){
@@ -224,7 +225,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	  id_proc<<Exp_ID<<"_p"<<rho[p]<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
 	  id_proc<<"_Ti"<<Thermostat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[0]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
 	  
-	  std::cout<<id_proc.str()<<":";  
+	  std::cout<<id_proc.str()<<":";
 	  clock_t cl_start = clock();
 	  unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
 	  if (needSimulation(id_proc.str(), sim_size)) {
@@ -515,13 +516,13 @@ double simpson_int(const double f_array[], const std::vector<double>& weight){
 }
 
 //Calcular la desviación estandar de una matriz
-double stan_dev(double ** M, unsigned int rows, unsigned int cols){
+double stan_dev(std::vector< std::vector<double> > M){
   unsigned int celdas;
-  celdas = rows * cols;
+  celdas = M.size() * M[0].size();
   double * Aij = new double [celdas];
-  for(unsigned int i = 0 ; i<rows; i++){
-    for(unsigned int j = 0; j<cols; j++)
-      Aij[i*cols + j] = M[i][j];
+  for(unsigned int i = 0 ; i<M.size(); i++){
+    for(unsigned int j = 0; j<M[0].size(); j++)
+      Aij[i*M[0].size() + j] = M[i][j];
   }
   double sd = gsl_stats_sd (Aij, 1, celdas);
   delete[] Aij;
