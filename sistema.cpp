@@ -78,7 +78,7 @@ void Material::set_space_config(unsigned int L){
     G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
     G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz
   }
-  
+
   //Free memory
   for(unsigned int i=0; i<R.size();i++)
     R[i].clear();
@@ -170,11 +170,25 @@ double Material::norm_pol(){
   return (double) P / PNR;
 }
 
+void Material::update_log_sigma(std::vector<double>& log_sigma){
+  for(unsigned int s = 0; s<PNR ; s++)
+    log_sigma[s] += sigma[s];
+}
+
+void Material::MonteCarloStep(double T, double E_field){
+  for(unsigned int idflip = 0; idflip < PNR; idflip++){
+    double dH = delta_E(idflip, E_field);
+    if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
+      sigma[idflip] *= -1;
+  }
+}
+
 void Material::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			  bool grabar, std::string id_proc){
   //vector historial de polarización por experimento
-  std::vector<double> pol_mag;
-  pol_mag.resize(Niter);
+  std::vector<double> log_pol,log_sigma;
+  log_pol.resize(Niter);
+  log_sigma.assign(PNR,0);
   
   //vector oscilación del campo alterno para un periodo
   std::vector<double> field;
@@ -186,24 +200,22 @@ void Material::experimento(double T, double E, unsigned int tau, unsigned int Ni
 
   /*Simulación del experimento en el número de iteraciones dadas*/
   for(unsigned int i = 0; i< Niter; i++){
-    /*Realiza el cambio del spin dipolar en una ubicación dada*/
-    for(unsigned int idflip = 0; idflip < PNR; idflip++){
-      double dH = delta_E(idflip, field[i]);
-      if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
-	sigma[idflip] *= -1;
-    }
+    MonteCarloStep(T,field[i]);
     if (grabar){
-      pol_mag[i] = norm_pol();
-      array_print_bin(ret_sigarr(),PNR,"log_sigma_"+id_proc+".dat");
+      log_pol[i] = norm_pol();
+      update_log_sigma(log_sigma);
     }
   }
   
 
   /* Guardar los datos de polarización en binario */
-  if (grabar)
-    array_print_bin(pol_mag,"log_pol_"+id_proc+".dat");
+  if (grabar){
+    array_print_bin(log_pol,"log_pol_"+id_proc+".dat");
+    array_print_bin(log_sigma,"log_sigma_"+id_proc+".dat");
+  }
 
-  pol_mag.clear();
+  log_pol.clear();
+  log_sigma.clear();
   field.clear();
 }
 
@@ -311,7 +323,7 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   file.close();
 }
 void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>& Temps, unsigned int numexps, std::string id_proc){
-  int8_t * sigma_hist = new int8_t[PNR];
+  double * sigma_hist = new double[PNR];
   std::vector< double > sigmaTemp;
   sigmaTemp.assign(numexps*Temps.size()*PNR,0);
   
@@ -320,11 +332,10 @@ void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>
   std::ifstream file(name.c_str());
   for(unsigned int n=0; n<numexps ; n++){
     for(unsigned int T=0; T<Temps.size(); T++){
-      for(unsigned int iter = 0; iter < Niter ; iter++){
-	file.read((char *)&sigma_hist[0],PNR*sizeof(int8_t));
+	file.read((char *)&sigma_hist[0],PNR*sizeof(double));
 	for(unsigned int s = 0; s<PNR ; s++)
 	  sigmaTemp[n*Temps.size()*PNR+T*PNR + s] += sigma_hist[s];
-  }}}
+  }}
   array_print(sigmaTemp, "sigmas_"+id_proc+".dat", PNR, Niter);
   delete[] sigma_hist;
   //Evaluar % congelamiento
@@ -346,7 +357,7 @@ void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>
     for(unsigned int f=1; f<4;f++)
       Frozen[T][f]/=PNR;
   }
-  array_print(Frozen,"frozen_"+id_proc+".dat");
+  array_print(Frozen,"fro_"+id_proc+".dat");
   /*Liberar memoria*/
   sigmaTemp.clear();
   for(unsigned int T=0; T<Temps.size(); T++)

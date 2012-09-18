@@ -291,4 +291,5 @@ def p3anot():
 
 
 if __name__ == "__main__":
-  ufilePlot('sus',0.1,0.3,1000)
+  ufilePlot('fro sus')
+  sigmahist(0.1,[15])

@@ -46,6 +46,9 @@ public:
     double delta_E (unsigned int idflip, double E);
     //Calcula la polarización ponderada del sistema en un instante dado
     double norm_pol ();
+    void update_log_sigma(std::vector< double >& log_sigma);
+    // Attemps to flip every dipole within the array acoording to Boltzman Probability
+    void MonteCarloStep(double T, double E_field);
     /*Evalúa el comportamiento del material a T[temperatura], E(t)[Campo alterno]
      * dados durante el tiempo otorgado(t) en [MCS/dipolo].
      * Graba los datos de ser necesario.*/
