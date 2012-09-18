@@ -14,33 +14,32 @@
 
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
-Sistema::Sistema(unsigned int lado,
-		 unsigned int dim,
+Material::Material(unsigned int L,
 		 bool polarizar){
-  dimension = dim;
-  L = lado;
-  PNR = pow(lado,dimension);
+  // Start random number generator
   rng = gsl_rng_alloc (gsl_rng_taus);
+
+  // Setup Material
+  PNR = L*L*L;
   // Dimensionado de arreglos caraterísticos del sistema
   sigma = new int8_t [PNR];
   mu_E = new double [PNR];
 
-  vecinos = 2*dimension;
   J = new double *[PNR];
   G = new unsigned int *[PNR];
   for(unsigned int i = 0; i < PNR; i++){
-    J[i] = new double [vecinos];
-    G[i] = new unsigned int [vecinos];
-    for(unsigned int j=0;j<vecinos;j++)
+    J[i] = new double [6];
+    G[i] = new unsigned int [6];
+    for(unsigned int j=0;j<6;j++)
       J[i][j] = -1000;
   }
   //Generar configuración espacial de PNR
-  set_space_config();
+  set_space_config(L);
 }
 
 /*Destructor:
 libera la memoria asignada a los vectores del sistema*/
-Sistema::~Sistema(){
+Material::~Material(){
   gsl_rng_free (rng);
   for(unsigned int i=0; i<PNR; i++){
     delete[] J[i];
@@ -52,7 +51,7 @@ Sistema::~Sistema(){
   delete[] sigma;
 }
 
-void Sistema::set_space_config(){
+void Material::set_space_config(unsigned int L){
   unsigned int ind_xy, L2=L*L;
   std::vector< std::vector<unsigned int> > R;
   R.resize(PNR);
@@ -60,7 +59,7 @@ void Sistema::set_space_config(){
   for(unsigned int i=0; i<R.size(); i++){
     // Coeficientes vector posición i-ésima PNR
     ind_xy = i % L2;
-    R[i].resize(dimension);
+    R[i].resize(3);
     R[i][0] = ind_xy % L;
     R[i][1] = ind_xy / L;
     R[i][2] = i / L2;
@@ -81,23 +80,23 @@ void Sistema::set_space_config(){
   R.clear();
 }
 
-double Sistema::Jex(){
+double Material::Jex(){
 //Genera directamente el arreglo de energías de intercambio
 //para la simulación ahorrando memoria
   for(unsigned int i=0;i<PNR;i++){
-    for(unsigned int j=0;j<vecinos;j++){
+    for(unsigned int j=0;j<6;j++){
       if (J[i][j] == -1000){
-        for(unsigned int k=0; k<vecinos;k++){
+        for(unsigned int k=0; k<6;k++){
 	  if (G[ G[i][j] ][k] == i){
 	    if (J [G[i][j] ][k] == -1000)
 	      J[ G[i][j] ][k] = gsl_ran_gaussian(rng,1)+rho;
 	    J[i][j] = J[ G[i][j] ][k];
 	  }
 	}}}}
-  return stan_dev(J,PNR,vecinos);
+  return stan_dev(J,PNR,6);
 }
 
-double Sistema::set_pol(bool polarizar){
+double Material::set_pol(bool polarizar){
   if (polarizar)
     for(unsigned int i=0; i<PNR; i++) sigma[i] = 1;
   else{
@@ -108,14 +107,14 @@ double Sistema::set_pol(bool polarizar){
   return norm_pol();
 }
 
-double Sistema::set_mu(bool polarizar){
+double Material::set_mu(bool polarizar){
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
   array_print(mu_E,PNR,"mu.dat");
   return set_pol(polarizar);
 }
 
-void Sistema::init(double p, bool polarizar, bool write){
+void Material::init(double p, bool polarizar, bool write){
   //Cambiar la semilla del generador de números aleatorios dentro de la clase
   gsl_rng_set(rng, std::time(NULL) );
   //Cambia las propidades del sistema
@@ -131,19 +130,19 @@ void Sistema::init(double p, bool polarizar, bool write){
   }
 }
 
-double Sistema::total_E(double E){
+double Material::total_E(double E){
   double Hamil = 0;
   for(unsigned int i = 0; i < PNR; i++){
-    for(unsigned int j = 0; j < vecinos; j++)
+    for(unsigned int j = 0; j < 6; j++)
       Hamil -= J[i][j]*sigma[i]*sigma[G[i][j]];
     Hamil -= E*mu_E[i]*sigma[i];
   }
   return Hamil;
 }
 
-double Sistema::delta_E(unsigned int idflip, double E){
+double Material::delta_E(unsigned int idflip, double E){
   double dHamil = 0;
-  for(unsigned int i = 0; i<vecinos; i++)
+  for(unsigned int i = 0; i<6; i++)
     dHamil += J[idflip][i]*sigma[idflip]*sigma[G[idflip][i]];
   dHamil *=4;
   dHamil += 2*E*mu_E[idflip]*sigma[idflip];
@@ -151,7 +150,7 @@ double Sistema::delta_E(unsigned int idflip, double E){
   return dHamil;
 }
 
-double Sistema::norm_pol(){
+double Material::norm_pol(){
   double P=0;
   for(unsigned int i=0; i<PNR; i++)
     P += mu_E[i]*sigma[i];
@@ -159,7 +158,7 @@ double Sistema::norm_pol(){
   return (double) P / PNR;
 }
 
-void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Niter,
+void Material::experimento(double T, double E, unsigned int tau, unsigned int Niter,
 			  bool grabar, std::string id_proc){
   //vector historial de polarización por experimento
   std::vector<double> pol_mag;
@@ -199,7 +198,7 @@ void Sistema::experimento(double T, double E, unsigned int tau, unsigned int Nit
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
-  Sistema relaxor(L);
+  Material relaxor(L);
   unsigned int Equi_iter=350;
   //   Código para bajar (variar) la temperatura a campos fijos
   if (Exp_ID == "cool" || Exp_ID == "heat"){
@@ -533,7 +532,7 @@ bool needSimulation(std::string id_proc, unsigned int size)
   return false;
 }
 
-void Sistema::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
-unsigned int Sistema::return_PNR(){return PNR;}
-int Sistema::ret_sig(unsigned int i){return sigma[i];}
-int8_t* Sistema::ret_sigarr(){ return sigma;}
+void Material::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
+unsigned int Material::return_PNR(){return PNR;}
+int Material::ret_sig(unsigned int i){return sigma[i];}
+int8_t* Material::ret_sigarr(){ return sigma;}

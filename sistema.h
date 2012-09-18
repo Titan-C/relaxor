@@ -5,29 +5,29 @@
 #include <gsl/gsl_rng.h>
 #include <iostream>
 
-class Sistema
+class Material
 {
 private:
-    unsigned int dimension, L, vecinos;		// Dimensionalidad del sistema, cantidad de PNR por lado
-    unsigned int PNR;
-    double rho;
-    int8_t * sigma;				// Arreglo de spines dipolares
-    double * mu_E;				// Arreglo de proyeciones de momento al eje del campo
+    unsigned int PNR;	// Total PNRs
+    double rho;		// Mean Ferroelectricity
 
-    double ** J;				// Energías de intercambio primeros vecinos
-    unsigned int ** G;				// Configuración espacial de primeros vecinos
-    gsl_rng * rng;				// Generador de números aleatorios
+    int8_t * sigma;	// Dipolar "Spin States"
+    double * mu_E;	// Dipolar momentum, projected magnitude on main axis
+
+    unsigned int ** G;	// Topological configuration of PNRs
+    double ** J;	// Exchange energies between PNRs
+
+    gsl_rng * rng;	// GSL Random number Generator
 
 public:
     // Constructor y destructor
-    Sistema(unsigned int lado,
-	    unsigned int dim = 3,
+    Material(unsigned int L,
 	    bool polarizar = true);
-    ~Sistema();
+    ~Material();
 
     /*localiza a las PNR generando un vector espacial.
      * Luego encuentra los primeros vecinos*/
-    void set_space_config();
+    void set_space_config(unsigned int L);
     //Llena la matriz de energías de intercambio del sistema
     double Jex();
     //Genera la polarización inicial
