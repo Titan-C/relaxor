@@ -25,20 +25,21 @@ Material::Material(unsigned int L,
   sigma = new int8_t [PNR];
   mu_E = new double [PNR];
 
+  /*Setup Topological configuration of
+    PNRs inside the material */
+  set_space_config(L);
+  
   J = new double *[PNR];
-  G = new unsigned int *[PNR];
   for(unsigned int i = 0; i < PNR; i++){
     J[i] = new double [6];
-    G[i] = new unsigned int [6];
     for(unsigned int j=0;j<6;j++)
       J[i][j] = -1000;
   }
-  //Generar configuración espacial de PNR
-  set_space_config(L);
+
 }
 
 /*Destructor:
-libera la memoria asignada a los vectores del sistema*/
+Frees Memory*/
 Material::~Material(){
   gsl_rng_free (rng);
   for(unsigned int i=0; i<PNR; i++){
@@ -52,6 +53,16 @@ Material::~Material(){
 }
 
 void Material::set_space_config(unsigned int L){
+
+  /* Generates a simple cubic lattice where each
+   * PNRs is assigned to a lattice point,
+   * this is only a topological consideration, not
+   * a real spatial configuration */
+  
+  G = new unsigned int *[PNR];
+  for(unsigned int i = 0; i < PNR; i++)
+    G[i] = new unsigned int [6];
+
   unsigned int ind_xy, L2=L*L;
   std::vector< std::vector<unsigned int> > R;
   R.resize(PNR);
@@ -213,6 +224,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	  id_proc<<Exp_ID<<"_p"<<rho[p]<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
 	  id_proc<<"_Ti"<<Thermostat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[0]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
 	  
+	  std::cout<<id_proc.str()<<":";  
 	  clock_t cl_start = clock();
 	  unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
 	  if (needSimulation(id_proc.str(), sim_size)) {
@@ -224,7 +236,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	      }}
 	  }
 	  proces_data(Thermostat,Fields[E],tau[t],numexps,relaxor.return_PNR(), rho[p],Exp_iter,id_proc.str());
-	  std::cout<<id_proc.str()<<":"<<clock()-cl_start<<"\n";
+	  std::cout<<clock()-cl_start<<"\n";
 	}}
     }
   }
