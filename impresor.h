@@ -6,23 +6,19 @@
 #include <sys/types.h>
 
 // Imprime datos de variables double
-void out(double value, std::string ARCHIVO, bool app = true, bool br = true);
+void out(double value, std::string ARCHIVO, bool br = true);
 // Imprime datos de los arreglos vectoriales
-void array_print_bin(int8_t * V, unsigned int size, std::string ARCHIVO, bool app = true);
-void array_print(const std::vector< int >& V, std::string ARCHIVO, bool app = true, bool br = true);
-void array_print(double * V, unsigned int size, std::string ARCHIVO, bool app = true);
-void array_print(const std::vector< double >& V, std::string ARCHIVO, bool app = true, bool br = true);
+void array_print(const std::vector< int >& V, std::string ARCHIVO);
+void array_print(const std::vector< double >& V, std::string ARCHIVO);
 void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale);
-void array_print_bin(const std::vector< double >& V, std::string ARCHIVO, bool app = true);
+void array_print_bin(const std::vector< double >& V, std::string ARCHIVO);
 // Imprime datos de los arreglos matricales
-void array_print(unsigned int ** M, std::string ARCHIVO, unsigned int len);
-void array_print(double ** M, std::string ARCHIVO, unsigned int len);
 void array_print(const std::vector< std::vector<int> >& M,
-		 std::string ARCHIVO, bool app=false, bool br = true);
+		 std::string ARCHIVO);
 void array_print(const std::vector< std::vector<unsigned int> >& M,
-		 std::string ARCHIVO, bool app=false, bool br = true);
+		 std::string ARCHIVO);
 void array_print(const std::vector< std::vector<double> >& M,
-		 std::string ARCHIVO, bool app=false, bool br = true);
+		 std::string ARCHIVO);
 void array_print_bin(const std::vector< double * >& V, std::string ARCHIVO, unsigned int cols);
 void import_data(std::vector < std::vector< double > >& M,
 		 std::string ARCHIVO,
