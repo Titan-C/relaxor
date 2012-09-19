@@ -8,18 +8,19 @@
 class Material
 {
 private:
-    unsigned int PNR;	// Total PNRs
-    double rho;		// Mean Ferroelectricity
+  gsl_rng * rng;	// GSL Random number Generator
+  std::string ExpID;	// Experiment identification
 
-    int8_t * sigma;	// Dipolar "Spin States"
-    double * mu_E;	// Dipolar momentum, projected magnitude on main axis
+  unsigned int PNR;	// Total PNRs
+  double rho;		// Mean Ferroelectricity
 
-    // Topological configuration of PNRs
-    std::vector< std::vector<unsigned int> > G;
-    // Exchange energies between PNRs
-    std::vector< std::vector<double> >  J;
+  std::vector<int> sigma;	// Dipolar "Spin States"
+  std::vector<double> mu_E;	// Projected Dipole magnitude on main axis
 
-    gsl_rng * rng;	// GSL Random number Generator
+  // Topological configuration of PNRs
+  std::vector< std::vector<unsigned int> > G;
+  // Exchange energies between PNRs
+  std::vector< std::vector<double> >  J;
 
 public:
     // Constructor & destructor
@@ -32,20 +33,21 @@ public:
     void set_space_config(unsigned int L);
     /* Fills values for the interaction energy between
      * PNRs according to spatial configuration */
-    double Jex();
-    //Genera la polarización inicial
-    double set_pol(bool polarizar);
-    //Genera los momentos dipolares
-    double set_mu(bool polarizar);
-    //Inicializa al sistema
-    void init(double p=0, bool polarizar = true, bool write = false);
+    void Jex();
+    //Generate initial polarization
+    void set_pol(bool polarize);
+    //Generate dipolar moments
+    void set_mu(bool polarize);
+    //Initialize material
+    void init(double p, std::string ID = 0, bool polarizar = true, bool write = false);
 
-    //Calcula la energía total del sistema
+    // Evaluates system's total Energy
     double total_E (double E);
-    //Calcula la variación de energía del sistema debído a un cambio del spin dipolar
+    // Evaluates Energy change after dipole flip
     double delta_E (unsigned int idflip, double E);
-    //Calcula la polarización ponderada del sistema en un instante dado
+    // Evaluate Global polarization
     double norm_pol ();
+    
     void update_log_sigma(std::vector< double >& log_sigma);
     // Attemps to flip every dipole within the array acoording to Boltzman Probability
     void MonteCarloStep(double T, double E_field);
@@ -53,11 +55,11 @@ public:
      * dados durante el tiempo otorgado(t) en [MCS/dipolo].
      * Graba los datos de ser necesario.*/
     void experimento(double T, double E, unsigned int tau, unsigned int Niter,
-		    bool grabar, std::string id_proc);
+		    bool grabar);
     void flip_sigma(unsigned int idsigma);
     unsigned int return_PNR();
     int ret_sig(unsigned int i);
-    int8_t * ret_sigarr();
+    std::vector<int> ret_sigarr();
 };
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,

@@ -22,8 +22,8 @@ Material::Material(unsigned int L,
   // Setup Material
   PNR = L*L*L;
   // Dimensionado de arreglos caraterísticos del sistema
-  sigma = new int8_t [PNR];
-  mu_E = new double [PNR];
+  sigma.resize(PNR);
+  mu_E.resize(PNR);
 
   /*Setup Topological configuration of
     PNRs inside the material */
@@ -42,8 +42,8 @@ Material::~Material(){
   }
   J.clear();
   G.clear();
-  delete[] mu_E;
-  delete[] sigma;
+  mu_E.clear();
+  sigma.clear();
 }
 
 void Material::set_space_config(unsigned int L){
@@ -85,7 +85,7 @@ void Material::set_space_config(unsigned int L){
   R.clear();
 }
 
-double Material::Jex(){
+void Material::Jex(){
   // Assigns J with same structure as G
   for(unsigned int i = 0; i < PNR; i++)
     J[i].assign (G[i].size(),-1000);
@@ -105,40 +105,35 @@ double Material::Jex(){
 	    k=G[ G[i][j] ].size();//end loop
 	  }
 	}}}}
-  return stan_dev(J);
 }
 
-double Material::set_pol(bool polarizar){
-  if (polarizar)
+void Material::set_pol(bool polarize){
+  if (polarize)
     for(unsigned int i=0; i<PNR; i++) sigma[i] = 1;
   else{
     for(unsigned int i=0; i<PNR; i++)
       sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
   }
-
-  return norm_pol();
 }
 
-double Material::set_mu(bool polarizar){
+void Material::set_mu(bool polarize){
+  set_pol(polarize);
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
-  array_print(mu_E,PNR,"mu.dat");
-  return set_pol(polarizar);
+  array_print(mu_E,"mu"+ExpID+".dat");
 }
 
-void Material::init(double p, bool polarizar, bool write){
-  //Cambiar la semilla del generador de números aleatorios dentro de la clase
+void Material::init(double p, std::string ID, bool polarizar, bool write){
   gsl_rng_set(rng, std::time(NULL) );
-  //Cambia las propidades del sistema
+  ExpID=ID;
   rho = p;
-  // Genera las energías de intercambio de las PNR
-  double Delta_J=Jex();
-  //Momentos dipolares y polarización
-  double pol=set_mu(polarizar);
+  // Calculate new values for exchange Energy an dipolar momentum
+  Jex();
+  set_mu(polarizar);
   
   if (write){
-    std::cout<<"Desvición Estandar Total= "<<Delta_J<<"\n";
-    std::cout<<"Polarización inicial="<<pol<<"\n";
+    std::cout<<"Desvición Estandar Total= "<<stan_dev(J)<<"\n";
+    std::cout<<"Polarización inicial="<<norm_pol()<<"\n";
   }
 }
 
@@ -184,7 +179,7 @@ void Material::MonteCarloStep(double T, double E_field){
 }
 
 void Material::experimento(double T, double E, unsigned int tau, unsigned int Niter,
-			  bool grabar, std::string id_proc){
+			  bool grabar){
   //vector historial de polarización por experimento
   std::vector<double> log_pol,log_sigma;
   log_pol.resize(Niter);
@@ -210,8 +205,8 @@ void Material::experimento(double T, double E, unsigned int tau, unsigned int Ni
 
   /* Guardar los datos de polarización en binario */
   if (grabar){
-    array_print_bin(log_pol,"log_pol_"+id_proc+".dat");
-    array_print_bin(log_sigma,"log_sigma_"+id_proc+".dat");
+    array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
+    array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
   }
 
   log_pol.clear();
@@ -242,10 +237,10 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	  unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
 	  if (needSimulation(id_proc.str(), sim_size)) {
 	    for(unsigned int n=0; n<numexps; n++){
-	      relaxor.init(rho[p],false);
+	      relaxor.init(rho[p], id_proc.str(),false);
 	      for(unsigned int T=0; T<Thermostat.size(); T++){
-		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
-		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
+		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false);
+		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true);
 	      }}
 	  }
 	  proces_data(Thermostat,Fields[E],tau[t],numexps,relaxor.return_PNR(), rho[p],Exp_iter,id_proc.str());
@@ -559,4 +554,4 @@ bool needSimulation(std::string id_proc, unsigned int size)
 void Material::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
 unsigned int Material::return_PNR(){return PNR;}
 int Material::ret_sig(unsigned int i){return sigma[i];}
-int8_t* Material::ret_sigarr(){ return sigma;}
+std::vector< int > Material::ret_sigarr(){ return sigma;}
