@@ -3,7 +3,8 @@
 #include <cstdio>
 #include <fstream>
 #include <sstream>
-#include "sistema.h"
+#include "material.h"
+#include "experiment.h"
 #include "impresor.h"
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_randist.h>
@@ -11,208 +12,6 @@
 #include <sys/stat.h>
 
 #define _2pi 8*atan(1)
-
-/*Constructor:
-Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
-Material::Material(unsigned int L,
-		 bool polarizar){
-  // Start random number generator
-  rng = gsl_rng_alloc (gsl_rng_taus);
-
-  // Setup Material
-  PNR = L*L*L;
-  // Dimensionado de arreglos caraterísticos del sistema
-  sigma.resize(PNR);
-  mu_E.resize(PNR);
-
-  /*Setup Topological configuration of
-    PNRs inside the material */
-  G.resize(PNR);
-  set_space_config(L);
-  J.resize(PNR);
-}
-
-/*Destructor:
-Frees Memory*/
-Material::~Material(){
-  gsl_rng_free (rng);
-  for(unsigned int i=0; i<PNR; i++){
-    J[i].clear();
-    G[i].clear();
-  }
-  J.clear();
-  G.clear();
-  mu_E.clear();
-  sigma.clear();
-}
-
-void Material::set_space_config(unsigned int L){
-
-  /* Generates a simple cubic lattice where each
-   * PNRs is assigned to a lattice point,
-   * this is only a topological consideration, not
-   * a real spatial configuration */
-
-  for(unsigned int i = 0; i < PNR; i++)
-    G[i].resize(6);
-
-  unsigned int ind_xy, L2=L*L;
-  std::vector< std::vector<unsigned int> > R;
-  R.resize(PNR);
-
-  for(unsigned int i=0; i<R.size(); i++){
-    // Coeficientes vector posición i-ésima PNR
-    ind_xy = i % L2;
-    R[i].resize(3);
-    R[i][0] = ind_xy % L;
-    R[i][1] = ind_xy / L;
-    R[i][2] = i / L2;
-
-    /*Encontrar índices de los primeros vecinos.
-     *solo existen 6: arriba y abajo(+z, -z), derecha e izquierda(+y, -y), adelante y atraz(+x, -x).
-     *También debo aplicar las condiciones de borde en este caso*/
-    G[i][0] = (R[i][2] == L-1 )	?i - (L-1)*L2	:i + L2;//arriba
-    G[i][1] = (R[i][2] == 0 )	?i + (L-1)*L2	:i - L2;//abajo
-    G[i][2] = (R[i][1] == L-1 )	?i - (L-1)*L	:i + L;//derecha
-    G[i][3] = (R[i][1] == 0)	?i + (L-1)*L	:i - L;//izquierda
-    G[i][4] = (R[i][0] == L-1 )	?i - L+1	:i + 1;//adelante
-    G[i][5] = (R[i][0] == 0 )	?i + L-1	:i - 1;//atraz
-  }
-
-  //Free memory
-  for(unsigned int i=0; i<R.size();i++)
-    R[i].clear();
-  R.clear();
-}
-
-void Material::Jex(){
-  // Assigns J with same structure as G
-  for(unsigned int i = 0; i < PNR; i++)
-    J[i].assign (G[i].size(),-1000);
-
-  // Look for the interaction of the j neighbour with PNR i
-  for(unsigned int i=0;i<PNR;i++){
-    for(unsigned int j=0; j<J[i].size() ;j++){
-      if ( J[i][j] == -1000 ){ /* if not assigned
-	* look if the neighbour has already an assigned value*/
-        for(unsigned int k=0; k<G[ G[i][j] ].size() ;k++){
-	  if (G[ G[i][j] ][k] == i){ // find matching neighbour
-	    /* if neighbour hasn't an interaction energy assigned
-	     * yet, assign it, then copy it */
-	    if ( J[ G[i][j] ][k] == -1000)
-		 J[ G[i][j] ][k] = gsl_ran_gaussian(rng,1)+rho;
-	    J[i][j] = J[ G[i][j] ][k];
-	    k=G[ G[i][j] ].size();//end loop
-	  }
-	}}}}
-}
-
-void Material::set_pol(bool polarize){
-  if (polarize)
-    for(unsigned int i=0; i<PNR; i++) sigma[i] = 1;
-  else{
-    for(unsigned int i=0; i<PNR; i++)
-      sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;
-  }
-}
-
-void Material::set_mu(bool polarize){
-  set_pol(polarize);
-  for(unsigned int i=0; i<PNR; i++)
-    mu_E[i]  = gsl_rng_uniform(rng);
-  array_print(mu_E,"mu"+ExpID+".dat");
-}
-
-void Material::init(double p, std::string ID, bool polarizar, bool write){
-  gsl_rng_set(rng, std::time(NULL) );
-  ExpID=ID;
-  rho = p;
-  // Calculate new values for exchange Energy an dipolar momentum
-  Jex();
-  set_mu(polarizar);
-  
-  if (write){
-    std::cout<<"Desvición Estandar Total= "<<stan_dev(J)<<"\n";
-    std::cout<<"Polarización inicial="<<norm_pol()<<"\n";
-  }
-}
-
-double Material::total_E(double E){
-  double Hamil = 0;
-  for(unsigned int i = 0; i < PNR; i++){
-    for(unsigned int j = 0; j < 6; j++)
-      Hamil -= J[i][j]*sigma[i]*sigma[G[i][j]];
-    Hamil -= E*mu_E[i]*sigma[i];
-  }
-  return Hamil;
-}
-
-double Material::delta_E(unsigned int idflip, double E){
-  double dHamil = 0;
-  for(unsigned int i = 0; i<6; i++)
-    dHamil += J[idflip][i]*sigma[idflip]*sigma[G[idflip][i]];
-  dHamil *=4;
-  dHamil += 2*E*mu_E[idflip]*sigma[idflip];
-
-  return dHamil;
-}
-
-double Material::norm_pol(){
-  double P=0;
-  for(unsigned int i=0; i<PNR; i++)
-    P += mu_E[i]*sigma[i];
-
-  return (double) P / PNR;
-}
-
-void Material::update_log_sigma(std::vector<double>& log_sigma){
-  for(unsigned int s = 0; s<PNR ; s++)
-    log_sigma[s] += sigma[s];
-}
-
-void Material::MonteCarloStep(double T, double E_field){
-  for(unsigned int idflip = 0; idflip < PNR; idflip++){
-    double dH = delta_E(idflip, E_field);
-    if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
-      sigma[idflip] *= -1;
-  }
-}
-
-void Material::experimento(double T, double E, unsigned int tau, unsigned int Niter,
-			  bool grabar){
-  //vector historial de polarización por experimento
-  std::vector<double> log_pol,log_sigma;
-  log_pol.resize(Niter);
-  log_sigma.assign(PNR,0);
-  
-  //vector oscilación del campo alterno para un periodo
-  std::vector<double> field;
-  double phase = 0;
-  if (!grabar)
-    phase = _2pi*Niter/tau;
-
-  field = cosarray(Niter,tau,E,phase);
-
-  /*Simulación del experimento en el número de iteraciones dadas*/
-  for(unsigned int i = 0; i< Niter; i++){
-    MonteCarloStep(T,field[i]);
-    if (grabar){
-      log_pol[i] = norm_pol();
-      update_log_sigma(log_sigma);
-    }
-  }
-  
-
-  /* Guardar los datos de polarización en binario */
-  if (grabar){
-    array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
-    array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
-  }
-
-  log_pol.clear();
-  log_sigma.clear();
-  field.clear();
-}
 
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
@@ -226,40 +25,31 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
       Thermostat= thermostat(rho.size(), p, rho[p], Tdat[0], Tdat[1]);
       for(unsigned int t=0; t< tau.size() ; t++){
 	unsigned int Exp_iter = stepEstimator(3000,tau[t],2);
-	
+
 	for(unsigned int E=0; E<Fields.size(); E++){
 	  std::ostringstream id_proc;
 	  id_proc<<Exp_ID<<"_p"<<rho[p]<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
 	  id_proc<<"_Ti"<<Thermostat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[0]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
-	  
+
 	  std::cout<<id_proc.str()<<":";
 	  clock_t cl_start = clock();
 	  unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
 	  if (needSimulation(id_proc.str(), sim_size)) {
+	    std::vector<double> Equi_field = wavearray(Fields[E],tau[t],Equi_iter, Equi_iter);
+	    std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
+
 	    for(unsigned int n=0; n<numexps; n++){
 	      relaxor.init(rho[p], id_proc.str(),false);
 	      for(unsigned int T=0; T<Thermostat.size(); T++){
-		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Equi_iter,false);
-		relaxor.experimento(Thermostat[T],Fields[E],tau[t], Exp_iter,true);
+		relaxor.state(Thermostat[T], Equi_field ,false);
+		relaxor.state(Thermostat[T], Exp_field  ,true);
 	      }}
 	  }
 	  proces_data(Thermostat,Fields[E],tau[t],numexps,relaxor.return_PNR(), rho[p],Exp_iter,id_proc.str());
-	  std::cout<<clock()-cl_start<<"\n";
+	  std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";
 	}}
     }
   }
-//   Código para variar el campo a temperaturas fijas, desactualizado
-//   else {
-//     for(unsigned int t=0; t< tau.size() ; t++){
-//       for(unsigned int T=0; T<Temps.size(); T++){
-// 	std::ostringstream id_proc;
-// 	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
-// 	for(unsigned int n=0; n<numexps; n++){
-// 	  relaxor.init(p,false);
-// 	  for(unsigned int E=0; E<Fields.size(); E++){
-// 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Equi_iter,false, id_proc.str());
-// 	    relaxor.experimento(Temps[T],Fields[E],tau[t], Exp_iter,true, id_proc.str());
-// 	  }}}}}
 }
 
 void proces_data(std::vector< double >& Temps, double Field,
@@ -275,14 +65,6 @@ void proces_data(std::vector< double >& Temps, double Field,
     intfield.clear();
     pol_int_avg.clear();
     pol_stats.clear();
-
-//       else {
-// 	id_proc<<Exp_ID<<"_p"<<p<<"_T"<<Temps[T]<<"_t"<<tau[t];
-// 	pp_data(pol_stats,pol_int_avg,Fields.size(),numexps,tau[t],Niter,id_proc.str());
-// 	eval_pol(pol_stats,numexps,Fields,id_proc.str(),(Exp_ID=="hist_loop") ? false : true);
-// 	calc_sus(pol_int_avg,numexps,Fields,Fields,id_proc.str());
-//       }
-
 }
 
 void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, unsigned int data_length,
@@ -292,12 +74,12 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   unsigned int dat_vec_size = data_length*numexps*2;
   pol_stats.resize(dat_vec_size);
   pol_int_avg.resize(dat_vec_size);
-  
+
   /*Generar arreglo de peso sin, cos para la integral*/
   std::vector<double> cos_wave, sin_wave;
-  cos_wave = cosarray(Niter,tau,1.0,0);
-  sin_wave = cosarray(Niter,tau,1.0,_2pi/4);
-  
+  cos_wave = wavearray(1.0,tau,Niter,0);
+  sin_wave = wavearray(1.0,tau,Niter,tau/4.0);
+
   //Abrir Archivo y leer
   std::string name = "log_pol_"+id_proc+".dat";
   std::ifstream file(name.c_str());
@@ -318,16 +100,15 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
   file.close();
 }
 void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>& Temps, unsigned int numexps, std::string id_proc){
-  double * sigma_hist = new double[PNR];
+  int * sigma_hist = new int[PNR];
   std::vector< double > sigmaTemp;
-  sigmaTemp.assign(numexps*Temps.size()*PNR,0);
-  
+
   //Abrir Archivo, leer guardar datos
   std::string name = "log_sigma_"+id_proc+".dat";
   std::ifstream file(name.c_str());
   for(unsigned int n=0; n<numexps ; n++){
     for(unsigned int T=0; T<Temps.size(); T++){
-	file.read((char *)&sigma_hist[0],PNR*sizeof(double));
+	file.read((char *)&sigma_hist[0],PNR*sizeof(int));
 	for(unsigned int s = 0; s<PNR ; s++)
 	  sigmaTemp[n*Temps.size()*PNR+T*PNR + s] += sigma_hist[s];
   }}
@@ -369,7 +150,7 @@ void eval_pol(const std::vector<double>& pol_stats, unsigned int numexps, const 
   for(unsigned int x=0;x< data_length; x++){
     pol_final[x].resize(3);
     pol_final[x][0]=x_array[x];
-    
+
     double pol_std=0;
     for(unsigned int n=0;n<numexps;n++){
       unsigned int ind = 2*(n*data_length+x);
@@ -401,7 +182,7 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
   for(unsigned int x=0;x<data_length;x++){
     X_mat[x].resize(7);
     X_mat[x][0]=x_array[x];
-    
+
     for(unsigned int n=0;n<numexps;n++){
       unsigned int ind = 2*(n*data_length+x);
       unsigned int field_ind=(fieldvec) ? x : 0;
@@ -420,7 +201,7 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
   //liberar memoria
   for(unsigned int i=0; i<X_mat.size();i++)
     X_mat[i].clear();
-  X_mat.clear();  
+  X_mat.clear();
   delete[] data_arrayr;
   delete[] data_arrayi;
 }
@@ -428,11 +209,11 @@ std::vector< double > thermostat(unsigned int n, unsigned int i, double rho, dou
   double Ti = (rho>0.5) ? 10*rho+2.5 : 8;
   double shift = (double) dT/(i+1);
   Ti+=shift;
-  
+
   std::vector<double> Temparray;
   Temparray.clear();
   Temparray=step2vec(Ti,Tf,dT,Temparray);
-  
+
   return Temparray;
 }
 
@@ -445,7 +226,7 @@ std::vector<double> step2vec(double v_start, double v_end, double dv, std::vecto
     last.push_back(v_start*unidad);
     v_start-=dv;
   }
-  
+
   return last;
 }
 
@@ -489,13 +270,13 @@ unsigned int stepEstimator(unsigned int Niter, unsigned int tau, unsigned int mi
     return min_periods*tau;
 }
 
-std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude, double phase){
+std::vector<double> wavearray(double amplitude, unsigned int tau, unsigned int length, double phase){
   std::vector<double> wave;
   wave.resize(length);
   unsigned int wavetop = (tau>=length)? length : tau;
     for(unsigned int i=0; i<wavetop; i++)
-      wave[i]=amplitude*cos(_2pi*i/tau-phase);
-  
+      wave[i]=amplitude*cos(_2pi*(i-phase)/tau);
+
   unsigned int periods = length/tau;
   for(unsigned int i=1; i<periods;i++){
     for(unsigned int j = 0; j<tau ;j++)
@@ -506,18 +287,18 @@ std::vector<double> cosarray(unsigned int length, unsigned int tau, double ampli
 
 double simpson_int(const double f_array[], const std::vector<double>& weight){
   unsigned int length=weight.size();
-  
+
   double Integral = f_array[0]*weight[0];
-  
+
   for(unsigned int i=1; i<length-1; i+=2)
     Integral+=4*f_array[i]*weight[i];
-  
+
   for(unsigned int i=2; i<length; i+=2)
     Integral+=2*f_array[i]*weight[i];
-  
+
   length--;
   Integral+=f_array[length]*weight[length];
-  
+
   return Integral/3;
 }
 
@@ -539,19 +320,14 @@ bool needSimulation(std::string id_proc, unsigned int size)
 {
   struct stat file;
   id_proc = "log_pol_"+id_proc+".dat";
-  
+
   if (stat(id_proc.c_str(), &file) == -1)
     return true;
-  
+
   if (file.st_size != size){
     std::remove(id_proc.c_str());
     return true;
   }
-  
+
   return false;
 }
-
-void Material::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
-unsigned int Material::return_PNR(){return PNR;}
-int Material::ret_sig(unsigned int i){return sigma[i];}
-std::vector< int > Material::ret_sigarr(){ return sigma;}

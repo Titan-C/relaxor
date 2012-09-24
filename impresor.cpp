@@ -40,6 +40,13 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned i
   }
   file.close();
 }
+
+void array_print_bin(const std::vector< int >& V, std::string ARCHIVO) {
+  std::ofstream file;
+  file.open (ARCHIVO.c_str(), std::fstream::app);
+  file.write((char * )&V[0],V.size()*sizeof(int));
+  file.close();
+}
 void array_print_bin(const std::vector< double >& V, std::string ARCHIVO) {
   std::ofstream file;
   file.open (ARCHIVO.c_str(), std::fstream::app);

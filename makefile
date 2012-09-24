@@ -1,7 +1,7 @@
 #Opciones variables
 EXE=relaxor
 TEST=test
-SOURCES=sistema.cpp impresor.cpp
+SOURCES=material.cpp experiment.cpp impresor.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 LIBS=$(shell pkg-config --libs gsl)
 CFLAGS= -g -march=native -O2 -pipe -Wall

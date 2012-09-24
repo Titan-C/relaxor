@@ -11,7 +11,10 @@ void out(double value, std::string ARCHIVO, bool br = true);
 void array_print(const std::vector< int >& V, std::string ARCHIVO);
 void array_print(const std::vector< double >& V, std::string ARCHIVO);
 void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale);
+
+void array_print_bin(const std::vector< int >& V, std::string ARCHIVO);
 void array_print_bin(const std::vector< double >& V, std::string ARCHIVO);
+
 // Imprime datos de los arreglos matricales
 void array_print(const std::vector< std::vector<int> >& M,
 		 std::string ARCHIVO);

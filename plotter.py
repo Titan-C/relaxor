@@ -59,6 +59,7 @@ def sigmahist(rho,tempind,sigmas = None,tr=0.7):
   legend()
   rho,E,tau,L = simIdentifier(file)
   dist_sig_avgTitle(rho,E,tau)
+  show()
   return sigmas
     
 #Multifile plots

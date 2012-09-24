@@ -1,66 +1,10 @@
-#ifndef SISTEMA_H
-#define SISTEMA_H
+#ifndef EXPERIMENT_H
+#define EXPERIMENT_H
 
 #include <vector>
 #include <gsl/gsl_rng.h>
 #include <iostream>
 
-class Material
-{
-private:
-  gsl_rng * rng;	// GSL Random number Generator
-  std::string ExpID;	// Experiment identification
-
-  unsigned int PNR;	// Total PNRs
-  double rho;		// Mean Ferroelectricity
-
-  std::vector<int> sigma;	// Dipolar "Spin States"
-  std::vector<double> mu_E;	// Projected Dipole magnitude on main axis
-
-  // Topological configuration of PNRs
-  std::vector< std::vector<unsigned int> > G;
-  // Exchange energies between PNRs
-  std::vector< std::vector<double> >  J;
-
-public:
-    // Constructor & destructor
-    Material(unsigned int L,
-	    bool polarizar = true);
-    ~Material();
-
-    /*Setup Topological configuration of
-     * PNRs inside the material */
-    void set_space_config(unsigned int L);
-    /* Fills values for the interaction energy between
-     * PNRs according to spatial configuration */
-    void Jex();
-    //Generate initial polarization
-    void set_pol(bool polarize);
-    //Generate dipolar moments
-    void set_mu(bool polarize);
-    //Initialize material
-    void init(double p, std::string ID = 0, bool polarizar = true, bool write = false);
-
-    // Evaluates system's total Energy
-    double total_E (double E);
-    // Evaluates Energy change after dipole flip
-    double delta_E (unsigned int idflip, double E);
-    // Evaluate Global polarization
-    double norm_pol ();
-    
-    void update_log_sigma(std::vector< double >& log_sigma);
-    // Attemps to flip every dipole within the array acoording to Boltzman Probability
-    void MonteCarloStep(double T, double E_field);
-    /*Evalúa el comportamiento del material a T[temperatura], E(t)[Campo alterno]
-     * dados durante el tiempo otorgado(t) en [MCS/dipolo].
-     * Graba los datos de ser necesario.*/
-    void experimento(double T, double E, unsigned int tau, unsigned int Niter,
-		    bool grabar);
-    void flip_sigma(unsigned int idsigma);
-    unsigned int return_PNR();
-    int ret_sig(unsigned int i);
-    std::vector<int> ret_sigarr();
-};
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID);
@@ -102,8 +46,8 @@ unsigned int stepEstimator(unsigned int Niter, unsigned int tau, unsigned int mi
 //Realiza una integración por Simpson de la función f con un peso
 double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales
-std::vector<double> cosarray(unsigned int length, unsigned int tau, double amplitude,  double phase);
+std::vector<double> wavearray(double amplitude, unsigned int tau, unsigned int length, double phase);
 //Validador que justifica realizar una simulacion
 bool needSimulation(std::string id_proc, unsigned int size);
 
-#endif // SISTEMA_H
+#endif // EXPERIMENT_H
