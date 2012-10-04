@@ -24,4 +24,4 @@ clean:
 run: $(EXE)
 	./$(EXE) 12 1 0.1 "0.4 1" 0.3 1000
 	python plotter.py
-	rm *dat
+# 	rm *dat

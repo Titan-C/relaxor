@@ -98,7 +98,7 @@ void Material::Jex(){
 
 void Material::set_pol(bool polarize){
   if (polarize)
-    for(unsigned int i=0; i<PNR; i++) sigma[i] = 1;
+    sigma.assign(PNR,1);
   else{
     for(unsigned int i=0; i<PNR; i++)
       sigma[i] = (gsl_rng_uniform(rng)-0.5 > 0)? 1:-1;

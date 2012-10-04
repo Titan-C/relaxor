@@ -37,6 +37,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	  if (needSimulation(id_proc.str(), sim_size)) {
 	    std::vector<double> Equi_field = wavearray(Fields[E],tau[t],Equi_iter, Equi_iter);
 	    std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
+	    std::cout<<Equi_field.size()<<" "<<Exp_field.size()<<" ";
 
 	    for(unsigned int n=0; n<numexps; n++){
 	      relaxor.init(rho[p], id_proc.str(),false);
@@ -61,7 +62,7 @@ void proces_data(std::vector< double >& Temps, double Field,
     std::vector<double> intfield (1,Field);
     eval_pol(pol_stats,numexps,Temps,id_proc,true);
     calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc);
-    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
+//     eval_frozen(PNR,Niter, Temps, numexps, id_proc);
     intfield.clear();
     pol_int_avg.clear();
     pol_stats.clear();

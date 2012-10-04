@@ -44,7 +44,7 @@ public:
     //Generate dipolar moments
     void set_mu(bool polarize);
     //Initialize material
-    void init(double p, std::string ID = 0, bool polarizar = true, bool write = false);
+    void init(double p, std::string ID, bool polarizar = true, bool write = false);
 
 
     // Evaluates system's total Energy
