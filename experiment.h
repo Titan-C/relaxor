@@ -33,10 +33,8 @@ void eval_frozen(unsigned int array_size, unsigned int Niter, const std::vector<
 //Funciones adicionales
 //Calcula la desviación estandar de los datos de toda la matriz
 double stan_dev(std::vector< std::vector< double > > M);
-//Genera el arreglo de temperaturas
-std::vector<double> thermostat(unsigned int n, unsigned int i, double rho, double dT, double Tf);
 //Genera un vector de datos double, entre dos números con cierto paso
-std::vector<double> step2vec(double v_start, double v_end, double dv, std::vector< double > last, double unidad = 1);
+void step2vec(double v_start, double v_end, double dv, std::vector< double >& array, double unidad = 1);
 //Genera un vector de datos para un lazo
 std::vector<double> loop2vec(double max, int divs, double unidad=1);
 //Genera un vector de datos double que contiene los números declarados en el string

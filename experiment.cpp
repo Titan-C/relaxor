@@ -22,7 +22,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
   if (Exp_ID == "cool" || Exp_ID == "heat"){
     for(unsigned int p=0; p<rho.size(); p++){
       std::vector<double> Thermostat;
-      Thermostat= thermostat(rho.size(), p, rho[p], Tdat[0], Tdat[1]);
+      step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
       for(unsigned int t=0; t< tau.size() ; t++){
 	unsigned int Exp_iter = stepEstimator(3000,tau[t],2);
 
@@ -206,29 +206,16 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
   delete[] data_arrayr;
   delete[] data_arrayi;
 }
-std::vector< double > thermostat(unsigned int n, unsigned int i, double rho, double dT, double Tf){
-  double Ti = (rho>0.5) ? 10*rho+2.5 : 8;
-  double shift = (double) dT/(i+1);
-  Ti+=shift;
 
-  std::vector<double> Temparray;
-  Temparray.clear();
-  Temparray=step2vec(Ti,Tf,dT,Temparray);
-
-  return Temparray;
-}
-
-std::vector<double> step2vec(double v_start, double v_end, double dv, std::vector<double> last, double unidad){
+void step2vec(double v_start, double v_end, double dv, std::vector<double>& array, double unidad){
   while(v_start<=v_end) {
-    last.push_back(v_start*unidad);
+    array.push_back(v_start*unidad);
     v_start+=dv;
   }
   while (v_start>v_end) {
-    last.push_back(v_start*unidad);
+    array.push_back(v_start*unidad);
     v_start-=dv;
   }
-
-  return last;
 }
 
 std::vector<double> loop2vec(double max, int divs, double unidad){
