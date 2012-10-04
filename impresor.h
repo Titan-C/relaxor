@@ -3,7 +3,11 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <cstdlib>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 // Imprime datos de variables double
 void out(double value, std::string ARCHIVO, bool br = true);

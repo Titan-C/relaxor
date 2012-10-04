@@ -1,7 +1,4 @@
 #include "impresor.h"
-#include <fstream>
-#include <sstream>
-#include <cstdlib>
 
 void out(double value, std::string ARCHIVO) {
   std::fstream file;

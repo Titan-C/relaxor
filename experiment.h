@@ -1,9 +1,12 @@
 #ifndef EXPERIMENT_H
 #define EXPERIMENT_H
 
-#include <vector>
-#include <gsl/gsl_rng.h>
-#include <iostream>
+
+#include "material.h"
+#include "impresor.h"
+#include <gsl/gsl_statistics.h>
+
+#define _2pi 8*atan(1)
 
 //Funciones Para tratar los experimentos del sistema
 void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,

@@ -1,17 +1,4 @@
-#include <cmath>
-#include <ctime>
-#include <cstdio>
-#include <fstream>
-#include <sstream>
-#include "material.h"
 #include "experiment.h"
-#include "impresor.h"
-#include <gsl/gsl_statistics.h>
-#include <gsl/gsl_randist.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#define _2pi 8*atan(1)
 
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
@@ -46,7 +33,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 		relaxor.state(Thermostat[T], Exp_field  ,true);
 	      }}
 	  }
-	  proces_data(Thermostat,Fields[E],tau[t],numexps,relaxor.return_PNR(), rho[p],Exp_iter,id_proc.str());
+	  proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,id_proc.str());
 	  std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";
 	}}
     }

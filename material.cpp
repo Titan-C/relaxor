@@ -1,6 +1,5 @@
 #include "material.h"
 
-
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
 Material::Material(unsigned int L,
@@ -192,8 +191,3 @@ void Material::update_log_sigma(std::vector< int >& log_sigma){
   for(unsigned int s = 0; s<PNR ; s++)
     log_sigma[s] += sigma[s];
 }
-
-void Material::flip_sigma(unsigned int idsigma){sigma[idsigma] *= -1;}
-unsigned int Material::return_PNR(){return PNR;}
-int Material::ret_sig(unsigned int i){return sigma[i];}
-std::vector< int > Material::ret_sigarr(){ return sigma;}
