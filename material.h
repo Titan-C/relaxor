@@ -71,7 +71,7 @@ public:
   void state(double T, std::vector< double >& field, bool record);
 
   // To allow test on material
-//   friend class tester;
+  friend class tester;
 
 };
 
