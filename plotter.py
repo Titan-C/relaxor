@@ -16,14 +16,17 @@ def uPlot(file, lb, stl='-o', error=False, IM=False,col=1):
   T = data[:,0]
   Y1 = data[:,col]
 #  lb='$\\chi$ $\\mathcal{R}eal$'
+  pl = list()
   if not error:
-    return plot(T,Y1,stl,label=lb)
+    pl = plot(T,Y1,stl,label=lb)
   else:
     Y1e = data[:,2]
-    return errorbar(T,Y1,yerr=Y1e,fmt=stl,label=lb)
+    pl =  errorbar(T,Y1,yerr=Y1e,fmt=stl,label=lb)
   if IM:
     Y2 = data[:,4]
-    return plot(T,Y2,stl,label='$\\chi$ $\\mathcal{I}maginaria$')
+    pl =  plot(T,Y2,stl,label='$\\chi$ $\\mathcal{I}maginaria$')
+
+  return pl
 
 def fittedPlot(equation,file):
   T = equation.dataCache.allDataCacheDictionary['IndependentData'][0]
@@ -292,5 +295,6 @@ def p3anot():
 
 
 if __name__ == "__main__":
-  ufilePlot('sus')
+  ufilePlot('pol', error=True)
+  ufilePlot('sus', error=True, IM=True)
   #sigmahist(0.1,[15])

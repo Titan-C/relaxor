@@ -22,9 +22,9 @@ clean:
 	rm -vf *.o *~ $(EXE) $(TEST) *pyc *dat
 
 run: $(EXE)
-	./$(EXE) 12 1 0.1 "9 0.4 1" 0.3 1000
+	./$(EXE) 12 4 0.2 "7 0.2 1" 0.3 200
 	python plotter.py
-	rm *dat
+#	rm *dat
 
 syscheck: $(EXE)
 	valgrind --track-origins=yes --leak-check=full ./$(EXE) 5 1 0.1 "9 0.4 1" 0.3 1000

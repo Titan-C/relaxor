@@ -178,11 +178,11 @@ void calc_sus(const std::vector<double>& pol_int_avg, unsigned int numexps,
       data_arrayi[n]=pol_int_avg[ind+1]/campo[field_ind];
     }
     X_mat[x][1]=gsl_stats_mean(data_arrayr,1,numexps);
-    X_mat[x][3]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[x][1]);
-    X_mat[x][2]=0.0001/X_mat[x][3]/X_mat[x][3];
+    X_mat[x][2]=gsl_stats_sd_m(data_arrayr,1,numexps,X_mat[x][1]);
+    X_mat[x][3]=0.0001/X_mat[x][3]/X_mat[x][3];
     X_mat[x][4]=gsl_stats_mean(data_arrayi,1,numexps);
-    X_mat[x][6]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[x][4]);
-    X_mat[x][5]=0.0001/X_mat[x][6]/X_mat[x][6];
+    X_mat[x][5]=gsl_stats_sd_m(data_arrayi,1,numexps,X_mat[x][4]);
+    X_mat[x][6]=0.0001/X_mat[x][6]/X_mat[x][6];
   }
   array_print(X_mat, "sus_"+id_proc+".dat");
 
