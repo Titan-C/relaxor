@@ -49,6 +49,6 @@ double simpson_int(const double f_array[], const std::vector< double >& weight);
 //Genera vectores de ondas cos- senoidales
 std::vector<double> wavearray(double amplitude, unsigned int tau, unsigned int length, double phase);
 //Validador que justifica realizar una simulacion
-bool needSimulation(std::string id_proc, unsigned int size);
+bool needSimulation(std::string id_proc, unsigned int iter, unsigned int PNR, unsigned int temps, unsigned int numexps);
 
 #endif // EXPERIMENT_H

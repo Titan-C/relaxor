@@ -20,8 +20,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 
 	  std::cout<<id_proc.str()<<":";
 	  clock_t cl_start = clock();
-	  unsigned int sim_size = sizeof(double)*Exp_iter*Thermostat.size()*numexps;
-	  if (needSimulation(id_proc.str(), sim_size)) {
+	  if (needSimulation(id_proc.str(), Exp_iter, L*L*L, Thermostat.size(), numexps)) {
 	    std::vector<double> Equi_field = wavearray(Fields[E],tau[t],Equi_iter, Equi_iter);
 	    std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
 	    std::cout<<Equi_field.size()<<" "<<Exp_field.size()<<" ";
@@ -49,7 +48,7 @@ void proces_data(std::vector< double >& Temps, double Field,
     std::vector<double> intfield (1,Field);
     eval_pol(pol_stats,numexps,Temps,id_proc,true);
     calc_sus(pol_int_avg,numexps,Temps,intfield,id_proc);
-//     eval_frozen(PNR,Niter, Temps, numexps, id_proc);
+    eval_frozen(PNR,Niter, Temps, numexps, id_proc);
     intfield.clear();
     pol_int_avg.clear();
     pol_stats.clear();
@@ -90,6 +89,7 @@ void pp_data(std::vector<double>& pol_stats, std::vector<double>& pol_int_avg, u
 void eval_frozen(unsigned int PNR, unsigned int Niter, const std::vector<double>& Temps, unsigned int numexps, std::string id_proc){
   int * sigma_hist = new int[PNR];
   std::vector< double > sigmaTemp;
+  sigmaTemp.assign(numexps*PNR*Temps.size(),0);
 
   //Abrir Archivo, leer guardar datos
   std::string name = "log_sigma_"+id_proc+".dat";
@@ -291,15 +291,20 @@ double stan_dev(std::vector< std::vector<double> > M){
   return sd;
 }
 
-bool needSimulation(std::string id_proc, unsigned int size)
+bool needSimulation(std::string id_proc, unsigned int iter, unsigned int PNR, unsigned int temps, unsigned int numexps)
 {
   struct stat file;
+
+  // Polarization log
   id_proc = "log_pol_"+id_proc+".dat";
 
   if (stat(id_proc.c_str(), &file) == -1)
     return true;
 
-  if (file.st_size != size){
+  unsigned int log_size = sizeof(double)*iter*temps*numexps;
+  if (file.st_size != log_size){
+    std::remove(id_proc.c_str());
+    id_proc = "log_sigma_"+id_proc+".dat";
     std::remove(id_proc.c_str());
     return true;
   }
