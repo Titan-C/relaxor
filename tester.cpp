@@ -64,6 +64,16 @@ void tester::rw_sigma()
 
   std::remove(savefile.c_str());
   cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"s\n";
+
+    std::vector<unsigned int> shape (2,3);
+    double a[3][3] = { { 1, 2.5, 3 },
+                       { 4.0, 5, 6 },
+                       { 7, -8.64, 9 } };
+    std::vector<double> b (9,5.7);
+
+    printf("Creating files a.npy, b.npy, c.npy, d.npy, e.npy\n");
+    npy_save_double("a.npy", 0, shape, &a[0][0]);
+    npy_save_double("b.npy", 0, shape, &b[0]);
 }
 
 int main(int argc, char **argv) {

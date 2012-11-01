@@ -6,7 +6,9 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <cstring>
 #include <sys/types.h>
+#include <stdint.h>
 #include <sys/stat.h>
 
 // Imprime datos de variables double
@@ -50,6 +52,31 @@ void array_print(const std::vector< std::vector<T> >& M, std::string ARCHIVO) {
   }
   file.close();
 }
+
+//Numpy Arrays
+static const char LIBNPY_VERSION[] = "0.5";
+static const char MAGIC[] = "\x93NUMPY";
+static const unsigned int  MAJOR = 1;
+static const unsigned int  MINOR = 0;
+static const unsigned int  MAX_HDR_LEN = 256 * 256;
+static const unsigned int  MAX_INT_LEN = 32;
+static const unsigned int  PREAMBLE_LEN = 6 + 1 + 1 + 2;
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+static const char ENDIAN_CHAR = '<';
+#else
+static const char ENDIAN_CHAR = '>';
+#endif
+
+int create_metadata(char preamble[PREAMBLE_LEN], char header[MAX_HDR_LEN],
+                    char* descr, int fortran_order,
+		    const std::vector<unsigned int> shape);
+
+void npy_save(char* fname, char* descr, int fortran_order,
+              const std::vector<unsigned int> shape, size_t sz, void* data);
+
+void npy_save_double(char* fname, int fortran_order,
+                     const std::vector<unsigned int> shape, double* data);
 
 
 #endif // IMPRESOR_H
