@@ -1,30 +1,12 @@
 #include "impresor.h"
 
 void out(double value, std::string ARCHIVO) {
-  std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
+  std::ofstream file;
+  file.open (ARCHIVO.c_str(), std::fstream::app);
   file<<value<<"\n";
   file.close();
 }
 // Imprime datos de los arreglos vectoriales
-void array_print(const std::vector< int >& V, std::string ARCHIVO) {
-  std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
-  
-  for(unsigned int i = 0; i<V.size(); i++)
-    file<<V[i]<<"\t";
-  file<<"\n";
-  file.close();
-}
-void array_print(const std::vector< double >& V, std::string ARCHIVO) {
-  std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out | std::fstream::app);
-
-  for(unsigned int i = 0; i<V.size(); i++)
-    file<<V[i]<<"\t";
-  file<<"\n";
-  file.close();
-}
 void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale){
   std::fstream file;
   file.open (ARCHIVO.c_str(), std::fstream::out);
@@ -38,56 +20,8 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned i
   file.close();
 }
 
-void array_print_bin(const std::vector< int >& V, std::string ARCHIVO) {
-  std::ofstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::app);
-  file.write((char * )&V[0],V.size()*sizeof(int));
-  file.close();
-}
-void array_print_bin(const std::vector< double >& V, std::string ARCHIVO) {
-  std::ofstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::app);
-  file.write((char * )&V[0],V.size()*sizeof(double));
-  file.close();
-}
+
 // Imprime datos de los arreglos matricales
-void array_print(const std::vector< std::vector<int> >& M, std::string ARCHIVO) {
-  std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out);
-
-  for (unsigned int i=0;i<M.size();i++) {
-    for (unsigned int j=0;j<M[i].size();j++) {
-      file<<M[i][j]<<"\t";
-    }
-    file<<"\n";
-  }
-  file.close();
-}
-
-void array_print(const std::vector< std::vector< unsigned int > >& M, std::string ARCHIVO) {
-  std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out);
-
-  for (unsigned int i=0;i<M.size();i++) {
-    for (unsigned int j=0;j<M[i].size();j++) {
-      file<<M[i][j]<<"\t";
-    }
-    file<<"\n";
-  }
-  file.close();
-}
-void array_print(const std::vector< std::vector< double > >& M, std::string ARCHIVO) {
-  std::fstream file;
-  file.open (ARCHIVO.c_str(), std::fstream::out);
-
-  for (unsigned int i=0;i<M.size();i++) {
-    for (unsigned int j=0;j<M[i].size();j++) {
-      file<<M[i][j]<<"\t";
-    }
-    file<<"\n";
-  }
-  file.close();
-}
 void array_print_bin(const std::vector< double * >& V, std::string ARCHIVO, unsigned int cols){
   std::ofstream file;
   file.open (ARCHIVO.c_str());
