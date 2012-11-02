@@ -74,36 +74,35 @@ static const char ENDIAN_CHAR = '<';
 static const char ENDIAN_CHAR = '>';
 #endif
 
-void create_metadata(std::string ARCHIVO,char* descr, int fortran_order,
+void create_metadata(std::string ARCHIVO,std::string descr, int fortran_order,
 		    const std::vector<unsigned int> shape);
+
+template <typename T>
+std::string descr(){
+  char str[5];
+  str[0] = ENDIAN_CHAR;
+  str[1] = ( typeid(T)==typeid(double) ) ? 'f' : 'i';
+  sprintf(str+2, "%d", (int) sizeof(T));
+  return str;
+}
 
 template <typename T>
 void npy_save_vector(std::string ARCHIVO, const std::vector<T>& data, int fortran_order=0)
 {
-    char descr[5];
-    descr[0] = ENDIAN_CHAR;
-    descr[1] = ( typeid(T)==typeid(double) ) ? 'f' : 'i';
-    sprintf(descr+2, "%d", (int) sizeof(T));
-
     std::vector<unsigned int> shape (1,data.size());
 
-    create_metadata(ARCHIVO,descr,fortran_order,shape);
+    create_metadata(ARCHIVO,descr<T>(),fortran_order,shape);
     array_print_bin(data,ARCHIVO);
 }
 
 template <typename T>
 void npy_save_matrix(std::string ARCHIVO, const std::vector< std::vector<T> >& data, int fortran_order=0)
 {
-    char descr[5];
-    descr[0] = ENDIAN_CHAR;
-    descr[1] = ( typeid(T)==typeid(double) ) ? 'f' : 'i';
-    sprintf(descr+2, "%d", (int) sizeof(T));
-
     std::vector<unsigned int> shape (2,0);
     shape[0] = data.size();
     shape[1] = data[0].size();
 
-    create_metadata(ARCHIVO,descr,fortran_order,shape);
+    create_metadata(ARCHIVO,descr<T>(),fortran_order,shape);
     array_print_bin(data,ARCHIVO);
 }
 #endif // IMPRESOR_H

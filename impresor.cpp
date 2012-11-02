@@ -21,7 +21,7 @@ void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned i
 }
 
 //Numpy Arrays
-void create_metadata(std::string ARCHIVO, char * descr, int fortran_order,
+void create_metadata(std::string ARCHIVO, std::string descr, int fortran_order,
 		     const std::vector<unsigned int> shape)
 {
   char preamble[PREAMBLE_LEN], header[MAX_HDR_LEN];
@@ -32,7 +32,7 @@ void create_metadata(std::string ARCHIVO, char * descr, int fortran_order,
    *    See numpy/lib/format.py for details of the .npy file format.
    */
   strcpy(header, "{'descr': '");
-  strcat(header, descr);
+  strcat(header, descr.c_str());
   strcat(header, "', 'fortran_order': ");
   if ( fortran_order )
     strcat(header, "True, ");
