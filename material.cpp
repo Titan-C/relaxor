@@ -2,10 +2,12 @@
 
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
-Material::Material(unsigned int L,
+Material::Material(unsigned int L,double p, std::string ID,
 		 bool polarizar){
   // Start random number generator
   rng = gsl_rng_alloc (gsl_rng_taus);
+  ExpID=ID;
+  rho = p;
 
   // Setup Material
   PNR = L*L*L;
@@ -111,10 +113,8 @@ void Material::set_mu(bool polarize){
   array_print(mu_E,"mu"+ExpID+".dat");
 }
 
-void Material::init(double p, std::string ID, bool polarizar, bool write){
+void Material::init(bool polarizar, bool write){
   gsl_rng_set(rng, std::time(NULL) );
-  ExpID=ID;
-  rho = p;
   // Calculate new values for exchange Energy an dipolar momentum
   Jex();
   set_mu(polarizar);
@@ -124,6 +124,8 @@ void Material::init(double p, std::string ID, bool polarizar, bool write){
     std::cout<<"Polarización inicial="<<norm_pol()<<"\n";
   }
 }
+void Material::set_rho(double p){rho = p;}
+void Material::set_ExpId(std::string ID){ ExpID =  ID;}
 
 double Material::total_E(double E){
   double Hamil = 0;
@@ -154,14 +156,19 @@ double Material::norm_pol(){
 }
 
 void Material::MonteCarloStep(double T, double E_field){
+  std::vector<double> logH;
+  logH.resize(PNR);
   for(unsigned int idflip = 0; idflip < PNR; idflip++){
+    logH[idflip]=total_E(E_field);
     double dH = delta_E(idflip, E_field);
     if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
       sigma[idflip] *= -1;
   }
+  array_print_bin<double>(logH,"logH"+ExpID+".dat");
+  logH.clear();
 }
 
-void Material::state(double T, std::vector< double >& field, bool record){
+void Material::state(double T, std::vector< double >& field, unsigned int Equilibration_Iter, bool measure){
   //vector historial de polarización por experimento
   std::vector<double> log_pol;
   log_pol.resize(field.size());
@@ -169,16 +176,17 @@ void Material::state(double T, std::vector< double >& field, bool record){
   log_sigma.assign(PNR,0);
 
   // Evaluate material's state during given amount of steps
-  for(unsigned int i = 0; i< field.size(); i++){
+  unsigned int start = (Equilibration_Iter>0) ? field.size()-Equilibration_Iter : 0;
+  for(unsigned int i = start ; i< field.size(); i++){
     MonteCarloStep(T,field[i]);
-    if (record){
+    if (measure){
       log_pol[i] = norm_pol();
       update_log_sigma(log_sigma);
     }
   }
 
   // Save recorded data in binary format
-  if (record){
+  if (measure){
     array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
     array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
   }
@@ -190,4 +198,18 @@ void Material::state(double T, std::vector< double >& field, bool record){
 void Material::update_log_sigma(std::vector< int >& log_sigma){
   for(unsigned int s = 0; s<PNR ; s++)
     log_sigma[s] += sigma[s];
+}
+
+//Calcular la desviación estandar de una matriz
+double stan_dev(std::vector< std::vector<double> > M){
+  unsigned int celdas;
+  celdas = M.size() * M[0].size();
+  double * Aij = new double [celdas];
+  for(unsigned int i = 0 ; i<M.size(); i++){
+    for(unsigned int j = 0; j<M[0].size(); j++)
+      Aij[i*M[0].size() + j] = M[i][j];
+  }
+  double sd = gsl_stats_sd (Aij, 1, celdas);
+  delete[] Aij;
+  return sd;
 }

@@ -73,7 +73,7 @@ void create_metadata(std::string ARCHIVO, std::string descr, int fortran_order,
   byte = MINOR;
   preamble[n++] = byte;
   hdrlen = htole16(l);
-  memcpy((void*) preamble+n, (void*) &hdrlen, 2);
+  memcpy(preamble+n, (void*) &hdrlen, 2);
 
   mtd_len = PREAMBLE_LEN + l;
   if ( mtd_len % 16 != 0 ) {

@@ -1,7 +1,6 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include "experiment.h"
 #include "impresor.h"
 #include <vector>
 #include <ctime>
@@ -9,6 +8,7 @@
 #include <cmath>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
+#include <gsl/gsl_statistics.h>
 
 class Material
 {
@@ -58,21 +58,24 @@ private:
 
 public:
   // Constructor & destructor
-  Material(unsigned int L,
+  Material(unsigned int L,double p, std::string ID,
 	   bool polarizar = true);
   ~Material();
 
 
   //Initialize material
-  void init(double p, std::string ID, bool polarizar = true, bool write = false);
+  void init(bool polarizar = true, bool write = false);
+  void set_rho(double p);
+  void set_ExpId(std::string ID);
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]
    * during the given amount of time Niter. Records data if requested */
-  void state(double T, std::vector< double >& field, bool record);
+  void state(double T, std::vector< double >& field, unsigned int Equilibration_Iter = 0, bool measure = true);
 
   // To allow test on material
   friend class tester;
 
 };
-
+//Calcula la desviación estandar de los datos de toda la matriz
+double stan_dev(std::vector< std::vector< double > > M);
 #endif // MATERIAL_H

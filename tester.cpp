@@ -2,10 +2,10 @@
 
 using namespace std;
 
-tester::tester(unsigned int L, double eps):relaxor(L)
+tester::tester(unsigned int L, double eps):relaxor(L,0,"test")
 {
   errtol = eps;
-  relaxor.init(0,"test",false);
+  relaxor.init(false);
   runAllTests();  
 }
 
@@ -54,7 +54,7 @@ void tester::rw_sigma()
   struct stat file;
   if (stat(savefile.c_str(), &file) == -1)
     cerr<<"no hay archivo";
-  assert (file.st_size == relaxor.PNR*sizeof(int));
+  assert (file.st_size == int (relaxor.PNR*sizeof(int)));
   std::ifstream ifile(savefile.c_str());
   
   int * newsigma = new int[relaxor.PNR];

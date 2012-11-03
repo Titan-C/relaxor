@@ -2,7 +2,6 @@
 #define TESTER_H
 
 #include "material.h"
-#include "impresor.h"
 #include <cassert>
 
 class tester

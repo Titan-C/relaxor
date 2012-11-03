@@ -3,13 +3,21 @@
 
 
 #include "material.h"
-#include "impresor.h"
-#include <gsl/gsl_statistics.h>
 
 #define _2pi 8*atan(1)
 
-//Funciones Para tratar los experimentos del sistema
-void Gen_exp(unsigned int L, unsigned int numexps,std::vector<double> rho, std::vector<double>& Tdat,
+//Perform Experiment according to certain parameters
+void doExperiment(unsigned int repetitions,		//
+		  unsigned int Equilibration_Iter,	//
+		  std::vector<double>& Temperature_loop,//Temperature range
+		  std::vector<double>& Electric_Field,	//External Electric Field
+		  Material & relaxor,
+		  bool polarize = false);
+
+std::string ExpLabel(std::string Exp_ID,unsigned int L, double rho, double Field, double tau, unsigned int numexps,
+		     std::vector<double>& Tdat, unsigned int Exp_iter, unsigned int Equi_iter);
+
+void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID);
 //Operaciones necesarias para tratar datos
 void proces_data(std::vector< double >& Temps, double Field,
@@ -34,8 +42,7 @@ void eval_frozen(unsigned int array_size, unsigned int Niter, const std::vector<
 		 unsigned int numexps, std::string id_proc);
 
 //Funciones adicionales
-//Calcula la desviación estandar de los datos de toda la matriz
-double stan_dev(std::vector< std::vector< double > > M);
+
 //Genera un vector de datos double, entre dos números con cierto paso
 void step2vec(double v_start, double v_end, double dv, std::vector< double >& array, double unidad = 1);
 //Genera un vector de datos para un lazo
