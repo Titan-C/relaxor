@@ -14,8 +14,8 @@ public:
   void runAllTests();
   void test_deltaH();
   void rw_sigma();
-  void sizes();
+  void material();
   
 };
-
+void mean_sd_stats(const std::vector< std::vector< double > >& M, double& mean, double& sd);
 #endif // TESTER_H

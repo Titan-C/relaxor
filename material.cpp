@@ -8,6 +8,8 @@ Material::Material(unsigned int L,double p, std::string ID,
   rng = gsl_rng_alloc (gsl_rng_taus);
   ExpID=ID;
   rho = p;
+  logH=true;
+  logS=true;
 
   // Setup Material
   PNR = L*L*L;
@@ -113,16 +115,11 @@ void Material::set_mu(bool polarize){
   array_print(mu_E,"mu"+ExpID+".dat");
 }
 
-void Material::init(bool polarizar, bool write){
+void Material::init(bool polarizar){
   gsl_rng_set(rng, std::time(NULL) );
   // Calculate new values for exchange Energy an dipolar momentum
   Jex();
   set_mu(polarizar);
-
-  if (write){
-    std::cout<<"Desvición Estandar Total= "<<stan_dev(J)<<"\n";
-    std::cout<<"Polarización inicial="<<norm_pol()<<"\n";
-  }
 }
 void Material::set_rho(double p){rho = p;}
 void Material::set_ExpId(std::string ID){ ExpID =  ID;}
@@ -156,25 +153,20 @@ double Material::norm_pol(){
 }
 
 void Material::MonteCarloStep(double T, double E_field){
-  std::vector<double> logH;
-  logH.resize(PNR);
   for(unsigned int idflip = 0; idflip < PNR; idflip++){
-    logH[idflip]=total_E(E_field);
     double dH = delta_E(idflip, E_field);
     if ( dH < 0 || exp(-dH/T) >= gsl_rng_uniform(rng) )
       sigma[idflip] *= -1;
   }
-  array_print_bin<double>(logH,"logH"+ExpID+".dat");
-  logH.clear();
 }
 
 void Material::state(double T, std::vector< double >& field, unsigned int Equilibration_Iter, bool measure){
   //vector historial de polarización por experimento
-  std::vector<double> log_pol;
+  std::vector<double> log_pol,log_H;
   log_pol.resize(field.size());
-  std::vector<int> log_sigma;
-  log_sigma.assign(PNR,0);
-
+  log_H.resize(field.size());  
+  std::vector<int> log_sigma (PNR,0);
+  
   // Evaluate material's state during given amount of steps
   unsigned int start = (Equilibration_Iter>0) ? field.size()-Equilibration_Iter : 0;
   for(unsigned int i = start ; i< field.size(); i++){
@@ -182,15 +174,18 @@ void Material::state(double T, std::vector< double >& field, unsigned int Equili
     if (measure){
       log_pol[i] = norm_pol();
       update_log_sigma(log_sigma);
+      log_H[i]=total_E(field[i]);
     }
   }
 
   // Save recorded data in binary format
   if (measure){
     array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
-    array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
+    if (logS) array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
+    if (logH) array_print_bin<double>(log_H,"logH"+ExpID+".dat");
   }
-
+  
+  log_H.clear();
   log_pol.clear();
   log_sigma.clear();
 }
@@ -198,18 +193,4 @@ void Material::state(double T, std::vector< double >& field, unsigned int Equili
 void Material::update_log_sigma(std::vector< int >& log_sigma){
   for(unsigned int s = 0; s<PNR ; s++)
     log_sigma[s] += sigma[s];
-}
-
-//Calcular la desviación estandar de una matriz
-double stan_dev(std::vector< std::vector<double> > M){
-  unsigned int celdas;
-  celdas = M.size() * M[0].size();
-  double * Aij = new double [celdas];
-  for(unsigned int i = 0 ; i<M.size(); i++){
-    for(unsigned int j = 0; j<M[0].size(); j++)
-      Aij[i*M[0].size() + j] = M[i][j];
-  }
-  double sd = gsl_stats_sd (Aij, 1, celdas);
-  delete[] Aij;
-  return sd;
 }

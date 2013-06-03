@@ -28,6 +28,8 @@ private:
   std::vector< std::vector<unsigned int> > G;
   // Exchange energies between PNRs
   std::vector< std::vector<double> >  J;
+  
+  bool logS,logH; //Logger Flags
 
   //Methods
 
@@ -64,9 +66,11 @@ public:
 
 
   //Initialize material
-  void init(bool polarizar = true, bool write = false);
+  void init(bool polarizar = true);
   void set_rho(double p);
   void set_ExpId(std::string ID);
+  bool getlogH(){return logH;}
+  std::string getExpID(){return ExpID;}
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]
    * during the given amount of time Niter. Records data if requested */

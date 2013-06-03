@@ -2,6 +2,11 @@
 
 void doExperiment(unsigned int repetitions, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, Material& relaxor, bool polarize)
 {
+  if (relaxor.getlogH()){
+    unsigned int Hlogsize = Electric_Field.size()*Temperature_loop.size()*repetitions;
+    std::vector<unsigned int> shape (1,Hlogsize);
+    create_metadata("logH"+relaxor.getExpID()+".dat", descr<double>(),0, shape);
+  } 
   for(unsigned int n=0; n<repetitions; n++){
     relaxor.init(polarize);
     for(unsigned int T=0; T<Temperature_loop.size(); T++){
@@ -10,42 +15,37 @@ void doExperiment(unsigned int repetitions, unsigned int Equilibration_Iter, std
   }}
 }
 
-
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
   Material relaxor(L,0,"NULL");
-  unsigned int Equi_iter=350;
-  unsigned int Exp=3000;
+  unsigned int Equi_iter=100;
+  unsigned int Exp=1000;
   //   Código para bajar (variar) la temperatura a campos fijos
-  if (Exp_ID == "cool" || Exp_ID == "heat"){
-    for(unsigned int p=0; p<rho.size(); p++){
-      std::vector<double> Thermostat;
-      step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
-      for(unsigned int t=0; t< tau.size() ; t++){
-	unsigned int Exp_iter = stepEstimator(Exp,tau[t],2);
+  for(unsigned int p=0; p<rho.size(); p++){
+    std::vector<double> Thermostat;
+    step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
+    for(unsigned int t=0; t< tau.size() ; t++){
+      unsigned int Exp_iter = stepEstimator(Exp,tau[t],2);
+      
+      for(unsigned int E=0; E<Fields.size(); E++){
+	std::string Label =ExpLabel(Exp_ID,L,rho[p], Fields[E],tau[t],numexps,Tdat,Exp_iter,Equi_iter);	
+	std::cout<<Label<<":";
+	
+	clock_t cl_start = clock();
+	if (needSimulation(Label, Exp_iter, L*L*L, Thermostat.size(), numexps)) {
+	  std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
+	  
 
-	for(unsigned int E=0; E<Fields.size(); E++){
-	  std::string id_proc =ExpLabel(Exp_ID,L,rho[p], Fields[E],tau[t],numexps,Tdat,Exp_iter,Equi_iter);
-
-	  std::cout<<id_proc<<":";
-	  clock_t cl_start = clock();
-	  if (needSimulation(id_proc, Exp_iter, L*L*L, Thermostat.size(), numexps)) {
-	    std::vector<double> Equi_field = wavearray(Fields[E],tau[t],Equi_iter, Equi_iter);
-	    std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
-	    std::cout<<Equi_field.size()<<" "<<Exp_field.size()<<" ";
-
-	    std::vector<unsigned int> shape (1,(Equi_iter+Exp_iter)*Thermostat.size()*numexps*L*L*L);
-	    create_metadata("logH"+id_proc+".dat", descr<double>(),0, shape);
-	    relaxor.set_rho(rho[p]);
-	    relaxor.set_ExpId(id_proc);
-	    doExperiment(numexps,Equi_iter, Thermostat,Exp_field,relaxor);
-	  }
-	  proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,id_proc);
-	  std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";
-	}}
-    }
+	  relaxor.set_rho(rho[p]);
+	  relaxor.set_ExpId(Label);
+	  doExperiment(numexps,Equi_iter, Thermostat,Exp_field,relaxor);
+	}
+	proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,Label);
+	std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";
+      }}
   }
+  
 }
 
 std::string ExpLabel(std::string Exp_ID,unsigned int L, double rho, double Field, double tau, unsigned int numexps,

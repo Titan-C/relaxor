@@ -12,19 +12,24 @@ tester::tester(unsigned int L, double eps):relaxor(L,0,"test")
 void tester::runAllTests()
 {
   cout<<"Ejecutando todas la pruebas"<<endl;
-  sizes();
+  material();
   rw_sigma();
   test_deltaH();
 }
 
-void tester::sizes(){
+void tester::material(){
   clock_t cl_start = clock();
-  cout<<"Verificar longitud de arreglos: ";
+  cout<<"Test array sizes: "<<endl;
   unsigned int PNR = relaxor.PNR;
   assert(relaxor.sigma.size() == PNR);
   assert(relaxor.mu_E.size() == PNR);
   assert(relaxor.G.size() == PNR);
   assert(relaxor.J.size() == PNR);
+  cout<<"Test interaction energy: "<<endl;
+  double mean, sd;
+  mean_sd_stats(relaxor.J,mean,sd);
+  assert(abs(mean - relaxor.rho)<0.02);
+  assert(abs(sd -1)<0.02);
  cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"s\n";
 }
 
@@ -76,6 +81,21 @@ void tester::rw_sigma()
     for(unsigned int i =0; i<a.size();i++)
       a[i].assign(4,15);
     npy_save_matrix("a.npy", a);
+}
+
+//Calcular la desviación estandar de una matriz
+void mean_sd_stats(const vector< std::vector< double > >& M, double& mean, double& sd)
+{
+  unsigned int entries;
+  entries = M.size() * M[0].size();
+  double * Aij = new double [entries];
+  for(unsigned int i = 0 ; i<M.size(); i++){
+    for(unsigned int j = 0; j<M[0].size(); j++)
+      Aij[i*M[0].size() + j] = M[i][j];
+  }
+  mean = gsl_stats_mean(Aij,1,entries);
+  sd = gsl_stats_sd_m (Aij, 1, entries,mean);
+  delete[] Aij;
 }
 
 int main(int argc, char **argv) {
