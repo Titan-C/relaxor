@@ -9,10 +9,11 @@ BOOST_PYTHON_MODULE(libmat)
     class_<std::vector<double> >("double_vector")
         .def(vector_indexing_suite<std::vector<double> >())
     ;
-    class_<Material>("Material", init<unsigned int,double, std::string, optional<bool> >())
+    class_<Material>("Material", init<unsigned int,double, std::string, optional<bool, bool, bool> >())
       .def("state", &Material::state)
+      .def("inicio", &Material::set_interaction_dipole_config)
+      .def("set_rho", &Material::set_rho)
       .def("set_ExpId", &Material::set_ExpId)
-      .def("__repr__", &Material::desc)
-      .def("inicio", &Material::init)
+      .def("__repr__", &Material::repr)
     ;
 }

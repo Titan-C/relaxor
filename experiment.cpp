@@ -2,13 +2,8 @@
 
 void doExperiment(unsigned int repetitions, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, Material& relaxor, bool polarize)
 {
-  if (relaxor.getlogH()){
-    unsigned int Hlogsize = Electric_Field.size()*Temperature_loop.size()*repetitions;
-    std::vector<unsigned int> shape (1,Hlogsize);
-    create_metadata("logH"+relaxor.getExpID()+".dat", descr<double>(),0, shape);
-  } 
   for(unsigned int n=0; n<repetitions; n++){
-    relaxor.init(polarize);
+    relaxor.set_interaction_dipole_config(polarize);
     for(unsigned int T=0; T<Temperature_loop.size(); T++){
       relaxor.state(Temperature_loop[T], Electric_Field, Equilibration_Iter, false);
       relaxor.state(Temperature_loop[T], Electric_Field);

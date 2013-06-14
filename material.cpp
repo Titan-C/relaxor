@@ -3,17 +3,15 @@
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
 Material::Material(unsigned int L,double p, std::string ID,
-		 bool polarizar){
-  // Start random number generator
-  rng = gsl_rng_alloc (gsl_rng_taus);
+		 bool polarizar, bool log_H, bool log_S){
+  rng = gsl_rng_alloc (gsl_rng_taus);// Start random number generator
   ExpID=ID;
   rho = p;
-  logH=true;
-  logS=true;
+  logH=log_H;
+  logS=log_S;
 
   // Setup Material
   PNR = L*L*L;
-  // Dimensionado de arreglos caraterísticos del sistema
   sigma.resize(PNR);
   mu_E.resize(PNR);
 
@@ -22,6 +20,7 @@ Material::Material(unsigned int L,double p, std::string ID,
   G.resize(PNR);
   set_space_config(L);
   J.resize(PNR);
+  set_interaction_dipole_config(polarizar);
 }
 
 /*Destructor:
@@ -99,7 +98,7 @@ void Material::Jex(){
 	}}}}
 }
 
-void Material::set_pol(bool polarize){
+void Material::set_sigma(bool polarize){
   if (polarize)
     sigma.assign(PNR,1);
   else{
@@ -109,13 +108,13 @@ void Material::set_pol(bool polarize){
 }
 
 void Material::set_mu(bool polarize){
-  set_pol(polarize);
+  set_sigma(polarize);
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
-  array_print(mu_E,"mu"+ExpID+".dat");
+//   array_print_bin(mu_E,"mu"+ExpID+".dat");
 }
 
-void Material::init(bool polarizar){
+void Material::set_interaction_dipole_config(bool polarizar){
   gsl_rng_set(rng, std::time(NULL) );
   // Calculate new values for exchange Energy an dipolar momentum
   Jex();
@@ -194,7 +193,7 @@ void Material::update_log_sigma(std::vector< int >& log_sigma){
   for(unsigned int s = 0; s<PNR ; s++)
     log_sigma[s] += sigma[s];
 }
-std::string Material::desc()
+std::string Material::repr()
 {
   std::ostringstream descrip;
   descrip<<"\n Random: "<<gsl_rng_uniform(rng);

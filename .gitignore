@@ -1,4 +1,4 @@
-.dat
+*.dat
 *.o
 *.pyc
 *.csv

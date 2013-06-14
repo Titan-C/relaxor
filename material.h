@@ -39,8 +39,8 @@ private:
   /* Fills values for the interaction energy between
    * PNRs according to spatial configuration */
   void Jex();
-  //Generate initial polarization
-  void set_pol(bool polarize);
+  //Generate initial polarization(orientation) of PNS
+  void set_sigma(bool polarize);
   //Generate dipolar moments
   void set_mu(bool polarize);
 
@@ -60,17 +60,15 @@ private:
 public:
   // Constructor & destructor
   Material(unsigned int L,double p, std::string ID,
-	   bool polarizar = true);
+	   bool polarizar = false, bool log_H = false, bool log_S = false);
   ~Material();
 
 
   //Initialize material
-  void init(bool polarizar = true);
+  void set_interaction_dipole_config(bool polarizar = true);
   void set_rho(double p);
   void set_ExpId(std::string ID);
-  bool getlogH(){return logH;}
-  std::string getExpID(){return ExpID;}
-  std::string desc();
+  std::string repr();
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]
    * during the given amount of time Niter. Records data if requested */

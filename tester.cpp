@@ -5,7 +5,7 @@ using namespace std;
 tester::tester(unsigned int L, double eps):relaxor(L,0,"test")
 {
   errtol = eps;
-  relaxor.init(false);
+  relaxor.set_interaction_dipole_config(false);
   runAllTests();  
 }
 
@@ -69,18 +69,6 @@ void tester::rw_sigma()
 
   std::remove(savefile.c_str());
   cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"s\n";
-
-    std::vector<unsigned int> shape (2,3);
-    std::vector<double> b  (14,0);
-    for(unsigned int i=0; i<b.size();i++)
-      b[i]=gsl_rng_uniform(relaxor.rng);
-    npy_save_vector("b.npy", b);
-    
-    std::vector< std::vector<double> > a;
-    a.resize(3);
-    for(unsigned int i =0; i<a.size();i++)
-      a[i].assign(4,15);
-    npy_save_matrix("a.npy", a);
 }
 
 //Calcular la desviación estandar de una matriz
