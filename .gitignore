@@ -1,4 +1,4 @@
-*.dat
+.dat
 *.o
 *.pyc
 *.csv
@@ -7,3 +7,6 @@ benchfro
 fits
 results
 pyeq2
+.directory
+build
+rel
