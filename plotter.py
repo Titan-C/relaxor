@@ -184,7 +184,7 @@ def procTitle(proc,rho,E,tau):
       setup += u'PNRs congeladas'
     if i<len(proc)-1:
       setup += u' y '
-  setup +=' en función de la tempertatura'
+  setup +=u' en función de la tempertatura'
 
   return setup+fixedCond(rho,E,tau)
 

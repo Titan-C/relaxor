@@ -17,3 +17,7 @@ parser.add_argument('-E', '--fields', metavar='E0', type=float, nargs='*',
 		    default=0.1, help='External Electric Field amplitude')
 parser.add_argument('-t', '--tau', metavar='t', type=float, nargs='*',
 		    default=100, help='External Electric Field period')
+
+if __name__ == "__main__":
+  args=parser.parse_args()
+  #main(args)
