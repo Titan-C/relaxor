@@ -51,10 +51,9 @@ private:
   // Evaluate Global polarization
   double norm_pol ();
 
-
+  /* Internal material operations */
   // Attemps to flip every dipole within the array acoording to Boltzman Probability
   void MonteCarloStep(double T, double E_field);
-  /* Internal material operations */
   // Update material state log
   void update_log_sigma(std::vector< int >& log_sigma);
 
@@ -80,6 +79,4 @@ public:
   friend class tester;
 
 };
-//Calcula la desviación estandar de los datos de toda la matriz
-double stan_dev(std::vector< std::vector< double > > M);
 #endif // MATERIAL_H
