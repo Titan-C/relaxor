@@ -194,3 +194,16 @@ void Material::update_log_sigma(std::vector< int >& log_sigma){
   for(unsigned int s = 0; s<PNR ; s++)
     log_sigma[s] += sigma[s];
 }
+std::string Material::desc()
+{
+  std::ostringstream descrip;
+  descrip<<"\n Random: "<<gsl_rng_uniform(rng);
+  descrip<<"\n Exp ID:"<<ExpID;
+  descrip<<"\n rho:"<<rho;
+  descrip<<"\n Log H, S:"<<logH<<", "<<logS;
+  descrip<<"\n #PNRs:"<<PNR;
+  descrip<<"\n sigma size:"<<sigma.size();
+  descrip<<"\n mu size:"<<mu_E.size();
+  return descrip.str();
+
+}

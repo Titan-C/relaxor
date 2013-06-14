@@ -13,5 +13,6 @@ BOOST_PYTHON_MODULE(libmat)
       .def("state", &Material::state)
       .def("set_ExpId", &Material::set_ExpId)
       .def("__repr__", &Material::desc)
+      .def("inicio", &Material::init)
     ;
 }

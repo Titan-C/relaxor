@@ -70,6 +70,7 @@ public:
   void set_ExpId(std::string ID);
   bool getlogH(){return logH;}
   std::string getExpID(){return ExpID;}
+  std::string desc();
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]
    * during the given amount of time Niter. Records data if requested */
