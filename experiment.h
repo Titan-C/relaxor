@@ -3,6 +3,14 @@
 
 
 #include "material.h"
+#include <iostream>
+#include <gsl/gsl_statistics.h>
+// #include <cstdlib>
+// #include <cstring>
+// #include <sys/types.h>
+// #include <typeinfo>
+// #include <stdint.h>
+#include <sys/stat.h>
 
 #define _2pi 8*atan(1)
 

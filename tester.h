@@ -2,6 +2,9 @@
 #define TESTER_H
 
 #include "material.h"
+#include <iostream>
+#include <sys/stat.h>
+#include <gsl/gsl_statistics.h>
 #include <cassert>
 
 class tester

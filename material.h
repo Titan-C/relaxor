@@ -2,13 +2,10 @@
 #define MATERIAL_H
 
 #include "impresor.h"
-#include <vector>
 #include <ctime>
-#include <cstdio>
 #include <cmath>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
-#include <gsl/gsl_statistics.h>
 
 class Material
 {
