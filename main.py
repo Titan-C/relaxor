@@ -2,7 +2,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Relaxor Simulator")
 
-parser.add_argument('-L', '--length', metavar='L',
+parser.add_argument('-L', metavar='L',
 		    type=int, nargs=1, default=12,
 		    help='Side length of simulation box')
 parser.add_argument('-n', '--numexps', metavar='N',
@@ -18,12 +18,12 @@ parser.add_argument('-Ti', metavar='T', type=float,
 		    nargs=1, default=7.15,
 		    help='Starting temperature of experiment')
 parser.add_argument('-Tf', metavar='T', type=float,
-		    nargs=1, default=0.1,
+		    nargs=1, default=0,
 		    help='Finishing temperature of experiment')
 parser.add_argument('-dT', metavar='T', type=float,
 		    nargs=1, default=-0.5,
 		    help='Temperature step during experiment')
-parser.add_argument('--Nexp', metavar='N', type=int, nargs=2,
+parser.add_argument('-Nexp', metavar='N', type=int, nargs=2,
 		    default=[3000,100], help='Time steps for Experiment and Equilibration')
 
 

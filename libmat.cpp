@@ -13,7 +13,7 @@ BOOST_PYTHON_MODULE(libmat)
       .def("state", &Material::state)
       .def("inicio", &Material::set_interaction_dipole_config)
       .def("set_rho", &Material::set_rho)
-      .def("set_ExpId", &Material::set_ExpId)
+      .def("set_ExpID", &Material::set_ExpID)
       .def("__repr__", &Material::repr)
     ;
 }

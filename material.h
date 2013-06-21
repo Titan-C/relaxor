@@ -63,8 +63,8 @@ public:
 
   //Initialize material
   void set_interaction_dipole_config(bool polarizar = true);
-  void set_rho(double p);
-  void set_ExpId(std::string ID);
+  void set_rho(double p){rho = p;}
+  void set_ExpID(std::string ID){ ExpID =  ID;}
   std::string repr();
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]

@@ -120,8 +120,6 @@ void Material::set_interaction_dipole_config(bool polarizar){
   Jex();
   set_mu(polarizar);
 }
-void Material::set_rho(double p){rho = p;}
-void Material::set_ExpId(std::string ID){ ExpID =  ID;}
 
 double Material::total_E(double E){
   double Hamil = 0;
@@ -137,7 +135,7 @@ double Material::delta_E(unsigned int idflip, double E){
   double dHamil = 0;
   for(unsigned int i = 0; i<6; i++)
     dHamil += J[idflip][i]*sigma[idflip]*sigma[G[idflip][i]];
-  dHamil *=4;
+  dHamil *=2;
   dHamil += 2*E*mu_E[idflip]*sigma[idflip];
 
   return dHamil;
@@ -172,8 +170,8 @@ void Material::state(double T, std::vector< double >& field, unsigned int Equili
     MonteCarloStep(T,field[i]);
     if (measure){
       log_pol[i] = norm_pol();
-      update_log_sigma(log_sigma);
-      log_H[i]=total_E(field[i]);
+      if (logS) update_log_sigma(log_sigma);
+      if (logH) log_H[i]=total_E(field[i]);
     }
   }
 

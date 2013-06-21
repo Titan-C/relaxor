@@ -33,7 +33,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	  
 
 	  relaxor.set_rho(rho[p]);
-	  relaxor.set_ExpId(Label);
+	  relaxor.set_ExpID(Label);
 	  doExperiment(numexps,Equi_iter, Thermostat,Exp_field,relaxor);
 	}
 	proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,Label);
