@@ -69,7 +69,7 @@ public:
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]
    * during the given amount of time Niter. Records data if requested */
-  void state(double T, std::vector< double >& field, unsigned int Equilibration_Iter = 0, bool measure = true);
+  void state(double T, std::vector< double >& field, unsigned int Equilibration_Iter = 0);
 
   // To allow test on material
   friend class tester;

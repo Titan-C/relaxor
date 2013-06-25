@@ -4,10 +4,9 @@ void doExperiment(unsigned int repetitions, unsigned int Equilibration_Iter, std
 {
   for(unsigned int n=0; n<repetitions; n++){
     relaxor.set_interaction_dipole_config(polarize);
-    for(unsigned int T=0; T<Temperature_loop.size(); T++){
-      relaxor.state(Temperature_loop[T], Electric_Field, Equilibration_Iter, false);
-      relaxor.state(Temperature_loop[T], Electric_Field);
-  }}
+    for(unsigned int T=0; T<Temperature_loop.size(); T++)
+      relaxor.state(Temperature_loop[T], Electric_Field, Equilibration_Iter);
+  }
 }
 
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,

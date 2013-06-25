@@ -157,7 +157,7 @@ void Material::MonteCarloStep(double T, double E_field){
   }
 }
 
-void Material::state(double T, std::vector< double >& field, unsigned int Equilibration_Iter, bool measure){
+void Material::state( double T, std::vector< double >& field, unsigned int Equilibration_Iter ){
   //vector historial de polarización por experimento
   std::vector<double> log_pol,log_H;
   log_pol.resize(field.size());
@@ -165,22 +165,21 @@ void Material::state(double T, std::vector< double >& field, unsigned int Equili
   std::vector<int> log_sigma (PNR,0);
   
   // Evaluate material's state during given amount of steps
-  unsigned int start = (Equilibration_Iter>0) ? field.size()-Equilibration_Iter : 0;
-  for(unsigned int i = start ; i< field.size(); i++){
+  unsigned int start = (Equilibration_Iter>0) ? field.size()-Equilibration_Iter : field.size();
+  for(unsigned int i = start ; i< field.size(); i++)
     MonteCarloStep(T,field[i]);
-    if (measure){
-      log_pol[i] = norm_pol();
-      if (logS) update_log_sigma(log_sigma);
-      if (logH) log_H[i]=total_E(field[i]);
-    }
+
+  for(unsigned int i = 0 ; i< field.size(); i++){
+    MonteCarloStep(T,field[i]);
+    log_pol[i] = norm_pol();
+    if (logS) update_log_sigma(log_sigma);
+    if (logH) log_H[i]=total_E(field[i]);
   }
 
   // Save recorded data in binary format
-  if (measure){
-    array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
-    if (logS) array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
-    if (logH) array_print_bin<double>(log_H,"log_H"+ExpID+".dat");
-  }
+  array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
+  if (logS) array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
+  if (logH) array_print_bin<double>(log_H,"log_H"+ExpID+".dat");
   
   log_H.clear();
   log_pol.clear();
