@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   vector<double> campos=str2vec(argv[5]);
   vector<double> tau =	str2vec(argv[6]);
   
-  Gen_exp(L,numexps,rho,Temp,campos,tau,"H4");
+  Gen_exp(L,numexps,rho,Temp,campos,tau,"Liufix");
   
   return 0;
 }

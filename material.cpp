@@ -135,7 +135,7 @@ double Material::delta_E(unsigned int idflip, double E){
   double dHamil = 0;
   for(unsigned int i = 0; i<6; i++)
     dHamil += J[idflip][i]*sigma[idflip]*sigma[G[idflip][i]];
-  dHamil *=2;
+  dHamil *=4;
   dHamil += 2*E*mu_E[idflip]*sigma[idflip];
 
   return dHamil;
@@ -179,7 +179,7 @@ void Material::state(double T, std::vector< double >& field, unsigned int Equili
   if (measure){
     array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
     if (logS) array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
-    if (logH) array_print_bin<double>(log_H,"logH"+ExpID+".dat");
+    if (logH) array_print_bin<double>(log_H,"log_H"+ExpID+".dat");
   }
   
   log_H.clear();
@@ -197,7 +197,7 @@ std::string Material::repr()
   descrip<<"\n Random: "<<gsl_rng_uniform(rng);
   descrip<<"\n Exp ID:"<<ExpID;
   descrip<<"\n rho:"<<rho;
-  descrip<<"\n Log H, S:"<<logH<<", "<<logS;
+  descrip<<"\n Log H:"<<logH<<" , S:"<<logS;
   descrip<<"\n #PNRs:"<<PNR;
   descrip<<"\n sigma size:"<<sigma.size();
   descrip<<"\n mu size:"<<mu_E.size();

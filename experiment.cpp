@@ -46,8 +46,8 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 std::string ExpLabel(std::string Exp_ID,unsigned int L, double rho, double Field, double tau, unsigned int numexps,
 		     std::vector<double>& Tdat, unsigned int Exp_iter, unsigned int Equi_iter){
   std::ostringstream id_proc;
-  id_proc<<Exp_ID<<"_p"<<rho<<"_E"<<Field<<"_t"<<tau<<"_L"<<L<<"_n"<<numexps;
-  id_proc<<"_Ti"<<Tdat[0]<<"Tf"<<Tdat[2]<<"dT"<<Tdat[1]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
+  id_proc<<Exp_ID<<"_N"<<L*L*L<<"_p"<<rho<<"_E"<<Field<<"_t"<<tau;
+  id_proc<<"_Ti"<<Tdat[0]<<"_Tf"<<Tdat[2]<<"_dT-"<<Tdat[1]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
   return id_proc.str();
 }
 
