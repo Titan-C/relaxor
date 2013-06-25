@@ -14,14 +14,6 @@
 
 #define _2pi 8*atan(1)
 
-//Perform Experiment according to certain parameters
-void doExperiment(unsigned int repetitions,		//
-		  unsigned int Equilibration_Iter,	//
-		  std::vector<double>& Temperature_loop,//Temperature range
-		  std::vector<double>& Electric_Field,	//External Electric Field
-		  Material & relaxor,
-		  bool polarize = false);
-
 std::string ExpLabel(std::string Exp_ID,unsigned int L, double rho, double Field, double tau, unsigned int numexps,
 		     std::vector<double>& Tdat, unsigned int Exp_iter, unsigned int Equi_iter);
 

@@ -48,6 +48,7 @@ BOOST_PYTHON_MODULE(libmat)
     ;
     class_<Material>("Material", init<unsigned int,double, std::string, optional<bool, bool, bool> >())
       .def("state", &Material::state)
+      .def("oven", &Material::oven)
       .def("inicio", &Material::set_interaction_dipole_config)
       .def("set_rho", &Material::set_rho)
       .def("set_ExpID", &Material::set_ExpID)

@@ -57,7 +57,8 @@ private:
 public:
   // Constructor & destructor
   Material(unsigned int L,double p, std::string ID,
-	   bool polarizar = false, bool log_H = false, bool log_S = false);
+	   bool polarizar = false, bool log_H = false,
+	   bool log_S = false);
   ~Material();
 
 
@@ -69,7 +70,11 @@ public:
 
   /* Evaluates material behavior given T[temperature] and E(t)[external field]
    * during the given amount of time Niter. Records data if requested */
-  void state(double T, std::vector< double >& field, unsigned int Equilibration_Iter = 0);
+  void state(double T, std::vector< double >& field,
+	     unsigned int Equilibration_Iter = 0);
+  void oven(unsigned int numexps, unsigned int Equilibration_Iter,
+	    std::vector< double >& Temperature_loop,
+	    std::vector< double >& Electric_Field, bool polarize = false);
 
   // To allow test on material
   friend class tester;

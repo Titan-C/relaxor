@@ -1,14 +1,5 @@
 #include "experiment.h"
 
-void doExperiment(unsigned int repetitions, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, Material& relaxor, bool polarize)
-{
-  for(unsigned int n=0; n<repetitions; n++){
-    relaxor.set_interaction_dipole_config(polarize);
-    for(unsigned int T=0; T<Temperature_loop.size(); T++)
-      relaxor.state(Temperature_loop[T], Electric_Field, Equilibration_Iter);
-  }
-}
-
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
@@ -33,7 +24,7 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 
 	  relaxor.set_rho(rho[p]);
 	  relaxor.set_ExpID(Label);
-	  doExperiment(numexps,Equi_iter, Thermostat,Exp_field,relaxor);
+	  relaxor.oven(numexps,Equi_iter, Thermostat,Exp_field);
 	}
 	proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,Label);
 	std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";

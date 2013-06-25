@@ -159,9 +159,8 @@ void Material::MonteCarloStep(double T, double E_field){
 
 void Material::state( double T, std::vector< double >& field, unsigned int Equilibration_Iter ){
   //vector historial de polarización por experimento
-  std::vector<double> log_pol,log_H;
-  log_pol.resize(field.size());
-  log_H.resize(field.size());  
+  std::vector<double> log_pol(field.size(),0);
+  std::vector<double> log_H(field.size(),0);
   std::vector<int> log_sigma (PNR,0);
   
   // Evaluate material's state during given amount of steps
@@ -179,11 +178,20 @@ void Material::state( double T, std::vector< double >& field, unsigned int Equil
   // Save recorded data in binary format
   array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
   if (logS) array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
-  if (logH) array_print_bin<double>(log_H,"log_H"+ExpID+".dat");
+  if (logH) array_print_bin<double>(log_H,"log_H_"+ExpID+".dat");
   
-  log_H.clear();
   log_pol.clear();
+  log_H.clear();
   log_sigma.clear();
+}
+
+void Material::oven(unsigned int numexps, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, bool polarize)
+{
+  for(unsigned int n=0; n<numexps; n++){
+    set_interaction_dipole_config(polarize);
+    for(unsigned int T=0; T<Temperature_loop.size(); T++)
+      state(Temperature_loop[T], Electric_Field, Equilibration_Iter);
+  }
 }
 
 void Material::update_log_sigma(std::vector< int >& log_sigma){
@@ -194,12 +202,12 @@ std::string Material::repr()
 {
   std::ostringstream descrip;
   descrip<<"\n Random: "<<gsl_rng_uniform(rng);
-  descrip<<"\n Exp ID:"<<ExpID;
-  descrip<<"\n rho:"<<rho;
-  descrip<<"\n Log H:"<<logH<<" , S:"<<logS;
-  descrip<<"\n #PNRs:"<<PNR;
-  descrip<<"\n sigma size:"<<sigma.size();
-  descrip<<"\n mu size:"<<mu_E.size();
+  descrip<<"\n Exp ID: "<<ExpID;
+  descrip<<"\n rho: "<<rho;
+  descrip<<"\n Log H: "<<logH<<" , S: "<<logS;
+  descrip<<"\n #PNRs: "<<PNR;
+  descrip<<"\n sigma size: "<<sigma.size();
+  descrip<<"\n mu size: "<<mu_E.size();
   return descrip.str();
 
 }
