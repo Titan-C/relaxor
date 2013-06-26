@@ -20,12 +20,14 @@ parser.add_argument('-Tf', metavar='T', type=float, default=0,
 		    help='Finishing temperature of experiment')
 parser.add_argument('-dT', metavar='T', type=float, default=-0.5,
 		    help='Temperature step during experiment')
-parser.add_argument('-Nexp', metavar='N', type=int, nargs=2,
-		    default=[3000,100], help='Time steps for Experiment and Equilibration')
+parser.add_argument('-Eiter', metavar='N', type=int, default=3000,
+		    help='Time steps for Experiment')
+parser.add_argument('-Qiter', metavar='N', type=int, default=200,
+		    help='Time steps for Equilibration')
 parser.add_argument('-name', type=str, default='',
 		    help='Additional experiment label')
 
 
 if __name__ == "__main__":
-  args=parser.parse_args()
+  experiment=vars(parser.parse_args())
   #main(args)
