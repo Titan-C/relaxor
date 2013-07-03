@@ -4,12 +4,13 @@ void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std:
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
   Material relaxor(L,0,"NULL");
-  unsigned int Equi_iter=100;
-  unsigned int Exp=1000;
+  unsigned int Equi_iter=200;
+  unsigned int Exp=3000;
   //   Código para bajar (variar) la temperatura a campos fijos
+  std::vector<double> Thermostat;
+  step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
+
   for(unsigned int p=0; p<rho.size(); p++){
-    std::vector<double> Thermostat;
-    step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
     for(unsigned int t=0; t< tau.size() ; t++){
       unsigned int Exp_iter = stepEstimator(Exp,tau[t],2);
       
