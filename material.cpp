@@ -164,7 +164,7 @@ void Material::state( double T, std::vector< double >& field, unsigned int Equil
   std::vector<int> log_sigma (PNR,0);
   
   // Evaluate material's state during given amount of steps
-  unsigned int start = (Equilibration_Iter>0) ? field.size()-Equilibration_Iter : field.size();
+  unsigned int start = field.size()-Equilibration_Iter;
   for(unsigned int i = start ; i< field.size(); i++)
     MonteCarloStep(T,field[i]);
 
@@ -185,13 +185,15 @@ void Material::state( double T, std::vector< double >& field, unsigned int Equil
   log_sigma.clear();
 }
 
-void Material::oven(unsigned int numexps, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, bool polarize)
+double Material::oven(unsigned int numexps, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, bool polarize)
 {
+  clock_t cl_start = clock();
   for(unsigned int n=0; n<numexps; n++){
     set_interaction_dipole_config(polarize);
     for(unsigned int T=0; T<Temperature_loop.size(); T++)
       state(Temperature_loop[T], Electric_Field, Equilibration_Iter);
   }
+  return (double) (clock()-cl_start)/CLOCKS_PER_SEC;
 }
 
 void Material::update_log_sigma(std::vector< int >& log_sigma){

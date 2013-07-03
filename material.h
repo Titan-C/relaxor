@@ -72,7 +72,7 @@ public:
    * during the given amount of time Niter. Records data if requested */
   void state(double T, std::vector< double >& field,
 	     unsigned int Equilibration_Iter = 0);
-  void oven(unsigned int numexps, unsigned int Equilibration_Iter,
+  double oven(unsigned int numexps, unsigned int Equilibration_Iter,
 	    std::vector< double >& Temperature_loop,
 	    std::vector< double >& Electric_Field, bool polarize = false);
 
