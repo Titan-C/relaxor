@@ -3,40 +3,43 @@
 void Gen_exp(unsigned int L, unsigned int numexps, std::vector<double> rho, std::vector<double>& Tdat,
 	     std::vector<double>& Fields, std::vector<double> tau, std::string Exp_ID)
 {
-  Material relaxor(L);
-  unsigned int Equi_iter=350;
+  Material relaxor(L,0,"NULL");
+  unsigned int Equi_iter=200;
+  unsigned int Exp=3000;
   //   Código para bajar (variar) la temperatura a campos fijos
-  if (Exp_ID == "cool" || Exp_ID == "heat"){
-    for(unsigned int p=0; p<rho.size(); p++){
-      std::vector<double> Thermostat;
-      step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
-      for(unsigned int t=0; t< tau.size() ; t++){
-	unsigned int Exp_iter = stepEstimator(3000,tau[t],2);
+  std::vector<double> Thermostat;
+  step2vec(Tdat[0],Tdat[2],Tdat[1],Thermostat,1);
 
-	for(unsigned int E=0; E<Fields.size(); E++){
-	  std::ostringstream id_proc;
-	  id_proc<<Exp_ID<<"_p"<<rho[p]<<"_E"<<Fields[E]<<"_t"<<tau[t]<<"_L"<<L<<"_n"<<numexps;
-	  id_proc<<"_Ti"<<Thermostat[0]<<"Tf"<<Tdat[1]<<"dT"<<Tdat[0]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
+  for(unsigned int p=0; p<rho.size(); p++){
+    for(unsigned int t=0; t< tau.size() ; t++){
+      unsigned int Exp_iter = stepEstimator(Exp,tau[t],2);
+      
+      for(unsigned int E=0; E<Fields.size(); E++){
+	std::string Label =ExpLabel(Exp_ID,L,rho[p], Fields[E],tau[t],numexps,Tdat,Exp_iter,Equi_iter);	
+	std::cout<<Label<<":";
+	
+	clock_t cl_start = clock();
+	if (needSimulation(Label, Exp_iter, L*L*L, Thermostat.size(), numexps)) {
+	  std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
+	  
 
-	  std::cout<<id_proc.str()<<":";
-	  clock_t cl_start = clock();
-	  if (needSimulation(id_proc.str(), Exp_iter, L*L*L, Thermostat.size(), numexps)) {
-	    std::vector<double> Equi_field = wavearray(Fields[E],tau[t],Equi_iter, Equi_iter);
-	    std::vector<double> Exp_field  = wavearray(Fields[E],tau[t],Exp_iter ,0    );
-	    std::cout<<Equi_field.size()<<" "<<Exp_field.size()<<" ";
-
-	    for(unsigned int n=0; n<numexps; n++){
-	      relaxor.init(rho[p], id_proc.str(),false);
-	      for(unsigned int T=0; T<Thermostat.size(); T++){
-		relaxor.state(Thermostat[T], Equi_field ,false);
-		relaxor.state(Thermostat[T], Exp_field  ,true);
-	      }}
-	  }
-	  proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,id_proc.str());
-	  std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";
-	}}
-    }
+	  relaxor.set_rho(rho[p]);
+	  relaxor.set_ExpID(Label);
+	  relaxor.oven(numexps,Equi_iter, Thermostat,Exp_field);
+	}
+	proces_data(Thermostat,Fields[E],tau[t],numexps,L*L*L, rho[p],Exp_iter,Label);
+	std::cout<<(double) (clock()-cl_start)/CLOCKS_PER_SEC<<"\n";
+      }}
   }
+  
+}
+
+std::string ExpLabel(std::string Exp_ID,unsigned int L, double rho, double Field, double tau, unsigned int numexps,
+		     std::vector<double>& Tdat, unsigned int Exp_iter, unsigned int Equi_iter){
+  std::ostringstream id_proc;
+  id_proc<<Exp_ID<<"_N"<<L*L*L<<"_p"<<rho<<"_E"<<Field<<"_t"<<tau;
+  id_proc<<"_Ti"<<Tdat[0]<<"_Tf"<<Tdat[2]<<"_dT-"<<Tdat[1]<<"_X"<<Exp_iter<<"_Q"<<Equi_iter;
+  return id_proc.str();
 }
 
 void proces_data(std::vector< double >& Temps, double Field,
@@ -275,20 +278,6 @@ double simpson_int(const double f_array[], const std::vector<double>& weight){
   Integral+=f_array[length]*weight[length];
 
   return Integral/3;
-}
-
-//Calcular la desviación estandar de una matriz
-double stan_dev(std::vector< std::vector<double> > M){
-  unsigned int celdas;
-  celdas = M.size() * M[0].size();
-  double * Aij = new double [celdas];
-  for(unsigned int i = 0 ; i<M.size(); i++){
-    for(unsigned int j = 0; j<M[0].size(); j++)
-      Aij[i*M[0].size() + j] = M[i][j];
-  }
-  double sd = gsl_stats_sd (Aij, 1, celdas);
-  delete[] Aij;
-  return sd;
 }
 
 bool needSimulation(std::string id_proc, unsigned int iter, unsigned int PNR, unsigned int temps, unsigned int numexps)

@@ -2,14 +2,16 @@
 
 /*Constructor:
 Dimensiona y encera a los vectores del sistema. Llena sus datos iniciales */
-Material::Material(unsigned int L,
-		 bool polarizar){
-  // Start random number generator
-  rng = gsl_rng_alloc (gsl_rng_taus);
+Material::Material(unsigned int L,double p, std::string ID,
+		 bool polarizar, bool log_H, bool log_S){
+  rng = gsl_rng_alloc (gsl_rng_taus);// Start random number generator
+  ExpID=ID;
+  rho = p;
+  logH=log_H;
+  logS=log_S;
 
   // Setup Material
   PNR = L*L*L;
-  // Dimensionado de arreglos caraterísticos del sistema
   sigma.resize(PNR);
   mu_E.resize(PNR);
 
@@ -18,6 +20,7 @@ Material::Material(unsigned int L,
   G.resize(PNR);
   set_space_config(L);
   J.resize(PNR);
+  set_interaction_dipole_config(polarizar);
 }
 
 /*Destructor:
@@ -95,7 +98,7 @@ void Material::Jex(){
 	}}}}
 }
 
-void Material::set_pol(bool polarize){
+void Material::set_sigma(bool polarize){
   if (polarize)
     sigma.assign(PNR,1);
   else{
@@ -105,24 +108,17 @@ void Material::set_pol(bool polarize){
 }
 
 void Material::set_mu(bool polarize){
-  set_pol(polarize);
+  set_sigma(polarize);
   for(unsigned int i=0; i<PNR; i++)
     mu_E[i]  = gsl_rng_uniform(rng);
-  array_print(mu_E,"mu"+ExpID+".dat");
+//   array_print_bin(mu_E,"mu"+ExpID+".dat");
 }
 
-void Material::init(double p, std::string ID, bool polarizar, bool write){
+void Material::set_interaction_dipole_config(bool polarizar){
   gsl_rng_set(rng, std::time(NULL) );
-  ExpID=ID;
-  rho = p;
   // Calculate new values for exchange Energy an dipolar momentum
   Jex();
   set_mu(polarizar);
-
-  if (write){
-    std::cout<<"Desvición Estandar Total= "<<stan_dev(J)<<"\n";
-    std::cout<<"Polarización inicial="<<norm_pol()<<"\n";
-  }
 }
 
 double Material::total_E(double E){
@@ -161,33 +157,59 @@ void Material::MonteCarloStep(double T, double E_field){
   }
 }
 
-void Material::state(double T, std::vector< double >& field, bool record){
+void Material::state( double T, std::vector< double >& field, unsigned int Equilibration_Iter ){
   //vector historial de polarización por experimento
-  std::vector<double> log_pol;
-  log_pol.resize(field.size());
-  std::vector<int> log_sigma;
-  log_sigma.assign(PNR,0);
-
+  std::vector<double> log_pol(field.size(),0);
+  std::vector<double> log_H(field.size(),0);
+  std::vector<int> log_sigma (PNR,0);
+  
   // Evaluate material's state during given amount of steps
-  for(unsigned int i = 0; i< field.size(); i++){
+  unsigned int start = field.size()-Equilibration_Iter;
+  for(unsigned int i = start ; i< field.size(); i++)
     MonteCarloStep(T,field[i]);
-    if (record){
-      log_pol[i] = norm_pol();
-      update_log_sigma(log_sigma);
-    }
+
+  for(unsigned int i = 0 ; i< field.size(); i++){
+    MonteCarloStep(T,field[i]);
+    log_pol[i] = norm_pol();
+    if (logS) update_log_sigma(log_sigma);
+    if (logH) log_H[i]=total_E(field[i]);
   }
 
   // Save recorded data in binary format
-  if (record){
-    array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
-    array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
-  }
-
+  array_print_bin(log_pol,"log_pol_"+ExpID+".dat");
+  if (logS) array_print_bin(log_sigma,"log_sigma_"+ExpID+".dat");
+  if (logH) array_print_bin<double>(log_H,"log_H_"+ExpID+".dat");
+  
   log_pol.clear();
+  log_H.clear();
   log_sigma.clear();
+}
+
+double Material::oven(unsigned int numexps, unsigned int Equilibration_Iter, std::vector< double >& Temperature_loop, std::vector< double >& Electric_Field, bool polarize)
+{
+  clock_t cl_start = clock();
+  for(unsigned int n=0; n<numexps; n++){
+    set_interaction_dipole_config(polarize);
+    for(unsigned int T=0; T<Temperature_loop.size(); T++)
+      state(Temperature_loop[T], Electric_Field, Equilibration_Iter);
+  }
+  return (double) (clock()-cl_start)/CLOCKS_PER_SEC;
 }
 
 void Material::update_log_sigma(std::vector< int >& log_sigma){
   for(unsigned int s = 0; s<PNR ; s++)
     log_sigma[s] += sigma[s];
+}
+std::string Material::repr()
+{
+  std::ostringstream descrip;
+  descrip<<"\n Random: "<<gsl_rng_uniform(rng);
+  descrip<<"\n Exp ID: "<<ExpID;
+  descrip<<"\n rho: "<<rho;
+  descrip<<"\n Log H: "<<logH<<" , S: "<<logS;
+  descrip<<"\n #PNRs: "<<PNR;
+  descrip<<"\n sigma size: "<<sigma.size();
+  descrip<<"\n mu size: "<<mu_E.size();
+  return descrip.str();
+
 }

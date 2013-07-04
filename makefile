@@ -2,20 +2,21 @@
 EXE=relaxor
 TEST=test
 SOURCES=material.cpp experiment.cpp impresor.cpp
+HEADERS=$(SOURCES:.cpp=.h)
 OBJECTS=$(SOURCES:.cpp=.o)
 LIBS=$(shell pkg-config --libs gsl)
 CFLAGS= -g -march=native -O2 -pipe -Wall
 
 all: $(EXE)
 
-$(EXE): main.o $(OBJECTS)
+$(EXE): main.o $(OBJECTS) $(HEADERS)
 	g++ $^ -o $@ $(CFLAGS) $(LIBS)
 
 $(TEST): tester.o $(OBJECTS)
 	g++ $^ -o $@ $(CFLAGS) $(LIBS)
 	./$@
 
-.cpp.o:
+.cpp.o: $(HEADERS)
 	g++ -c $< $(CFLAGS)
 
 clean:
