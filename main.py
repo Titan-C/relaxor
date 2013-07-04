@@ -7,8 +7,6 @@ Argparser for relaxor simulations
 import argparse
 import experiment as ee
 
-import copy
-
 parser = argparse.ArgumentParser(description="Relaxor Simulator")
 
 parser.add_argument('-L', metavar='L', type=int, default=12,
@@ -16,10 +14,10 @@ parser.add_argument('-L', metavar='L', type=int, default=12,
 parser.add_argument('-n', '--numexps', metavar='N', type=int, default=4,
                     help='Number of sampling experiments')
 parser.add_argument('-p', '--rho', type=float, nargs='*',
-                    default=[0], help='Mean Ferroelectricity')
+                    default=[0.], help='Mean Ferroelectricity')
 parser.add_argument('-E', '--field', metavar='E0', type=float, nargs='*',
 		    default=[0.1], help='External Electric Field amplitude')
-parser.add_argument('-t', '--tau', metavar='t', type=float, nargs='*',
+parser.add_argument('-t', '--tau', metavar='t', type=int, nargs='*',
 		    default=[100], help='External Electric Field period')
 parser.add_argument('-Ti', metavar='T', type=float, default=7.15,
 		    help='Starting temperature of experiment')
@@ -46,12 +44,4 @@ parser.add_argument('--logS', action='store_true', default=False,
 
 if __name__ == "__main__":
     setup = parser.parse_args()
-    experiment = copy.deepcopy(setup)
-
-    for p in setup.rho:
-        for E in setup.field:
-            for t in setup.tau:
-                experiment.rho = p
-                experiment.field = E
-                experiment.tau = t
-                ee.do_experiment(experiment)
+    ee.setup_experiments(setup)

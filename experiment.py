@@ -8,6 +8,7 @@ from __future__ import division
 import numpy as np
 import libmat as lm
 import re
+import copy
 from pylab import plot, errorbar
 from scipy.integrate import simps
 from os import path, remove
@@ -145,6 +146,18 @@ def required_simulations(numexps, experiment_label):
     else:
         remove(filename)
         return numexps
+
+def setup_experiments(instructions):
+    """Arrange multiple experiments accordind to instructions"""
+    experiment = copy.deepcopy(instructions)
+
+    for rho in instructions.rho:
+        for field in instructions.field:
+            for tau in instructions.tau:
+                experiment.rho = rho
+                experiment.field = field
+                experiment.tau = tau
+                do_experiment(experiment)
 
 def do_experiment(setup):
     """Perform experiment accoding to setup"""
