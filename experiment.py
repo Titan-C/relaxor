@@ -12,7 +12,7 @@ import copy
 from pylab import plot, errorbar
 from scipy.integrate import simps
 from os import path, remove
-
+from multiprocessing import Pool, cpu_count
 
 def steps_calibrator(setup):
     """Stablishes proper amount of MCS during simulation
@@ -150,6 +150,7 @@ def required_simulations(numexps, experiment_label):
 def setup_experiments(instructions):
     """Arrange multiple experiments accordind to instructions"""
     experiment = copy.deepcopy(instructions)
+    experiment_list = []
 
     for rho in instructions.rho:
         for field in instructions.field:
@@ -157,7 +158,10 @@ def setup_experiments(instructions):
                 experiment.rho = rho
                 experiment.field = field
                 experiment.tau = tau
-                do_experiment(experiment)
+                experiment_list.append(copy.deepcopy(experiment))
+
+    pool = Pool(cpu_count())
+    pool.map(do_experiment, experiment_list)
 
 def do_experiment(setup):
     """Perform experiment accoding to setup"""
@@ -173,5 +177,5 @@ def do_experiment(setup):
         field[:] = setup.field * np.cos(steps)
         temperatures = lm.double_vector()
         temperatures[:] = build_temp(vars(setup))
-        print relaxor.oven(num, setup.Qiter, temperatures,
+        return exp_label, relaxor.oven(num, setup.Qiter, temperatures,
                            field, setup.pol)
