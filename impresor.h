@@ -5,11 +5,6 @@
 #include <fstream>
 #include <sstream>
 
-
-// Imprime datos de variables double
-void out(double value, std::string ARCHIVO, bool br = true);
-void array_print(const std::vector< double >& V, std::string ARCHIVO, unsigned int colsize, double scale);
-
 // Imprime arreglos vectoriales de todo tipo de variable en texto y binario
 template <typename T>
 void array_print(const std::vector<T> & V, std::string ARCHIVO) {
