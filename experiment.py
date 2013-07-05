@@ -161,12 +161,11 @@ def setup_experiments(instructions):
                 experiment_list.append(copy.deepcopy(experiment))
 
     pool = Pool(cpu_count())
-    pool.map(do_experiment, experiment_list)
+    return pool.map(do_experiment, experiment_list)
 
 def do_experiment(setup):
     """Perform experiment accoding to setup"""
     exp_label = gen_label(setup)
-    print exp_label
 
     num = required_simulations(setup.numexps, exp_label)
     if num > 0:
@@ -177,5 +176,5 @@ def do_experiment(setup):
         field[:] = setup.field * np.cos(steps)
         temperatures = lm.double_vector()
         temperatures[:] = build_temp(vars(setup))
-        return exp_label, relaxor.oven(num, setup.Qiter, temperatures,
+        print exp_label, relaxor.oven(num, setup.Qiter, temperatures,
                            field, setup.pol)
