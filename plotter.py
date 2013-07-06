@@ -7,9 +7,10 @@ from utils import zoom_effect02
 #Plotters
 # Single files plots
 
-def HlogPlot(file,stl='+'):
-  H=genfromtxt(file)
-  plot(H,stl,label=legendSet(file))
+def HlogPlot(filename,stl='+'):
+    with open(filename, 'rb') as datf:
+        H = np.fromfile(datf, dtype=np.double)
+    plot(H,stl,label=legendSet(filename))
 
 def uPlot(file, lb, stl='-o', error=False, IM=False,col=1):
   data = genfromtxt(file)
@@ -64,7 +65,7 @@ def sigmahist(rho,tempind,sigmas = None,tr=0.7):
   dist_sig_avgTitle(rho,E,tau)
   show()
   return sigmas
-    
+
 #Multifile plots
 def filesPlot(files,Frho,FE,Ftau,yAxis,stl,error,IM):
   plots=list()
@@ -95,12 +96,12 @@ def ufilePlot(procs,rho=None,E=None,tau=None,stl='-o',error=False,IM=False):
   title(procTitle(procs,rho,E,tau))
 
   show()
-  
+
 def matplot(material,stl='-o'):
   '''Grafica Las curvas de constante dieléctrica y pérdidas para el
      material asignado colocar 'P2BIT' o 'P3BIT' '''
   fig=figure()
-  ax1 = subplot(111)  
+  ax1 = subplot(111)
   freqs = ['1K','10K','100K']
   for file in freqs:
     uPlot('data/'+material+file+'.dat',file+'Hz',stl)
@@ -115,7 +116,7 @@ def matplot(material,stl='-o'):
   ylabel(lossLabel())
   arrow(380,36,-30,0,width=1,color='k')
   arrow(430,8,30,0,width=1,color='k')
-  
+
   show()
 
 def fileHlogPlot(path,stl='+',error=False):
@@ -249,7 +250,7 @@ def legendSet(file,Frho=None,FE=None,Ftau=None):
     if legend[0]==';':
       legend = legend[1:]
     return legend
-    
+
   else:
     mat = file.find('P')
     return file[mat+5:-4]
@@ -291,7 +292,7 @@ def p3anot():
   axvline(x=2.9,ls='--')
   arrow(1.3,0.036,-0.55,0,color='k', head_length=0.5)
   annotate('$T_f$',xy=(2.9,0),xytext=(2.5,0.007),arrowprops=dict(arrowstyle="->"))
-  
+
 
 
 if __name__ == "__main__":
