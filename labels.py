@@ -17,7 +17,7 @@ def gen_label(setup):
 
 def get_label(filename):
     """Extract from filename simulation setup"""
-    pat  = r'_N(?P<N>\d+)'
+    pat  = r'_(?P<name>[\w]+)_N(?P<N>\d+)'
     pat += r'_p(?P<rho>[\d\.]+)_E(?P<E>[\d\.]+)_t(?P<tau>\d+)'
     pat += r'_Ti(?P<Ti>[\d\.]+)_Tf(?P<Tf>[\d\.]+)_dT(?P<dT>[-+\d\.]+)'
     pat += r'_X(?P<Eiter>\d+)_Q(?P<Qiter>\d+)'
@@ -28,3 +28,10 @@ def get_label(filename):
         experiment[key] = float(experiment[key])
 
     return experiment
+   
+def labeler(experiment):
+    """Generates string to label plots"""
+    label  = experiment['name'] + r' $\rho=' + str(experiment['rho'])
+    label += 'E_0=' + str(experiment['E']) 
+    label += r'\tau=' + str(experiment['tau']) + '$'
+    return label
